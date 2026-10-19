@@ -26,7 +26,7 @@ Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `
 ## Hardware validation gates
 - Compare reflective Memory LCD and transflective monochrome LCD. Screen controller/pinout, viewing angle, illumination method, MOQ, long-term availability and actual measured consumption must be confirmed before PCB freeze.
 - Battery capacity and hours of operation are goals, not guarantees. Include display, MCU, audio, BLE and regulator losses in power budget.
-- BLE config/sync and Bluetooth headphone audio are distinct requirements. nRF52840 BLE-only cannot be claimed as standard A2DP or interoperable LE Audio headphone output. Resolve before chip freeze.
+- CONFIRMED: BLE only for connecting to a phone, settings and synchronization. All sound uses onboard speaker; no Bluetooth headphone streaming, Classic A2DP or LE Audio. Do not introduce dedicated Bluetooth audio hardware.
 - Factory test pads, SWD/recovery programming, reverse/ESD protection, battery safety, USB-C CC/power control, DFM, regulatory constraints are mandatory review items.
 - Never assert compliance/certification without relevant test records.
 
