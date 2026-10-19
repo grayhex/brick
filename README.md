@@ -35,6 +35,10 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 
 The following pictures are **vector concept drawings**, not photorealistic renderings or fabrication CAD. They encode the corrected controls and are kept directly in this repository. The user's preferred **original photorealistic triptych** sets the proportions and silhouette; its older D-pad / low function buttons / side-bottom speaker holes are superseded by R0.2 requirements.
 
+**Preferred original silhouette:** [locally archived JPG thumbnail](design/reference-original/preferred-render-thumb.jpg) ([reference notes](design/reference-original/README.md)). The complete high-resolution source PNG still needs binary upload; this archived thumbnail is only 150×137 px.
+
+![User-preferred original visual proportions — preview only](design/reference-original/preferred-render-thumb.jpg)
+
 ![Three finishes of Brick R0.2](design/concepts/brick-family-r02.svg)
 
 ![Orthographic layout and USB-C-only bottom](design/concepts/brick-orthographic-r02.svg)
@@ -55,7 +59,7 @@ brick/
 │   ├── CAD_HANDOFF_PROMPT.md
 │   ├── GAME_PORTING.md
 │   └── DECISIONS.md
-├── design/          # concept SVG images and source-reference notes
+├── design/          # concept SVG images and original-photo thumbnail
 ├── hardware/        # KiCad schematic, PCB, BOM and fabrication outputs
 ├── mechanical/      # CAD, enclosure, buttons, STEP
 ├── firmware/        # bootloader, platform HAL, games, audio, menu
