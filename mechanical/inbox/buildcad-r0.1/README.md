@@ -16,9 +16,9 @@
 
 ```sh
 pip install numpy Pillow
-python3 -I tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip \
+python3 tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip \
   --verify mechanical/inbox/buildcad-r0.1/measurements.json              # сверка с сохранёнными измерениями
-python3 -I tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip \
+python3 tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip \
   --json /tmp/m.json --png-dir /tmp/png                                  # свежие измерения и рисунки
 ```
 

@@ -14,7 +14,7 @@ The analysis is specific to this mockup's structure (hollow shells with a half-l
 keys). It is a review aid, not a CAD kernel: a different export needs the part names and thresholds revisited.
 
 Usage:
-    python3 -I tools/cad_review/stl_review.py <dir|zip> [--json out.json] [--png-dir DIR] [--verify baseline.json]
+    python3 tools/cad_review/stl_review.py <dir|zip> [--json out.json] [--png-dir DIR] [--verify baseline.json]
 
 Dependencies: numpy, Pillow.
 """

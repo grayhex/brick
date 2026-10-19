@@ -94,7 +94,7 @@ jobs:
       - run: pip install numpy Pillow
       - name: Measure the archived mockup and compare with the saved baseline
         run: >
-          python3 -I tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip
+          python3 tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip
           --verify mechanical/inbox/buildcad-r0.1/measurements.json --png-dir "$RUNNER_TEMP/cad-png"
 
   wasm:
