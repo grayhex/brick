@@ -131,7 +131,7 @@
         <button class="btn" id="save" disabled>Сохранить .bkt</button>
         <button class="btn" id="load">Открыть…</button>
       </div>
-      <input type="file" id="file" accept=".bkt" hidden>
+      <input type="file" id="file" accept=".bkt,.txt" hidden>
       <div class="row"><button class="btn" id="copyTrace" disabled>Копировать как текст</button><button class="btn" id="pasteTrace">Воспроизвести из текста</button></div>
       <textarea id="traceText" rows="3" spellcheck="false" aria-label="Запись в виде текста" placeholder="Запись в виде текста (base64): вставьте сюда и нажмите «Воспроизвести из текста»"></textarea>
       <p class="note" id="traceInfo">Запись начинается с заводского состояния (профиль в записи сброшен; ваш сохранённый профиль не затрагивается). Файл можно воспроизвести здесь и в терминальном симуляторе.</p>
@@ -524,8 +524,20 @@ function stopRecording() {
   applyUser(false);                      // back to the stored profile and settings
   setRecordUi(false);
 }
+// Inside the Artifact viewer a page cannot start a download itself and only some file types are offered: there the
+// recording is saved through the downloads capability as a text file (base64), which "Открыть…" reads back.
+let downloads = null;
+if (window.claude && window.claude.use) {
+  window.claude.use("downloads").then((d) => { downloads = d; if (d) $("save").textContent = "Сохранить файл"; }, () => {});
+}
 function saveTrace() {
   if (!lastTrace) return;
+  if (downloads) {
+    downloads.save({ filename: "brick-session.txt", data: bytesToB64(lastTrace) }).then(
+      () => { $("traceInfo").textContent = "Файл записи сохранён."; },
+      (e) => { if (!e || e.code !== "declined") $("traceInfo").textContent = "Файл сохранить не удалось, скопируйте запись как текст."; });
+    return;
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lastTrace], { type: "application/octet-stream" }));
   a.download = "brick-session.bkt"; document.body.appendChild(a); a.click(); a.remove();
@@ -533,7 +545,14 @@ function saveTrace() {
 }
 function loadTraceFile(e) {
   const f = e.target.files[0]; e.target.value = "";
-  if (f) f.arrayBuffer().then((buf) => startReplay(new Uint8Array(buf)));
+  if (!f) return;
+  f.arrayBuffer().then((buf) => {
+    let bytes = new Uint8Array(buf);
+    if (!(bytes.length >= 4 && String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === "BKT1")) {
+      try { bytes = b64ToBytes(new TextDecoder().decode(bytes).replace(/\s+/g, "")); } catch (err) { $("traceInfo").textContent = "Это не запись симулятора."; return; }
+    }
+    startReplay(bytes);
+  });
 }
 function startReplay(bytes) {
   if (bytes.length > w.bk_w_io_size()) { $("traceInfo").textContent = "Запись слишком велика."; return; }
