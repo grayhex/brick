@@ -11,6 +11,7 @@ Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `
 ## Hard constraints
 - Strict monochrome logical framebuffer (1 bit/pixel or equivalent two-level cell encoding). Greyscale, RGB color palettes and emissive OLED are **not product requirements**.
 - **CONFIRMED positive display polarity:** BLACK/dark active pixels on a light neutral gray/white reflective background; unlit readability in ambient light. Do not invert into a negative display (light pixels on black). Panel type and true contrast remain to be measured.
+- **CONFIRMED display composition:** 10 columns × 20 rows for the gameplay matrix, with dedicated auxiliary status/score panel **on the right**, preserving original Brick Game proportions. These are logical cells, not native LCD pixels. Keep layout/rendering independent from the final LCD resolution; do not distort cell aspect ratio or move status beneath the playfield by default.
 - Illumination must be optional and subtle white; evaluate display readability with light fully off. A reflective-only LCD generally needs a separately engineered FRONTLIGHT; a transflective LCD may accept a BACKLIGHT. Do not assume lighting is included in a panel.
 - Characteristic large vertical Brick Game enclosure; USB-C bottom; no 3.5 mm jack.
 - One D-pad, one large action, three function buttons, dedicated power switch, tactile volume control.
