@@ -43,6 +43,7 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 - [Hardware research and decision gates](docs/HARDWARE_RESEARCH.md) — LCD, SoC, battery, BLE, sound, production, provisional BOM.
 - [Display shortlist and physical pixel fit](docs/DISPLAY_CANDIDATES.md) — concrete Sharp MIP displays, Azumo frontlight, 10×20+right-side HUD fit, sourcing risks.
 - [Enclosure R0.2 concept](docs/MECHANICAL_CONCEPT.md) — preferred classic straight-sided silhouette, 175×80 mm, proposed 20–22 mm thickness, corrected 8 buttons and front speaker.
+- [First CAD mockup review](docs/MECHANICAL_MOCKUP_REVIEW.md) — measured STL mockup (buildcad.ai) against R0.2: what matches, 14 open items (button pitch, window, USB-C opening, side controls); archive in `mechanical/inbox/`, tool in `tools/cad_review/`.
 - [CAD agent handoff prompt](docs/CAD_HANDOFF_PROMPT.md) — ready-to-use editable parametric CAD task, part hierarchy, fit checks, STEP/STL exports.
 - [R0.2 three finish variants](design/concepts/brick-family-r02.svg) · [orthographic views](design/concepts/brick-orthographic-r02.svg) · [exploded concept](design/concepts/brick-exploded-r02.svg) — new SVG images with **current** controls.
 - [Older R0.1 drawing](design/brick-envelope-r01.svg) — **ARCHIVED**, not the approved button placement.
@@ -88,9 +89,10 @@ brick/
 ├── tools/
 │   ├── conformance/              # exporter of reference fixtures (Node, only for regeneration)
 │   ├── frames/                   # golden frame -> PNG
+│   ├── cad_review/               # measure the STL mockup against R0.2 (Python, numpy, Pillow)
 │   └── experiments/              # reproducible experiments behind ADRs
 ├── hardware/        # (planned) KiCad schematic, PCB, BOM and fabrication outputs
-├── mechanical/      # (planned) CAD, enclosure, buttons, STEP
+├── mechanical/      # inbox/ — archived first mockup (STL); (planned) CAD, enclosure, buttons, STEP
 └── manufacturing/   # (planned) assembly/test instructions, DFM, QA
 ```
 

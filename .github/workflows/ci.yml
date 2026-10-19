@@ -85,3 +85,14 @@ jobs:
           npm ci --no-audit --no-fund
           APOLLO_BRICK_GAMES="$GITHUB_WORKSPACE/ApolloBrickGames" npm run export:tetris -- --out /tmp/tetris.conformance.json
           cmp /tmp/tetris.conformance.json ../../tests/fixtures/tetris/tetris.conformance.json
+
+  cad-review:
+    name: STL mockup measurements are reproducible
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install numpy Pillow
+      - name: Measure the archived mockup and compare with the saved baseline
+        run: >
+          python3 -I tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip
+          --verify mechanical/inbox/buildcad-r0.1/measurements.json --png-dir "$RUNNER_TEMP/cad-png"

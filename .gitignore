@@ -1,4 +1,5 @@
-build*/
+/build*/
+__pycache__/
 tools/conformance/node_modules/
 tools/conformance/dist/
 *.o

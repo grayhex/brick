@@ -1,0 +1,531 @@
+{
+ "bosses": {
+  "front": {
+   "items": [
+    {
+     "d": 5.0,
+     "x": 23.0,
+     "y": 10.1
+    },
+    {
+     "d": 5.0,
+     "x": 23.0,
+     "y": 79.9
+    },
+    {
+     "d": 5.0,
+     "x": 162.0,
+     "y": 10.1
+    },
+    {
+     "d": 5.0,
+     "x": 162.0,
+     "y": 79.9
+    }
+   ],
+   "top_z": 17.95
+  },
+  "rear": {
+   "items": [
+    {
+     "d": 5.0,
+     "x": 30.0,
+     "y": 104.0
+    },
+    {
+     "d": 5.0,
+     "x": 30.0,
+     "y": 156.0
+    },
+    {
+     "d": 5.0,
+     "x": 165.0,
+     "y": 104.0
+    },
+    {
+     "d": 5.0,
+     "x": 165.0,
+     "y": 156.0
+    }
+   ],
+   "top_z": 12.8
+  },
+  "rear_holes": [
+   {
+    "d": 2.3,
+    "x": 23.0,
+    "y": 10.1
+   },
+   {
+    "d": 2.3,
+    "x": 23.0,
+    "y": 79.9
+   },
+   {
+    "d": 2.3,
+    "x": 162.0,
+    "y": 10.1
+   },
+   {
+    "d": 2.3,
+    "x": 162.0,
+    "y": 79.9
+   }
+  ]
+ },
+ "caps": {
+  "action": {
+   "flange_mm": [
+    23.99,
+    24.0
+   ],
+   "flange_top_z": 2.45,
+   "height_mm": 3.65,
+   "stem_mm": [
+    21.99,
+    22.0
+   ]
+  },
+  "btn_mode": {
+   "flange_mm": [
+    15.0,
+    8.0
+   ],
+   "flange_top_z": 2.85,
+   "height_mm": 3.65,
+   "stem_mm": [
+    12.0,
+    5.0
+   ]
+  },
+  "btn_select": {
+   "flange_mm": [
+    15.0,
+    8.0
+   ],
+   "flange_top_z": 2.85,
+   "height_mm": 3.65,
+   "stem_mm": [
+    12.0,
+    5.0
+   ]
+  },
+  "btn_start": {
+   "flange_mm": [
+    15.0,
+    8.0
+   ],
+   "flange_top_z": 2.85,
+   "height_mm": 3.65,
+   "stem_mm": [
+    12.0,
+    5.0
+   ]
+  },
+  "dir_down": {
+   "flange_mm": [
+    12.0,
+    12.0
+   ],
+   "flange_top_z": 2.45,
+   "height_mm": 3.65,
+   "stem_mm": [
+    10.0,
+    10.0
+   ]
+  },
+  "dir_left": {
+   "flange_mm": [
+    12.0,
+    12.0
+   ],
+   "flange_top_z": 2.45,
+   "height_mm": 3.65,
+   "stem_mm": [
+    10.0,
+    10.0
+   ]
+  },
+  "dir_right": {
+   "flange_mm": [
+    12.0,
+    12.0
+   ],
+   "flange_top_z": 2.45,
+   "height_mm": 3.65,
+   "stem_mm": [
+    10.0,
+    10.0
+   ]
+  },
+  "dir_up": {
+   "flange_mm": [
+    12.0,
+    12.0
+   ],
+   "flange_top_z": 2.45,
+   "height_mm": 3.65,
+   "stem_mm": [
+    10.0,
+    10.0
+   ]
+  },
+  "wheel": {
+   "flange_mm": [
+    16.0,
+    15.97
+   ],
+   "flange_top_z": -0.0,
+   "height_mm": 3.0,
+   "stem_mm": [
+    16.0,
+    15.97
+   ]
+  }
+ },
+ "corner_radius_mm": 12.1,
+ "envelope_mm": [
+  80.0,
+  175.0
+ ],
+ "front_origin_xy": [
+  5.0,
+  5.0
+ ],
+ "lens_mm": [
+  81.7,
+  59.7,
+  0.9
+ ],
+ "lens_seat": {
+  "ledge_z": 1.0,
+  "recess_depth": 1.0,
+  "x": [
+   10.0,
+   70.0
+  ],
+  "y": [
+   8.0,
+   90.0
+  ]
+ },
+ "parts": [
+  {
+   "open_edges": 0,
+   "part": "action",
+   "size_mm": [
+    23.99,
+    24.0,
+    3.65
+   ],
+   "triangles": 9068,
+   "volume_cm3": 1.42
+  },
+  {
+   "open_edges": 0,
+   "part": "btn_mode",
+   "size_mm": [
+    15.0,
+    8.0,
+    3.65
+   ],
+   "triangles": 9212,
+   "volume_cm3": 0.24
+  },
+  {
+   "open_edges": 0,
+   "part": "btn_select",
+   "size_mm": [
+    15.0,
+    8.0,
+    3.65
+   ],
+   "triangles": 9212,
+   "volume_cm3": 0.24
+  },
+  {
+   "open_edges": 0,
+   "part": "btn_start",
+   "size_mm": [
+    15.0,
+    8.0,
+    3.65
+   ],
+   "triangles": 9212,
+   "volume_cm3": 0.24
+  },
+  {
+   "open_edges": 2,
+   "part": "dir_down",
+   "size_mm": [
+    12.0,
+    12.0,
+    3.65
+   ],
+   "triangles": 9431,
+   "volume_cm3": 0.3
+  },
+  {
+   "open_edges": 2,
+   "part": "dir_left",
+   "size_mm": [
+    12.0,
+    12.0,
+    3.65
+   ],
+   "triangles": 9431,
+   "volume_cm3": 0.3
+  },
+  {
+   "open_edges": 2,
+   "part": "dir_right",
+   "size_mm": [
+    12.0,
+    12.0,
+    3.65
+   ],
+   "triangles": 9431,
+   "volume_cm3": 0.3
+  },
+  {
+   "open_edges": 2,
+   "part": "dir_up",
+   "size_mm": [
+    12.0,
+    12.0,
+    3.65
+   ],
+   "triangles": 9431,
+   "volume_cm3": 0.3
+  },
+  {
+   "open_edges": 0,
+   "part": "front",
+   "size_mm": [
+    175.0,
+    80.0,
+    17.95
+   ],
+   "triangles": 33006,
+   "volume_cm3": 26.99
+  },
+  {
+   "open_edges": 0,
+   "part": "lens",
+   "size_mm": [
+    81.7,
+    59.7,
+    0.9
+   ],
+   "triangles": 524,
+   "volume_cm3": 4.38
+  },
+  {
+   "open_edges": 0,
+   "part": "power",
+   "size_mm": [
+    8.0,
+    6.1,
+    3.0
+   ],
+   "triangles": 28,
+   "volume_cm3": 0.1
+  },
+  {
+   "open_edges": 0,
+   "part": "rear",
+   "size_mm": [
+    175.0,
+    80.0,
+    12.8
+   ],
+   "triangles": 17844,
+   "volume_cm3": 36.56
+  },
+  {
+   "open_edges": 0,
+   "part": "wheel",
+   "size_mm": [
+    16.0,
+    15.97,
+    3.0
+   ],
+   "triangles": 8304,
+   "volume_cm3": 0.55
+  }
+ ],
+ "rim_notches": [
+  {
+   "depth": 1.53,
+   "device_y": [
+    52.5,
+    67.5
+   ],
+   "length": 15.0,
+   "side": "right"
+  },
+  {
+   "depth": 1.03,
+   "device_y": [
+    34.5,
+    45.5
+   ],
+   "length": 11.0,
+   "side": "left"
+  }
+ ],
+ "round_holes": [
+  {
+   "area_mm2": 391.3,
+   "h": 22.3,
+   "w": 22.3,
+   "x0": 49.6,
+   "x1": 72.0,
+   "y0": 123.8,
+   "y1": 146.2
+  },
+  {
+   "area_mm2": 83.8,
+   "h": 10.3,
+   "w": 10.3,
+   "x0": 16.4,
+   "x1": 26.8,
+   "y0": 117.8,
+   "y1": 128.2
+  },
+  {
+   "area_mm2": 83.8,
+   "h": 10.3,
+   "w": 10.3,
+   "x0": 6.4,
+   "x1": 16.8,
+   "y0": 127.8,
+   "y1": 138.2
+  },
+  {
+   "area_mm2": 83.8,
+   "h": 10.3,
+   "w": 10.3,
+   "x0": 26.4,
+   "x1": 36.8,
+   "y0": 127.8,
+   "y1": 138.2
+  },
+  {
+   "area_mm2": 83.8,
+   "h": 10.3,
+   "w": 10.3,
+   "x0": 16.4,
+   "x1": 26.8,
+   "y0": 137.8,
+   "y1": 148.2
+  }
+ ],
+ "slots": [
+  {
+   "area_mm2": 59.5,
+   "h": 5.3,
+   "w": 12.3,
+   "x0": 15.9,
+   "x1": 28.1,
+   "y0": 96.3,
+   "y1": 101.7
+  },
+  {
+   "area_mm2": 59.5,
+   "h": 5.3,
+   "w": 12.3,
+   "x0": 33.9,
+   "x1": 46.1,
+   "y0": 96.3,
+   "y1": 101.7
+  },
+  {
+   "area_mm2": 59.5,
+   "h": 5.3,
+   "w": 12.3,
+   "x0": 51.9,
+   "x1": 64.2,
+   "y0": 96.3,
+   "y1": 101.7
+  }
+ ],
+ "speaker": {
+  "open_area_mm2": 107.5,
+  "slit_w": 1.39,
+  "slits": 8,
+  "x": [
+   31.0,
+   49.0
+  ],
+  "y": [
+   152.1,
+   161.9
+  ]
+ },
+ "stack": {
+  "butt_joint_sum": 30.75,
+  "front": {
+   "depth_incl_bosses": 17.95,
+   "plate_inner": 2.0,
+   "rim": 11.85,
+   "shoulder": 8.85
+  },
+  "rear": {
+   "depth_incl_bosses": 12.8,
+   "plate_inner": 2.0,
+   "rim": 11.0,
+   "shoulder": 8.0
+  },
+  "thickness_front_rim_on_rear_shoulder": 19.85,
+  "thickness_rear_rim_on_front_shoulder": 19.85
+ },
+ "usb": [
+  {
+   "device_x": [
+    36.4,
+    43.6
+   ],
+   "facing": "+z",
+   "wall_x": [
+    1.0,
+    2.4
+   ],
+   "z": 2.05
+  },
+  {
+   "device_x": [
+    36.4,
+    43.6
+   ],
+   "facing": "-z",
+   "wall_x": [
+    1.0,
+    2.4
+   ],
+   "z": 5.55
+  },
+  {
+   "device_x": [
+    35.4,
+    44.6
+   ],
+   "facing": "-z",
+   "wall_x": [
+    0.0,
+    1.0
+   ],
+   "z": 6.59
+  }
+ ],
+ "window": {
+  "area_mm2": 4096.7,
+  "h": 76.0,
+  "w": 54.0,
+  "x0": 13.1,
+  "x1": 67.0,
+  "y0": 10.9,
+  "y1": 87.0
+ },
+ "window_in_upper_half": true
+}
