@@ -21,22 +21,22 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 
 | Candidate | Strengths | Constraints / decision |
 | --- | --- | --- |
-| **nRF52840 module** (Raytac MDBT50Q family; exact SKU validation pending) | BLE config, USB, modest power, adequate MCU performance for bitmapped classics | 64 MHz Cortex-M4F; 256 KB RAM; no Classic Bluetooth A2DP; no generic LE Audio headphone transmitter; check chosen display interface and firmware footprint |
-| **nRF5340** (module if possible) | Newer dual-core Nordic Bluetooth SoC; potential LE Audio architectures via ecosystem | Larger software stack, actual LE Audio TX and interoperability need explicit prototype; no Classic A2DP; not plug-and-play headphones |
-| **ESP32-S3** module | Greater CPU/UI headroom, USB and BLE | No Classic BT A2DP; Wi-Fi unnecessary unless justified; benchmark real sleep and gameplay energy |
-| **ESP32 original / ESP32-WROVER** | Classic Bluetooth A2DP capability in relevant firmware stacks | Higher complexity and often higher active power; verify chip lifecycle and modules; do not assume high-quality low-latency audio |
+| **nRF52840 module** (Raytac MDBT50Q family; exact SKU validation pending) | **Preferred candidate:** BLE phone configuration/sync, USB and modest power | 64 MHz Cortex-M4F; 256 KB RAM; verify selected LCD interface, firmware/DFU footprint and power |
+| **nRF5340** (module if possible) | Newer dual-core Nordic Bluetooth SoC, more headroom | Complexity not justified by audio (headphones not required); evaluate only if memory/performance needs demand |
+| **ESP32-S3** module | Greater CPU/UI headroom, USB and BLE | Wi-Fi unnecessary unless justified; benchmark real sleep and gameplay energy |
+| **ESP32 original / ESP32-WROVER** | Classic Bluetooth capability in relevant firmware stacks | Not preferred: headset audio is explicitly out of scope; no reason to add Classic BT hardware |
 | **STM32WB55** | Mature MCU with BLE, USB | No automatic standard headphone audio; alternate if STM32 ecosystem preferred |
 | **FPGA** (e.g. Lattice ECP5) | Hardware recreation of original logic possible | No benefit to simple custom pixel games, requires BLE/USB/power support chips, RTL development and extra validation; NOT default |
 
-**Default engineering direction, subject to BT-audio clarification and display bench:** low-power MCU with integrated BLE, likely nRF52840 module. FPGA is a research option, not a product prerequisite.
+**Default engineering direction, with BLE-only phone connectivity confirmed and display bench still pending:** low-power MCU with integrated BLE, likely nRF52840 module. FPGA is a research option, not a product prerequisite.
 
-## 3. Bluetooth caveat (DO NOT MISS)
+## 3. Bluetooth decision (CONFIRMED)
 
-- BLE GATT for phone settings, firmware status and synchronization ≠ streaming audio to regular Bluetooth headphones.
-- Classic A2DP headset support requires an appropriate Classic Bluetooth radio/stack; nRF52840 and ESP32-S3 do not provide it.
-- LE Audio compatibility requires suitable Bluetooth LE Audio roles, codec, stack and verified headsets; nRF5340 is a candidate for feasibility work, not a promise of universal support.
-- If headphone output is explicitly required, re-evaluate SoC or add a dedicated audio TX chip/module; measure latency, compatibility and battery impact.
-- Built-in speaker is mandatory.
+- Only **Bluetooth Low Energy** for phone connection, settings and synchronization.
+- All sound uses the **built-in speaker**. No Bluetooth headphones, Classic A2DP, LE Audio, 3.5 mm output or additional wireless-audio transmitter.
+- Proposed phone GATT work: read device/firmware info, battery level, write settings, and sync selected game data. Exact schema, authorization and pairing are OPEN.
+- USB-C wired firmware recovery/update is baseline; BLE OTA is optional for a later version.
+- A low-power integrated-BLE MCU such as the nRF52840 is now the preferred candidate, pending LCD integration, power and firmware validation.
 
 ## 4. Preliminary subsystem design
 
@@ -57,7 +57,7 @@ USB-C 5V sink without mandatory Power Delivery; correct CC resistors/data path, 
 
 | Block | Candidate / requirement | Decision |
 | --- | --- | --- |
-| MCU / Bluetooth module | nRF52840 module; compare nRF5340 if audio required | OPEN |
+| MCU / Bluetooth module | Prefer nRF52840 module for BLE-only requirements; validate LCD/power/firmware | OPEN (SKU not approved) |
 | Display | Reflective Memory LCD + custom frontlight **OR** transflective mono LCD + white backlight | OPEN, highest priority |
 | Charger / Power Path | TI BQ25619E-class, validate charge current and datasheet | OPEN |
 | Battery | 1S Li-Po; 3000–4000 mAh packaging proposal; select capacity based on measured power | OPEN |
@@ -86,7 +86,7 @@ These are hypothetical ceilings, **not** measurements. New monochrome LCD techno
 ## 7. Prototype / freeze gates
 
 1. **Display optical review:** white illumination disabled and at night, mechanical FPC, pixel response, supplier MOQ.
-2. **Audio decision:** built-in speaker only vs Bluetooth headphones; exact radio architecture.
+2. **BLE phone prototype:** demonstrate pairing, GATT settings/data sync and low-power operation; sound remains on built-in speaker.
 3. **Game input mapping:** controls sufficient for all first-wave titles; single action semantics.
 4. **Board power prototype:** current consumption in game, idle, backlit/night, BLE and power-off.
 5. **Mechanical EVT:** enclosure ergonomic print, battery safe fit, bottom USB clearance, antenna and cavity.
@@ -96,6 +96,6 @@ These are hypothetical ceilings, **not** measurements. New monochrome LCD techno
 
 - Produce a sourced display comparison of 3–5 purchasable panel modules with dimensional drawings, FPC pinouts, MOQ, price bands **from real supplier quotes** and compatible white-light design.
 - Obtain battery/cell mechanical drawings to cross-check full-size enclosure.
-- Make BLE phone-vs-audio feasibility comparison **before approving MCU**.
+- Validate BLE phone GATT behavior/security/power **before approving MCU**.
 - Benchmark latency and redraw bandwidth for the selected LCD (use realistic game input/replay data).
 - Build quantified per-rail power budget and estimate size/cost range with assumptions separately labelled.
