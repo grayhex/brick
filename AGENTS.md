@@ -1,6 +1,6 @@
 # Instructions for coding and engineering agents
 
-Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
+Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/CAD_HANDOFF_PROMPT.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
 
 ## Source of truth
 - User-confirmed choices have status **CONFIRMED** in the PRD. Preserve them unless explicitly changed.
@@ -14,7 +14,8 @@ Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `
 - **CONFIRMED display composition:** 10 columns × 20 rows for the gameplay matrix, with dedicated auxiliary status/score panel **on the right**, preserving original Brick Game proportions. These are logical cells, not native LCD pixels. Keep layout/rendering independent from the final LCD resolution; do not distort cell aspect ratio or move status beneath the playfield by default.
 - Illumination must be optional and subtle white; evaluate display readability with light fully off. A reflective-only LCD generally needs a separately engineered FRONTLIGHT; a transflective LCD may accept a BACKLIGHT. Do not assume lighting is included in a panel.
 - Characteristic large vertical Brick Game enclosure; USB-C bottom; no 3.5 mm jack.
-- One D-pad, one large action, three function buttons, dedicated power switch, tactile volume control.
+- **CURRENT R0.2 control spec overrides R0.1:** four **separate smaller YELLOW ROUND direction keys** (not a D-pad cross, with generous clearance); one **large smooth yellow Action**; **three yellow function keys MODE/SELECT/START directly UNDER the LCD**; dedicated side power switch and volume wheel/slider. Keep them away from palm-contact zone.
+- Speaker has **ONE grille on the FRONT near lower center**, no bottom/rear speaker holes. **Only USB-C centered on bottom edge**, no mini-jack or microSD cutout.
 - ~10 initial classic games; incremental update support; 20–30 hour measured battery-life goal.
 - Target production 100–500. Prioritize parts with supply continuity, accessible datasheets, and manufacturability.
 
@@ -32,6 +33,9 @@ Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `
 - CONFIRMED: BLE only for connecting to a phone, settings and synchronization. All sound uses onboard speaker; no Bluetooth headphone streaming, Classic A2DP or LE Audio. Do not introduce dedicated Bluetooth audio hardware.
 - Factory test pads, SWD/recovery programming, reverse/ESD protection, battery safety, USB-C CC/power control, DFM, regulatory constraints are mandatory review items.
 - Never assert compliance/certification without relevant test records.
+
+- Three finishes share ONE mechanical master: MONOLITH (matte black), CLEAR SMOKE (translucent black, black PCB), CERAMIC (warm ivory plastic). **Original photorealistic triptych** is silhouette reference, but its old buttons and speaker outlets are obsolete. **Current SVG**: `design/concepts/*r02.svg`; `design/brick-envelope-r01.svg` is archived and outdated.
+- CAD is a **separate task** from firmware/game agent; do not edit `firmware/` or game logic just for mechanical model.
 
 ## Workflow
 1. Investigate and summarize alternatives plus measurable acceptance criteria.
