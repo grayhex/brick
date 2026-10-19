@@ -1,4 +1,4 @@
-# Brick — Product Requirements Document (PRD), revision 0.3
+# Brick — Product Requirements Document (PRD), revision 0.4
 
 **Date:** 2026-10-19  
 **Stage:** concept and engineering feasibility study  
@@ -19,6 +19,7 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 | DISP-01 | **Strict black/white** gameplay and UI | CONFIRMED | No color palette required |
 | DISP-02 | Subtle **white lighting only for darkness**, user switchable | CONFIRMED | Daylight legibility without lighting is intended; LCD technology must be validated |
 | DISP-03 | **Positive monochrome LCD**: dark/black active pixels on a light neutral-gray / near-white background | CONFIRMED | User explicitly chose traditional light LCD with black cells, not reverse/negative display; optical white is a visual reference, not a specific material chromaticity |
+| DISP-04 | **Classic layout: main playfield 10 columns × 20 rows and a separate information/status zone on its RIGHT** | CONFIRMED | Preserve classic relative proportions, no gameplay cropping or distortion; sidebar for score, level, mode, status; whole panel dimensions/pixel resolution OPEN |
 | CTRL-01 | Physical D-pad | CONFIRMED | Final mechanics under review |
 | CTRL-02 | **One** prominent large action button | CONFIRMED | No pair of action buttons |
 | CTRL-03 | **Three** dedicated function buttons | CONFIRMED | Meaning/keycaps to be set |
@@ -54,7 +55,9 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 - **Ambient-light readability without active lighting is CONFIRMED**; select panel technology and contrast/reflectivity accordingly. Background may appear neutral-light gray rather than literal pure white.
 - White illumination shall be uniform, free of obvious hotspots and independently controllable; reflective LCD requires separately evaluated frontlight/optical stack whereas transflective LCD can use compatible white backlight.
 - Menu to preserve classic game letter/number, schematic game preview and mode, plus modern settings.
-- Portrait playfield shall preserve aspect and cells for original games without distorted geometry.
+- **CONFIRMED main gameplay glass layout:** 10 columns × 20 rows of equally proportioned logical cells, with **dedicated information strip to the right** (score, level, modes, status, next piece when relevant). The overall display aspect ratio is wider than the 10:20 playfield alone; exact sidebar width and physical matrix dimensions remain OPEN. Do not treat 10×20 as an exact native pixel resolution.
+- Preserve the classic proportions of the gameplay field and auxiliary score/status zone; never stretch cells or let full-screen menus permanently displace the game/status separation.
+- Rendering should be **hardware-independent**: define a logical frame/layout and scale using the actual LCD panel constraints after it is chosen; choose square logical cells where compatible with classic source, validate against real device references.
 - In case of larger native display resolution, integer scaling, black margins and separate status HUD are acceptable, subject to review.
 - Main candidates: reflective Memory LCD with custom frontlight vs monochrome transflective/FSTN with backlight. **E-ink is not default** due to refresh/ghosting challenges; **OLED is emissive and cannot behave as passive LCD**.
 - Quantify contrast, outdoor readability, scan/update latency, unit price/MOQ and the optical impact of custom illumination.
