@@ -10,7 +10,7 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 ## Confirmed product direction
 
 - Large recognizable **classic Brick Game silhouette**; elegant contemporary execution, not a mini handheld.
-- **Strict black-and-white pixel output**, readable with lighting off; optional subtle **white illumination** for darkness (prefer reflective/transflective LCD; not emissive OLED by default).
+- **CONFIRMED positive monochrome LCD appearance:** dark/black pixels on a light neutral-gray reflective background, legible without powered illumination in adequate ambient light; optional subtle **white illumination** only for darkness. No reverse/negative LCD theme, greyscale or color UI required. Panel technology and illuminator are still unselected.
 - D-pad, **one large action button**, **three function buttons**, dedicated physical power switch, and physical wheel/slider volume control (exact control type TBD).
 - USB-C **on bottom**, no 3.5 mm audio jack; integrated speaker. **BLE is required for phone connection, settings and synchronization. All audio is through the built-in speaker; Bluetooth headphones are not supported or required.**
 - Target **20–30 hours** runtime under a precisely defined test profile; rechargeable battery.
