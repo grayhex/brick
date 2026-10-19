@@ -1,0 +1,87 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # Commit of grayhex/ApolloBrickGames the conformance fixtures were recorded from (docs/CONFORMANCE.md).
+  APOLLO_REF: abd7c3426f28222b54db2fe280597d7578e7191c
+
+jobs:
+  host:
+    name: host (${{ matrix.cc }}, ${{ matrix.build_type }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build cmake
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cc == 'gcc' && 'g++' || 'clang++' }}
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  sanitize:
+    name: ASan + UBSan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build cmake
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBRICK_SANITIZE=ON
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+
+  cortex-m4:
+    name: Cortex-M4F cross build (portability smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build cmake gcc-arm-none-eabi libnewlib-arm-none-eabi
+      - run: >
+          cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
+          -DCMAKE_BUILD_TYPE=Release -DBRICK_BUILD_TESTS=OFF
+      - run: cmake --build build-m4
+      - name: Size of the core
+        run: cmake --build build-m4 --target brickcore_size
+      - name: The core must not need a heap or stdio
+        run: |
+          undefined=$(arm-none-eabi-nm -u build-m4/firmware/libbrickcore.a | awk '$1=="U"{print $2}' | grep -v '^bk' | sort -u)
+          echo "$undefined"
+          if echo "$undefined" | grep -Eq '^(malloc|calloc|realloc|free|printf|snprintf|sprintf|puts|fopen)$'; then
+            echo "forbidden libc dependency" >&2; exit 1
+          fi
+
+  fixtures:
+    name: conformance fixtures are reproducible
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: grayhex/ApolloBrickGames
+          ref: ${{ env.APOLLO_REF }}
+          path: ApolloBrickGames
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The fixture names the same reference commit
+        run: grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/tetris/tetris.conformance.json
+      - name: Regenerate and compare
+        working-directory: tools/conformance
+        run: |
+          npm ci --no-audit --no-fund
+          APOLLO_BRICK_GAMES="$GITHUB_WORKSPACE/ApolloBrickGames" npm run export:tetris -- --out /tmp/tetris.conformance.json
+          cmp /tmp/tetris.conformance.json ../../tests/fixtures/tetris/tetris.conformance.json

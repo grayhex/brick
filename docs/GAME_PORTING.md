@@ -61,3 +61,9 @@ Tetris, Tank, Snake, Racing, Frogger, Arkanoid, Space Invaders, Pentix, Construc
 - Produce an audited, pinned upstream source commit SHA for future reproducible extraction.
 - Write one C/C++ golden conformance port (Tetris first) with host CI.
 - Evaluate memory/flash requirements after real code and icon/font assets are defined.
+
+## 7. Статус (2026-10-19)
+
+* **Сделано:** Tetris (базовый вариант 01) портирован на C ([GAME_TETRIS.md](GAME_TETRIS.md)); закреплён коммит эталона `abd7c3426f28222b54db2fe280597d7578e7191c`; host CI и побитовая сверка на каждом такте ([CONFORMANCE.md](CONFORMANCE.md)); эскиз интерфейса из §3 стал конкретным ([FIRMWARE_ARCHITECTURE.md §4](FIRMWARE_ARCHITECTURE.md)).
+* **Не сделано:** остальные 50 вариантов Tetris (по решению владельца отложены), Pentix, Tank, Snake и остальные кандидаты §5; оценка Flash/RAM по реальным ассетам остальных игр; запуск сверки на целевом процессоре.
+* **Первые задачи §6:** п. 3 выполнен для Tetris; п. 1–2 (точные идентификаторы Snake/Pong, закреплённый SHA) — SHA закреплён, идентификаторы Snake/Pong не исследованы; п. 4 — измерено только для ядра и Tetris (≈ 22 КБ flash, состояние Tetris 552 Б), компиляция, не железо.

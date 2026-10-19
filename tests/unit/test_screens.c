@@ -1,0 +1,196 @@
+/*
+ * Golden screens: the logical 1-bit frame of every console screen, one character per dot ('#' ink, '.' light).
+ * The files in tests/golden are reviewable pictures of the UI and fail the build when the picture changes.
+ *   BK_UPDATE_GOLDEN=1   rewrite the golden files (review the diff!)
+ *   BK_DUMP_DIR=dir      additionally write PBM files (tools/frames/pbm_to_png.py turns them into PNG)
+ */
+#include <stdlib.h>
+#include <string.h>
+
+#include "bk_test.h"
+#include "brick/console.h"
+#include "brick/games/tetris.h"
+#include "fake_hal.h"
+#include "frame_dump.h"
+#include "mini_json.h"
+#include "stub_game.h"
+
+static const char *golden_dir;
+
+static fake_hal_t hal;
+static bk_console_t con;
+static char ascii[BK_FRAME_MAX_W * BK_FRAME_MAX_H * 2];
+
+static void check_golden(const char *name)
+{
+    const bk_frame_t *f = bk_console_render(&con);
+    bk_frame_to_ascii(f, ascii, sizeof ascii);
+
+    char path[512];
+    snprintf(path, sizeof path, "%s/%s.txt", golden_dir, name);
+    if (getenv("BK_DUMP_DIR") != NULL) {
+        char pbm[512];
+        snprintf(pbm, sizeof pbm, "%s/%s.pbm", getenv("BK_DUMP_DIR"), name);
+        bk_frame_write_pbm(f, pbm);
+    }
+    if (getenv("BK_UPDATE_GOLDEN") != NULL) {
+        FILE *fp = fopen(path, "wb");
+        CHECK(fp != NULL);
+        if (fp != NULL) {
+            fputs(ascii, fp);
+            fclose(fp);
+        }
+        return;
+    }
+    char *want = jv_read_file(path);
+    if (want == NULL) {
+        fprintf(stderr, "FAIL [%s] missing golden file %s (run with BK_UPDATE_GOLDEN=1)\n", name, path);
+        bk_test_failures++;
+        return;
+    }
+    bool same = strcmp(want, ascii) == 0;
+    if (!same) {
+        fprintf(stderr, "FAIL [%s] frame differs from %s\n", name, path);
+        bk_test_failures++;
+        /* first differing dot, to make the report actionable */
+        size_t i = 0;
+        while (want[i] != '\0' && want[i] == ascii[i]) {
+            i++;
+        }
+        fprintf(stderr, "  first difference at byte %zu (row %zu, column %zu)\n", i, i / (f->width + 1u),
+                i % (f->width + 1u));
+    }
+    bk_test_checks++;
+    free(want);
+}
+
+static void boot(const bk_catalog_entry_t *cat, size_t n)
+{
+    CHECK(bk_console_init(&con, cat, n, &hal.hal, 8));
+}
+
+static void run(unsigned ticks, bk_buttons_t held)
+{
+    for (unsigned i = 0; i < ticks; i++) {
+        bk_console_step(&con, held);
+    }
+}
+
+static void tap(bk_buttons_t b)
+{
+    bk_console_step(&con, b);
+    bk_console_step(&con, 0);
+}
+
+static const bk_catalog_entry_t CAT_TETRIS[] = {{&bk_tetris_def, "1"}};
+static const bk_catalog_entry_t CAT_MULTI[] = {{&stub_def_multi, "12"}, {&stub_def_single, "A"}};
+
+static void seed_profile(uint16_t uid, uint16_t mode, uint32_t score, uint8_t speed, uint8_t level)
+{
+    bk_profile_t p;
+    bk_profile_defaults(&p);
+    bk_profile_set_record(&p, uid, mode, score);
+    p.settings.last_speed = speed;
+    p.settings.last_level = level;
+    bk_save_store(&hal.hal.storage, &p);
+}
+
+static void test_splash_and_home(void)
+{
+    fake_hal_init(&hal);
+    seed_profile(BK_TETRIS_UID, 0, 12345, 3, 1);
+    boot(CAT_TETRIS, 1);
+    run(1, 0);
+    check_golden("splash");
+    run(BK_SPLASH_TICKS, 0);
+    CHECK_EQ(con.screen, BK_SCREEN_HOME);
+    check_golden("home_tetris");
+}
+
+static void test_home_two_digit_glyph_and_mode_focus(void)
+{
+    fake_hal_init(&hal);
+    boot(CAT_MULTI, 2);
+    run(BK_SPLASH_TICKS, 0);
+    tap(BK_BTN_FN2); /* LEVEL */
+    tap(BK_BTN_FN2); /* MODE: the mode number blinks */
+    tap(BK_BTN_UP);
+    tap(BK_BTN_UP); /* mode 3 */
+    run(30, 0);     /* back into the lit blink phase: 2 * BK_BLINK_HALF_TICKS later */
+    check_golden("home_multi_mode_focus");
+}
+
+static void play_tetris_to(unsigned ticks)
+{
+    for (unsigned i = 0; i < ticks; i++) {
+        bk_buttons_t b = 0;
+        unsigned phase = i % 90;
+        if (phase < 8) {
+            b = BK_BTN_LEFT;
+        } else if (phase >= 20 && phase < 22) {
+            b = BK_BTN_ACTION;
+        } else if (phase >= 30 && phase < 70) {
+            b = BK_BTN_DOWN;
+        }
+        bk_console_step(&con, b);
+    }
+}
+
+static void test_game_screens(void)
+{
+    fake_hal_init(&hal);
+    seed_profile(BK_TETRIS_UID, 0, 12345, 3, 4);
+    boot(CAT_TETRIS, 1);
+    run(BK_SPLASH_TICKS, 0);
+    tap(BK_BTN_ACTION);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    play_tetris_to(600);
+    CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+    run(1, 0);
+    check_golden("game_tetris");
+    bk_console_step(&con, BK_BTN_FN1);
+    run(1, 0);
+    check_golden("game_tetris_paused");
+    tap(BK_BTN_FN1);
+
+    unsigned guard = 0;
+    while (con.game->phase != BK_PHASE_OVER && guard++ < 40000) {
+        bk_console_step(&con, (guard % 25) < 15 ? BK_BTN_DOWN : 0);
+    }
+    CHECK_EQ(con.game->phase, BK_PHASE_OVER);
+    check_golden("game_tetris_over");
+}
+
+static void test_text_screens(void)
+{
+    fake_hal_init(&hal);
+    boot(CAT_TETRIS, 1);
+    run(BK_SPLASH_TICKS, 0);
+    tap(BK_BTN_FN3);
+    tap(BK_BTN_DOWN);
+    CHECK_EQ(con.screen, BK_SCREEN_SETTINGS);
+    check_golden("settings");
+    for (int i = 0; i < 2; i++) {
+        tap(BK_BTN_DOWN);
+    }
+    tap(BK_BTN_ACTION);
+    run(1, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_FN2);
+    CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
+    check_golden("buttons");
+    run(1, BK_BTN_FN1 | BK_BTN_FN2 | BK_BTN_FN3);
+    run(1, 0);
+    tap(BK_BTN_DOWN);
+    tap(BK_BTN_ACTION);
+    CHECK_EQ(con.screen, BK_SCREEN_ABOUT);
+    check_golden("about");
+}
+
+int main(int argc, char **argv)
+{
+    golden_dir = argc > 1 ? argv[1] : "tests/golden";
+    TEST_RUN(test_splash_and_home);
+    TEST_RUN(test_home_two_digit_glyph_and_mode_focus);
+    TEST_RUN(test_game_screens);
+    TEST_RUN(test_text_screens);
+    return bk_test_finish("screens");
+}

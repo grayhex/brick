@@ -1,0 +1,129 @@
+/*
+ * Platform-neutral game interface (docs/GAME_PORTING.md section 3, now concrete).
+ *
+ * A game is a plain-old-data struct whose first member is bk_game_t. All state lives inside it:
+ * no heap, no globals. That gives us, for free:
+ *   - static allocation on the MCU (bk_game_def_t.state_size / state_align),
+ *   - deterministic replay (same seed + same inputs => same states),
+ *   - snapshot/restore by copying the struct (same firmware build only, see save.h).
+ *
+ * bk_game_t reproduces the phase machine of the reference BrickBase (ready -> playing <-> paused -> over),
+ * score/hi-score, speed/level, cutscenes (no-input animations) and the game-over fill animation.
+ * A concrete game provides a bk_game_vtable_t.
+ */
+#ifndef BRICK_GAME_H
+#define BRICK_GAME_H
+
+#include "brick/defs.h"
+#include "brick/event.h"
+#include "brick/input.h"
+#include "brick/rng.h"
+
+BK_EXTERN_C_BEGIN
+
+typedef enum { BK_PHASE_READY = 0, BK_PHASE_PLAYING = 1, BK_PHASE_PAUSED = 2, BK_PHASE_OVER = 3 } bk_phase_t;
+
+typedef struct bk_game bk_game_t;
+
+typedef struct {
+    uint32_t seed;     /* RNG seed */
+    uint32_t hi_score; /* best score of this game+mode so far */
+    uint8_t speed;     /* start speed 1..10 */
+    uint8_t level;     /* start level 1..10 */
+    uint16_t mode;     /* variant, 0-based; out of range wraps modulo the number of modes */
+} bk_game_options_t;
+
+typedef struct {
+    void (*reset)(bk_game_t *g);                        /* start a fresh party; score, speed and level are already reset */
+    void (*update)(bk_game_t *g, const bk_input_t *in); /* one tick, never called during a cutscene or game over */
+    void (*draw)(const bk_game_t *g, uint8_t cells[BK_CELLS]); /* BK_CELL_* values, row 0 = top */
+    /* Fill the NEXT preview; return false when the game has none. May be NULL. */
+    bool (*draw_preview)(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS]);
+    void (*on_start)(bk_game_t *g); /* phase just became PLAYING. May be NULL. */
+    /* Cutscene hooks (kind is chosen by the game). frame() paints the overlay (bk_game_overlay()); done() runs on the last
+     * tick. */
+    void (*scene_frame)(bk_game_t *g, uint8_t kind, uint16_t elapsed);
+    void (*scene_done)(bk_game_t *g, uint8_t kind);
+} bk_game_vtable_t;
+
+struct bk_game {
+    const bk_game_vtable_t *vt;
+
+    /* ---- observable state (read-only for the shell) ---- */
+    bk_phase_t phase;
+    uint32_t score;
+    uint32_t hi_score;
+    uint8_t speed;     /* current speed 1..10 */
+    uint8_t level;     /* current level 1..10 */
+    int8_t lives;      /* -1: the game has no lives */
+    uint32_t tick;     /* ticks played in PLAYING since the party began */
+    uint8_t over_fill; /* game-over animation: rows already flooded from the bottom, 0..BK_ROWS */
+
+    /* ---- base-class internals ---- */
+    bk_rng_t rng;
+    uint16_t mode; /* normalised variant */
+    uint16_t mode_count;
+    uint8_t start_speed;
+    uint8_t start_level;
+    uint8_t overlay[BK_CELLS]; /* cutscene frame, valid while overlay_on */
+    bool overlay_on;
+    bool dying; /* game-over animation running */
+    uint16_t over_timer;
+    bool scene_on;
+    uint8_t scene_kind;
+    uint16_t scene_total;
+    uint16_t scene_elapsed;
+    bk_event_queue_t *out; /* where emit() writes during a call; NULL outside of one */
+};
+
+/* ---- construction (called by a game's create function) ---- */
+void bk_game_base_init(bk_game_t *g, const bk_game_vtable_t *vt, const bk_game_options_t *opt, uint16_t mode_count);
+
+/* ---- shell API ---- */
+void bk_game_start(bk_game_t *g, bk_event_queue_t *q); /* READY or OVER -> PLAYING */
+void bk_game_pause(bk_game_t *g, bk_event_queue_t *q);
+void bk_game_resume(bk_game_t *g, bk_event_queue_t *q);
+void bk_game_restart(bk_game_t *g);                                         /* fresh party, back to READY */
+void bk_game_step(bk_game_t *g, const bk_input_t *in, bk_event_queue_t *q); /* one tick; no-op unless PLAYING */
+void bk_game_cells(const bk_game_t *g, uint8_t cells[BK_CELLS]);            /* overlay if any, else draw() */
+bool bk_game_preview(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS]);  /* false: no preview */
+
+/* ---- helpers for game implementations ---- */
+void bk_game_emit(bk_game_t *g, bk_event_type_t type, uint8_t a, uint16_t b, uint32_t c);
+void bk_game_add_score(bk_game_t *g, uint32_t points);
+void bk_game_set_score(bk_game_t *g, uint32_t value);
+void bk_game_set_speed(bk_game_t *g, int value);                         /* wraps 0 -> 10 and 11 -> 1 like the toy */
+void bk_game_game_over(bk_game_t *g);                                    /* start the flood animation, then PHASE_OVER */
+void bk_game_cutscene(bk_game_t *g, uint8_t kind, uint32_t total_ticks); /* no-input animation */
+bool bk_game_busy(const bk_game_t *g);                                   /* cutscene or game-over animation running */
+uint8_t *bk_game_overlay(bk_game_t *g);                                  /* writable overlay; marks it as displayed */
+
+/* Ticks of the flood animation per row (reference: 127 ms at 60 Hz, 7.62 ticks) and total length. */
+#define BK_GAME_OVER_ROW_MS     127
+#define BK_GAME_OVER_HOLD_TICKS 30
+
+/* ---- catalog entry ---- */
+
+#define BK_GAME_USES_FIRE (1u << 0) /* cannot be played without a separate FIRE key (reference: usesFire) */
+
+typedef struct {
+    uint16_t uid;      /* stable numeric identity used in saves; never reuse or renumber */
+    const char *id;    /* "tetris" (matches the reference registry id) */
+    const char *title; /* upper-case ASCII for the built-in font */
+    uint16_t mode_count;
+    uint8_t flags;
+    size_t state_size; /* sizeof the concrete game struct */
+    size_t state_align;
+    /* Construct a game in caller-provided storage (size >= state_size, aligned to state_align). */
+    bk_game_t *(*create)(void *storage, const bk_game_options_t *opt);
+    /* Short ASCII caption of a variant, for the menu. May be NULL. */
+    void (*mode_label)(uint16_t mode, char *buf, size_t cap);
+    /* Menu thumbnail: frame `frame` (0 .. thumb_frames-1) as 10x5 cells, '#'-rows already expanded to 0/1. */
+    uint8_t thumb_frames;
+    uint8_t thumb_frame_ticks;
+    void (*thumbnail)(uint8_t frame, uint8_t cells[BK_COLS * 5]);
+} bk_game_def_t;
+
+BK_EXTERN_C_END
+
+#endif /* BRICK_GAME_H */

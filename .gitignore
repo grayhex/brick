@@ -1,0 +1,7 @@
+build*/
+tools/conformance/node_modules/
+tools/conformance/dist/
+*.o
+*.a
+.cache/
+compile_commands.json

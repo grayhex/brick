@@ -40,3 +40,11 @@ Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `
 5. Use issues/PRs for changes, with screenshots, measurements or test logs as appropriate.
 
 Do not invent supplier stock, prices, battery life or test outcomes.
+
+## Software prototype (firmware/)
+- Build and test: `cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build --output-on-failure`; also run the ASan/UBSan build (`-DBRICK_SANITIZE=ON`) and the Cortex-M4 cross build (`cmake/arm-none-eabi.cmake`) before proposing changes to `firmware/`.
+- The core must stay platform-neutral: no `malloc`, no global mutable state, no vendor headers, no knowledge of a display, panel resolution or board. Hardware access only through `bk_hal_t`.
+- Do not change gameplay behaviour of a ported game without regenerating and reviewing the conformance fixtures (`docs/CONFORMANCE.md`); `-ffp-contract=off` is required for bit-exact timing.
+- Golden screens (`tests/golden`) change only on purpose: update with `BK_UPDATE_GOLDEN=1`, review the diff, refresh `docs/img`.
+- Every new game: pinned reference SHA, fidelity label (verified vs approximation), licence check, conformance traces, ADR; see `docs/FIRMWARE_ARCHITECTURE.md` section 11.
+- Keep the logical frame strictly 1 bit, positive polarity, with the status panel to the right (ADR-003/015/016).
