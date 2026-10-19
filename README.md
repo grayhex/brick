@@ -22,6 +22,7 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 
 - [Product requirements](docs/PRODUCT_REQUIREMENTS.md) — authoritative confirmed requirements vs open choices.
 - [Hardware research and decision gates](docs/HARDWARE_RESEARCH.md) — LCD, SoC, battery, BLE, sound, production, provisional BOM.
+- [Display shortlist and physical pixel fit](docs/DISPLAY_CANDIDATES.md) — concrete Sharp MIP displays, Azumo frontlight, 10×20+right-side HUD fit, sourcing risks.
 - [Game portability plan](docs/GAME_PORTING.md) — factual source mapping and safe migration.
 - [Decision log](docs/DECISIONS.md) — status and rationale.
 - [Agent instructions](AGENTS.md) — constraints and first execution steps.
