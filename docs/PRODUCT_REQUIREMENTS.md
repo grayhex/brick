@@ -1,4 +1,4 @@
-# Brick — Product Requirements Document (PRD), revision 0.4
+# Brick — Product Requirements Document (PRD), revision 0.5
 
 **Date:** 2026-10-19  
 **Stage:** concept and engineering feasibility study  
@@ -15,7 +15,8 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 
 | ID | Requirement | Status | Notes |
 | --- | --- | --- | --- |
-| MECH-01 | Tall, familiar classic Brick Game silhouette, relatively large rather than mini | CONFIRMED | Exact size not approved |
+| MECH-01 | Tall, familiar classic Brick Game silhouette, relatively large rather than mini | CONFIRMED | Owner chose **preliminary outer footprint 175×80 mm**; exact CAD tolerances and final size pending physical mockup |
+| MECH-02 | Preliminary enclosure thickness **~20–22 mm**, ergonomic acceptance pending | PROPOSED | Azumo frontlight protrusions and LiPo packaging to be included; see `MECHANICAL_CONCEPT.md` |
 | DISP-01 | **Strict black/white** gameplay and UI | CONFIRMED | No color palette required |
 | DISP-02 | Subtle **white lighting only for darkness**, user switchable | CONFIRMED | Daylight legibility without lighting is intended; LCD technology must be validated |
 | DISP-03 | **Positive monochrome LCD**: dark/black active pixels on a light neutral-gray / near-white background | CONFIRMED | User explicitly chose traditional light LCD with black cells, not reverse/negative display; optical white is a visual reference, not a specific material chromaticity |
@@ -47,7 +48,7 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 - Finish: premium, smooth mechanical fit; material, transparent shell/black PCB aesthetic, coating and window details OPEN.
 - Product inspiration includes Analogue Pocket build quality while preserving Brick Game outer shape.
 
-**Dimension proposal for ergonomics only:** investigate 145–165 mm height and fit of battery/cell/display; not approved.
+**Current owner's preliminary choice:** approx. **175×80 mm**, see [MECHANICAL_CONCEPT.md](MECHANICAL_CONCEPT.md) and [front/rear/side dimensional SVG](../design/brick-envelope-r01.svg). Thickness **~20–22 mm** is an engineering proposal, not an owner-approved manufacturing dimension.
 
 ## 4. Screen and UI requirements
 
@@ -61,6 +62,7 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 - In case of larger native display resolution, integer scaling, black margins and separate status HUD are acceptable, subject to review.
 - Main candidates: reflective Memory LCD with custom frontlight vs monochrome transflective/FSTN with backlight. **E-ink is not default** due to refresh/ghosting challenges; **OLED is emissive and cannot behave as passive LCD**.
 - Quantify contrast, outdoor readability, scan/update latency, unit price/MOQ and the optical impact of custom illumination.
+- **CRITICAL OPEN ITEM:** Sharp LS032B7DD02 datasheet specifies `fSCS` 1–10 Hz. Its implications for gameplay refresh rate must be tested with representative 10/15/20/30 FPS motion before approval. See [DISPLAY_CANDIDATES.md](DISPLAY_CANDIDATES.md).
 
 ## 5. Controls and game compatibility
 
