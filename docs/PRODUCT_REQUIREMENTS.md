@@ -1,4 +1,4 @@
-# Brick — Product Requirements Document (PRD), revision 0.1
+# Brick — Product Requirements Document (PRD), revision 0.2
 
 **Date:** 2026-10-19  
 **Stage:** concept and engineering feasibility study  
@@ -26,8 +26,8 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 | IO-01 | USB-C on **bottom** edge | CONFIRMED | Data + charging, update/recovery route |
 | IO-02 | Do **not** include 3.5 mm analog headphone jack | CONFIRMED | Speaker integrated |
 | AUDIO-01 | Built-in high quality sound / loudspeaker | CONFIRMED | Acoustic chamber/volume calibration required |
-| BT-01 | Bluetooth support | CONFIRMED | Phone BLE configuration/sync selected previously |
-| BT-02 | Standard Bluetooth wireless **headphone audio** | OPEN | Mention of 'Bluetooth is enough' is ambiguous; BLE alone does not equal headphone audio |
+| BT-01 | **Bluetooth Low Energy (BLE)** to connect to phone, configure settings, synchronize data | CONFIRMED | GATT services, security and protocol design OPEN |
+| BT-02 | No Bluetooth headphone audio (neither A2DP nor LE Audio); speaker is the **only audio output** | CONFIRMED | No Bluetooth audio transmitter or codec required |
 | PWR-01 | USB-C rechargeable battery | CONFIRMED | Chemistry/capacity/vendor OPEN |
 | PWR-02 | **20–30 hours gameplay** | TARGET | Define test profile, validate measured whole-device runtime |
 | GAMES-01 | Approx. 10 classic games at launch | CONFIRMED | Exact selection OPEN |
@@ -71,7 +71,7 @@ Check reference game quirks before fixing a matrix: some library titles historic
 - User-friendly USB-C update and recoverable boot path; optional BLE firmware update only after protocol/security review.
 - Versioned saves, firmware signatures/checksums, reliable power-failure behavior and regression test matrix.
 - Persist records and sound/lighting settings.
-- Phone companion optional; requirements for configuration screens/protocol still OPEN.
+- Phone connection via BLE for settings and synchronization is required; app UI/services/security specifics OPEN. USB DFU remains baseline; BLE firmware update optional.
 
 ## 7. Target quality acceptance tests (preliminary)
 
@@ -87,7 +87,7 @@ These are TEST PROPOSALS, not demonstrated results:
 
 ## 8. Unresolved product questions
 
-1. Does 'Bluetooth and speaker are enough' require output to **ordinary Bluetooth headphones**, or only BLE configuration/sync plus built-in speaker?
+1. What features must the BLE phone companion have at launch beyond settings/sync (e.g. game statistics, saves, firmware update)?
 2. Which exact classic **10 launch games**, and which three labelled function-button roles?
 3. Preferred enclosure material/finish: opaque matte, smoked transparent (black PCB visible), or both?
 4. Is a microSD slot still desired on the side, or is internal Flash enough for games and updates?
