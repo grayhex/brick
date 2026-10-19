@@ -15,6 +15,8 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 | E-ink/e-paper | Truly unlit monochrome experience | Ghosting, refresh latency, animations; not primary candidate |
 | Small monochrome emissive OLED | Simple contrast and rendering | Not visible as intended with illumination off; does not meet passive LCD feel |
 
+**New sourced shortlist:** [DISPLAY_CANDIDATES.md](DISPLAY_CANDIDATES.md) compares Sharp LS032B7DD02 3.16-inch (provisional favorite), LS044Q7DH01 4.4-inch and LS027B7DH01 2.7-inch, including full 10×20 + right status pixel-fit and Azumo frontlight assembly procurement caveat. **No display has been approved.**
+
 **Decision gate:** procure 2–3 physical sample panels, test positive-polarity contrast (black pixel vs light unlit background), outdoor/night legibility, update rate (game dirty rectangles), white lighting uniformity, thickness, integration complexity, availability and volume pricing; then freeze display dimensions/interface **before** MCU/PCB. Reflective Memory LCD typically needs a separate FRONTLIGHT optical solution; transflective LCD can use a compatible white BACKLIGHT. Do not treat either as automatically integrated.
 
 **Display geometry confirmed:** classical 10 columns × 20 rows of game cells plus a **right-side information strip** for score/level/mode/other status. This is not a 10×20 physical pixel panel; whole active area must accommodate the side information zone while preserving game-cell aspect ratio. Compare candidate LCD active-area shape and effective usable pixels accordingly; exact geometry and sidebar width are still open.
