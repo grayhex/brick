@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="980" viewBox="0 0 1760 980"><title>Brick R0.2 mechanical parts concept exploded view</title>
+<rect x="0" y="0" width="1760" height="980" rx="0" fill="#f5f5f1" stroke="none" stroke-width="1" />
+<text x="76" y="72" font-family="Inter,Arial,sans-serif" font-size="33" font-weight="bold" fill="#162b36" text-anchor="start">BRICK  /  EXPLODED ARCHITECTURE</text>
+<text x="78" y="104" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="normal" fill="#78848a" text-anchor="start">Concept assembly order only — not mechanical proof or production parts</text>
+<line x1="70" y1="123" x2="1695" y2="123" stroke="#c9cfcf" stroke-width="1.5" />
+<text x="172" y="173" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="bold" fill="#213944" text-anchor="middle">FRONT SHELL</text>
+<text x="172" y="194" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#687b86" text-anchor="middle">one shared geometry</text>
+<rect x="70" y="226" width="204" height="446.24999999999994" rx="24" fill="#2b343a" stroke="#19262e" stroke-width="2" />
+<rect x="103.15" y="248.95" width="137.7" height="209.1" rx="6" fill="#e4e8e4" stroke="#8796a1" stroke-width="1" />
+<circle cx="133.75" cy="483.54999999999995" r="8.2875" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="172" cy="483.54999999999995" r="8.2875" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="210.25" cy="483.54999999999995" r="8.2875" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="131.2" cy="529.45" r="11.22" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="101.875" cy="558.775" r="11.22" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="160.52499999999998" cy="558.775" r="11.22" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="131.2" cy="588.0999999999999" r="11.22" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="220.45" cy="558.775" r="28.049999999999997" fill="#f5f5f1" stroke="#6c7a7e" stroke-width="1"/>
+<circle cx="146.5" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="152.875" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="159.25" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="165.625" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="172" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="178.375" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="184.75" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="191.125" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="197.5" cy="631.45" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="146.5" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="152.875" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="159.25" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="165.625" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="172" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="178.375" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="184.75" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="191.125" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="197.5" cy="637.825" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="146.5" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="152.875" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="159.25" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="165.625" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="172" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="178.375" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="184.75" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="191.125" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="197.5" cy="644.2" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="146.5" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="152.875" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="159.25" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="165.625" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="172" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="178.375" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="184.75" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="191.125" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<circle cx="197.5" cy="650.575" r="2.295" fill="#151f24" stroke="#5a6c73" stroke-width="0.4"/>
+<line x1="284" y1="435.1" x2="328" y2="435.1" stroke="#a9b4b7" stroke-width="2" stroke-dasharray="6 5"/>
+<polygon points="328,435.1 316,428.1 316,442.1" fill="#a9b4b7"/>
+<text x="447" y="173" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="bold" fill="#213944" text-anchor="middle">SCREEN BEZEL</text>
+<text x="447" y="194" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#687b86" text-anchor="middle">opaque display mask</text>
+<rect x="378.15" y="248.95" width="137.7" height="209.1" rx="10" fill="#171e24" stroke="#95a3a9" stroke-width="2" />
+<rect x="387.075" y="256.6" width="119.901" height="193.79999999999998" rx="3" fill="#f6f6f1" stroke="#6a7c7e" stroke-width="1" />
+<rect x="394.725" y="277" width="104.55" height="155.54999999999998" rx="2" fill="#c5d2cd" stroke="#8ba198" stroke-width="0.4" fill-opacity='.3'/>
+<line x1="559" y1="435.1" x2="603" y2="435.1" stroke="#a9b4b7" stroke-width="2" stroke-dasharray="6 5"/>
+<polygon points="603,435.1 591,428.1 591,442.1" fill="#a9b4b7"/>
+<text x="722" y="173" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="bold" fill="#213944" text-anchor="middle">DISPLAY + LIGHT</text>
+<text x="722" y="194" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#687b86" text-anchor="middle">Sharp/Azumo candidate</text>
+<rect x="662.0495" y="256.6" width="119.901" height="193.79999999999998" rx="4" fill="#9fb5ab" stroke="#48645a" stroke-width="2" />
+<rect x="667.5932" y="266.8" width="108.81359999999998" height="173.5836" rx="2" fill="#d5dfd3" stroke="#759084" stroke-width="1" />
+<rect x="664.88" y="259.15" width="114.74999999999999" height="186.14999999999998" rx="3" fill="none" stroke="#f2de78" stroke-width="2" />
+<rect x="714.35" y="450.4" width="17.849999999999998" height="22.95" rx="2" fill="#d3a952" stroke="#82652d" stroke-width="1" />
+<line x1="834" y1="435.1" x2="878" y2="435.1" stroke="#a9b4b7" stroke-width="2" stroke-dasharray="6 5"/>
+<polygon points="878,435.1 866,428.1 866,442.1" fill="#a9b4b7"/>
+<text x="997" y="173" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="bold" fill="#213944" text-anchor="middle">BUTTON SET</text>
+<text x="997" y="194" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#687b86" text-anchor="middle">4+3+1 separate keys</text>
+<circle cx="958.75" cy="483.54999999999995" r="8.2875" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="997" cy="483.54999999999995" r="8.2875" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="1035.25" cy="483.54999999999995" r="8.2875" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="956.2" cy="529.45" r="11.22" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="926.875" cy="558.775" r="11.22" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="985.525" cy="558.775" r="11.22" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="956.2" cy="588.0999999999999" r="11.22" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="1045.45" cy="558.775" r="28.049999999999997" fill="#ffd619" stroke="#8c640a" stroke-width="2"/>
+<circle cx="958.75" cy="498.84999999999997" r="11.3475" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="997" cy="498.84999999999997" r="11.3475" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="1035.25" cy="498.84999999999997" r="11.3475" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="956.2" cy="544.75" r="14.280000000000001" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="926.875" cy="574.075" r="14.280000000000001" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="985.525" cy="574.075" r="14.280000000000001" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="956.2" cy="603.4" r="14.280000000000001" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<circle cx="1045.45" cy="574.075" r="31.109999999999996" fill="none" stroke="#9c9c8a" stroke-width="0.8"/>
+<line x1="1109" y1="435.1" x2="1153" y2="435.1" stroke="#a9b4b7" stroke-width="2" stroke-dasharray="6 5"/>
+<polygon points="1153,435.1 1141,428.1 1141,442.1" fill="#a9b4b7"/>
+<text x="1272" y="173" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="bold" fill="#213944" text-anchor="middle">PCB PLACEHOLDER</text>
+<text x="1272" y="194" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#687b86" text-anchor="middle">NOT routed electronics</text>
+<rect x="1190.4" y="243.85" width="163.2" height="402.9" rx="15" fill="#1a2929" stroke="#87a6a0" stroke-width="2" />
+<rect x="1208.25" y="261.7" width="7.6499999999999995" height="10.2" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1236.3" y="261.7" width="12.75" height="12.75" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1264.35" y="261.7" width="17.849999999999998" height="15.299999999999999" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1292.4" y="261.7" width="7.6499999999999995" height="17.849999999999998" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1320.45" y="261.7" width="12.75" height="10.2" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1208.25" y="330.55" width="17.849999999999998" height="12.75" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1236.3" y="330.55" width="7.6499999999999995" height="15.299999999999999" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1264.35" y="330.55" width="12.75" height="17.849999999999998" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1292.4" y="330.55" width="17.849999999999998" height="10.2" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1320.45" y="330.55" width="7.6499999999999995" height="12.75" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1208.25" y="399.4" width="12.75" height="15.299999999999999" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1236.3" y="399.4" width="17.849999999999998" height="17.849999999999998" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1264.35" y="399.4" width="7.6499999999999995" height="10.2" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1292.4" y="399.4" width="12.75" height="12.75" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1320.45" y="399.4" width="17.849999999999998" height="15.299999999999999" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1208.25" y="468.25" width="7.6499999999999995" height="17.849999999999998" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1236.3" y="468.25" width="12.75" height="10.2" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1264.35" y="468.25" width="17.849999999999998" height="12.75" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1292.4" y="468.25" width="7.6499999999999995" height="15.299999999999999" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1320.45" y="468.25" width="12.75" height="17.849999999999998" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1208.25" y="537.0999999999999" width="17.849999999999998" height="10.2" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1236.3" y="537.0999999999999" width="7.6499999999999995" height="12.75" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1264.35" y="537.0999999999999" width="12.75" height="15.299999999999999" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1292.4" y="537.0999999999999" width="17.849999999999998" height="17.849999999999998" rx="2" fill="#304746" stroke="#78908a" stroke-width="0.7" />
+<rect x="1243.95" y="639.0999999999999" width="56.099999999999994" height="12.75" rx="5" fill="#9caeb0" stroke="#23343a" stroke-width="1" />
+<text x="1272" y="682.45" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#405e68" text-anchor="middle">USB-C</text>
+<line x1="1384" y1="435.1" x2="1428" y2="435.1" stroke="#a9b4b7" stroke-width="2" stroke-dasharray="6 5"/>
+<polygon points="1428,435.1 1416,428.1 1416,442.1" fill="#a9b4b7"/>
+<text x="1547" y="173" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="bold" fill="#213944" text-anchor="middle">BACK + POWER</text>
+<text x="1547" y="194" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#687b86" text-anchor="middle">battery / speaker cavity</text>
+<rect x="1445" y="226" width="204" height="446.24999999999994" rx="24" fill="#3a444b" stroke="#19252b" stroke-width="2" />
+<rect x="1470.5" y="289.75" width="153" height="175.95" rx="7" fill="#7a8790" stroke="#b1bec0" stroke-width="1.2" stroke-dasharray='4,4' fill-opacity='.34'/>
+<text x="1547" y="356.04999999999995" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="bold" fill="#e9e8de" text-anchor="middle">BATTERY</text>
+<text x="1547" y="381.54999999999995" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="normal" fill="#e9e8de" text-anchor="middle">FIT ONLY</text>
+<circle cx="1547" cy="593.2" r="25.5" fill="#101b21" stroke="#9ba8b0" stroke-width="2"/>
+<circle cx="1565.615" cy="593.2" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1563.1210628914473" cy="602.5075" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1556.3075" cy="609.3210628914474" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1547" cy="611.815" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1537.6925" cy="609.3210628914474" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1530.8789371085527" cy="602.5075" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1528.385" cy="593.2" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1530.8789371085527" cy="583.8925" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1537.6924999999999" cy="577.0789371085527" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1547" cy="574.585" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1556.3075" cy="577.0789371085527" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1563.1210628914473" cy="583.8925" r="2.6774999999999998" fill="#8c9c9f" stroke="#8c9c9f" stroke-width="0.3"/>
+<circle cx="1465.4" cy="246.4" r="5.1" fill="#101a20" stroke="#a6b2b9" stroke-width="1"/>
+<circle cx="1628.6" cy="246.4" r="5.1" fill="#101a20" stroke="#a6b2b9" stroke-width="1"/>
+<circle cx="1465.4" cy="651.8499999999999" r="5.1" fill="#101a20" stroke="#a6b2b9" stroke-width="1"/>
+<circle cx="1628.6" cy="651.8499999999999" r="5.1" fill="#101a20" stroke="#a6b2b9" stroke-width="1"/>
+<line x1="72" y1="746" x2="1693" y2="746" stroke="#c9cfcf" stroke-width="1.5" />
+<text x="75" y="786" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="bold" fill="#213c46" text-anchor="start">MECHANICAL VALIDATION BEFORE PCB</text>
+<circle cx="83" cy="829" r="3" fill="#54676f" stroke="#54676f" stroke-width="0"/>
+<text x="104" y="835" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="normal" fill="#4b5f67" text-anchor="start">LCD module, bonded frontlight, FPC bend and button stacks require real supplier drawings</text>
+<circle cx="83" cy="856" r="3" fill="#54676f" stroke="#54676f" stroke-width="0"/>
+<text x="104" y="862" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="normal" fill="#4b5f67" text-anchor="start">PCB shown ONLY as volume placeholder; no routed tracks, radio keep-out or correct electronics implied</text>
+<circle cx="83" cy="883" r="3" fill="#54676f" stroke="#54676f" stroke-width="0"/>
+<text x="104" y="889" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="normal" fill="#4b5f67" text-anchor="start">Battery capacity is UNDECIDED; do not infer 4000 mAh or cell shape from the illustrative rectangle</text>
+<circle cx="83" cy="910" r="3" fill="#54676f" stroke="#54676f" stroke-width="0"/>
+<text x="104" y="916" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="normal" fill="#4b5f67" text-anchor="start">One speaker chamber ported to FRONT CENTER; USB-C is the sole opening on bottom edge</text>
+<circle cx="83" cy="937" r="3" fill="#54676f" stroke="#54676f" stroke-width="0"/>
+<text x="104" y="943" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="normal" fill="#4b5f67" text-anchor="start">Three finishes share one CAD source/part geometry; materials and molding shrinkage remain separate review items</text>
+</svg>
