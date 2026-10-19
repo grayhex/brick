@@ -1,6 +1,6 @@
 # Instructions for coding and engineering agents
 
-Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
+Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
 
 ## Source of truth
 - User-confirmed choices have status **CONFIRMED** in the PRD. Preserve them unless explicitly changed.
