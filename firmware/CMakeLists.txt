@@ -26,6 +26,13 @@ target_compile_options(brickcore PRIVATE
   # Bit-exact conformance with the reference needs IEEE double results without fused multiply-add.
   -ffp-contract=off)
 
+# Largest frame the buffer holds, in dots. The default fits the biggest panel candidate of docs/DISPLAY_CANDIDATES.md
+# (Sharp LS032B7DD02, 336 x 536 portrait) so the compositor can be fitted to it; it is a RAM reservation, not a panel
+# decision. Set both to your panel (or lower, e.g. 132 x 160) to save RAM.
+set(BRICK_FRAME_MAX_W 336 CACHE STRING "Largest logical frame width in dots")
+set(BRICK_FRAME_MAX_H 536 CACHE STRING "Largest logical frame height in dots")
+target_compile_definitions(brickcore PUBLIC BK_FRAME_MAX_W=${BRICK_FRAME_MAX_W} BK_FRAME_MAX_H=${BRICK_FRAME_MAX_H})
+
 # libm: fmod() in the gravity timer (ADR-024).
 target_link_libraries(brickcore PUBLIC m)
 

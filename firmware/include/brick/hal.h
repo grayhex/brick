@@ -27,9 +27,15 @@ typedef struct {
 
 typedef struct {
     void *ctx;
-    /* Show this frame. Called only when the picture changed, so a slow or power-hungry panel is not refreshed needlessly.
-     * The frame is positive polarity (ink = dark) and is only valid for the duration of the call. */
+    /* Show this frame. Called only when the picture changed AND the panel can take it (see max_fps), so a slow or
+     * power-hungry panel is not refreshed needlessly. The frame is positive polarity, 1 bit per dot, MSB first, and is
+     * only valid for the duration of the call. */
     void (*present)(void *ctx, const bk_frame_t *frame);
+    /* Highest rate at which the panel can show NEW pictures; 0 = no limit (every tick may present). The core never
+     * assumes a 60 Hz display (AGENTS.md: the Sharp LS032B7DD02 candidate quotes 1-10 Hz): when a picture changes
+     * faster than this, the intermediate pictures are dropped and the LATEST one is shown as soon as the interval has
+     * elapsed. The game simulation keeps running at BK_TICK_HZ regardless. */
+    uint8_t max_fps;
 } bk_display_port_t;
 
 typedef struct {

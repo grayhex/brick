@@ -76,7 +76,18 @@ static void cycle_light(bk_console_t *c, int delta)
 bool bk_console_init(bk_console_t *c, const bk_catalog_entry_t *catalog, size_t count, const bk_hal_t *hal,
                      unsigned cell_dots)
 {
-    if (catalog == NULL || count == 0 || count > BK_MAX_GAMES || hal == NULL) {
+    bk_layout_t layout;
+    if (!bk_layout_init(&layout, cell_dots)) {
+        return false;
+    }
+    return bk_console_init_layout(c, catalog, count, hal, &layout);
+}
+
+bool bk_console_init_layout(bk_console_t *c, const bk_catalog_entry_t *catalog, size_t count, const bk_hal_t *hal,
+                            const bk_layout_t *layout)
+{
+    if (catalog == NULL || count == 0 || count > BK_MAX_GAMES || hal == NULL || layout == NULL ||
+        layout->width > BK_FRAME_MAX_W || layout->height > BK_FRAME_MAX_H || layout->cell < BK_MIN_CELL_DOTS) {
         return false;
     }
     for (size_t i = 0; i < count; i++) {
@@ -87,9 +98,7 @@ bool bk_console_init(bk_console_t *c, const bk_catalog_entry_t *catalog, size_t 
         }
     }
     memset(c, 0, sizeof *c);
-    if (!bk_layout_init(&c->layout, cell_dots)) {
-        return false;
-    }
+    c->layout = *layout;
     c->catalog = catalog;
     c->catalog_count = count;
     c->hal = hal;
@@ -169,11 +178,11 @@ static void home_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
     bool left = bk_repeat_fire(&c->repeat[2], BK_KEY_LEFT, &in, BK_MENU_REPEAT_DELAY, BK_MENU_REPEAT_INTERVAL);
     bool right = bk_repeat_fire(&c->repeat[3], BK_KEY_RIGHT, &in, BK_MENU_REPEAT_DELAY, BK_MENU_REPEAT_INTERVAL);
 
-    if (pressed & (BK_BTN_ACTION | BK_BTN_FN1)) {
+    if (pressed & (BK_BTN_ACTION | BK_BTN_START)) {
         start_game(c);
         return;
     }
-    if (pressed & BK_BTN_FN3) {
+    if (pressed & BK_BTN_MODE) {
         c->cursor = 0;
         c->confirm_clear = false;
         emit(c, BK_EV_UI_CONFIRM);
@@ -188,7 +197,7 @@ static void home_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
         }
         emit(c, BK_EV_MOVE);
     }
-    if (pressed & BK_BTN_FN2) {
+    if (pressed & BK_BTN_SELECT) {
         do {
             c->focus = (uint8_t)((c->focus + 1u) % 3u);
         } while (c->focus == BK_MENU_MODE && current_def(c)->mode_count <= 1);
@@ -246,7 +255,7 @@ static void settings_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t he
     bool up = bk_repeat_fire(&c->repeat[0], BK_KEY_UP, &in, BK_MENU_REPEAT_DELAY, BK_MENU_REPEAT_INTERVAL);
     bool down = bk_repeat_fire(&c->repeat[1], BK_KEY_DOWN, &in, BK_MENU_REPEAT_DELAY, BK_MENU_REPEAT_INTERVAL);
 
-    if (pressed & BK_BTN_FN3) {
+    if (pressed & BK_BTN_MODE) {
         emit(c, BK_EV_UI_BACK);
         enter_screen(c, BK_SCREEN_HOME);
         return;
@@ -258,14 +267,14 @@ static void settings_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t he
     }
     if (pressed & BK_BTN_LEFT) {
         settings_activate(c, -1);
-    } else if (pressed & (BK_BTN_RIGHT | BK_BTN_ACTION | BK_BTN_FN1)) {
+    } else if (pressed & (BK_BTN_RIGHT | BK_BTN_ACTION | BK_BTN_START)) {
         settings_activate(c, +1);
     }
 }
 
 static void button_test_step(bk_console_t *c, bk_buttons_t held)
 {
-    const bk_buttons_t chord = BK_BTN_FN1 | BK_BTN_FN2 | BK_BTN_FN3;
+    const bk_buttons_t chord = BK_BTN_START | BK_BTN_SELECT | BK_BTN_MODE;
     if ((held & chord) == chord) {
         emit(c, BK_EV_UI_BACK);
         enter_screen(c, BK_SCREEN_SETTINGS);
@@ -274,7 +283,7 @@ static void button_test_step(bk_console_t *c, bk_buttons_t held)
 
 static void about_step(bk_console_t *c, bk_buttons_t pressed)
 {
-    if (pressed & (BK_BTN_FN3 | BK_BTN_ACTION | BK_BTN_FN1)) {
+    if (pressed & (BK_BTN_MODE | BK_BTN_ACTION | BK_BTN_START)) {
         emit(c, BK_EV_UI_BACK);
         enter_screen(c, BK_SCREEN_SETTINGS);
     }
@@ -295,11 +304,11 @@ static void game_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
     bk_game_t *g = c->game;
     bk_buttons_t consumed = 0;
 
-    if (pressed & BK_BTN_FN2) {
+    if (pressed & BK_BTN_SELECT) {
         cycle_light(c, +1);
     }
 
-    bool play = (pressed & BK_BTN_FN1) != 0u || ((pressed & BK_BTN_ACTION) != 0u && g->phase != BK_PHASE_PLAYING);
+    bool play = (pressed & BK_BTN_START) != 0u || ((pressed & BK_BTN_ACTION) != 0u && g->phase != BK_PHASE_PLAYING);
     if (play) {
         consumed |= BK_BTN_ACTION;
         if (g->phase == BK_PHASE_PLAYING) {
@@ -310,7 +319,7 @@ static void game_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
             c->parties++;
             bk_game_start(g, &c->events); /* a fresh party of the same game; the RNG simply continues */
         }
-    } else if (pressed & BK_BTN_FN3) {
+    } else if (pressed & BK_BTN_MODE) {
         if (g->phase == BK_PHASE_PLAYING) {
             bk_game_pause(g, &c->events);
         } else {
@@ -452,9 +461,9 @@ static char *fmt_uint(char *dst, unsigned v)
 static void render_text_screen(bk_console_t *c)
 {
     static const char *const light_names[BK_LIGHT_MAX + 1] = {"OFF", "LOW", "HIGH"};
-    static const char *const button_names[8] = {"UP", "DOWN", "LEFT", "RIGHT", "ACTION", "FN1", "FN2", "FN3"};
-    static const bk_button_t button_bits[8] = {BK_BTN_UP,     BK_BTN_DOWN, BK_BTN_LEFT, BK_BTN_RIGHT,
-                                               BK_BTN_ACTION, BK_BTN_FN1,  BK_BTN_FN2,  BK_BTN_FN3};
+    static const char *const button_names[8] = {"UP", "DOWN", "LEFT", "RIGHT", "ACTION", "MODE", "SELECT", "START"};
+    static const bk_button_t button_bits[8] = {BK_BTN_UP,     BK_BTN_DOWN, BK_BTN_LEFT,   BK_BTN_RIGHT,
+                                               BK_BTN_ACTION, BK_BTN_MODE, BK_BTN_SELECT, BK_BTN_START};
     bk_text_row_t rows[BK_SET_COUNT + 4];
     char line[6][20];
 
@@ -469,13 +478,14 @@ static void render_text_screen(bk_console_t *c)
         rows[BK_SET_BUTTONS].value = "TEST";
         rows[BK_SET_ABOUT].label = "ABOUT";
         rows[BK_SET_ABOUT].value = NULL;
-        bk_render_text_page(&c->layout, "SETTINGS", rows, BK_SET_COUNT, c->cursor, "UP DOWN  OK FN1  BACK FN3", &c->frame);
+        bk_render_text_page(&c->layout, "SETTINGS", rows, BK_SET_COUNT, c->cursor, "UP DOWN  OK START  BACK MODE",
+                            &c->frame);
     } else if (c->screen == BK_SCREEN_BUTTON_TEST) {
         for (int i = 0; i < 8; i++) {
             rows[i].label = button_names[i];
             rows[i].value = (c->held & button_bits[i]) ? "ON" : "--";
         }
-        bk_render_text_page(&c->layout, "BUTTONS", rows, 8, -1, "EXIT FN1+FN2+FN3", &c->frame);
+        bk_render_text_page(&c->layout, "BUTTONS", rows, 8, -1, "EXIT MODE+SELECT+START", &c->frame);
     } else {
         char *p = line[0];
         strcpy(p, "BRICK");
@@ -490,7 +500,7 @@ static void render_text_screen(bk_console_t *c)
         rows[2].value = NULL;
         rows[3].label = "NO HW APPROVED";
         rows[3].value = NULL;
-        bk_render_text_page(&c->layout, "ABOUT", rows, 4, -1, "BACK FN3", &c->frame);
+        bk_render_text_page(&c->layout, "ABOUT", rows, 4, -1, "BACK MODE", &c->frame);
     }
 }
 
@@ -548,6 +558,13 @@ const bk_frame_t *bk_console_render(bk_console_t *c)
     return &c->frame;
 }
 
+/* Ticks that must pass between two pictures for a panel limited to max_fps (0 = unlimited). */
+static uint32_t present_interval(const bk_console_t *c)
+{
+    unsigned fps = c->hal->display.max_fps;
+    return (fps == 0u || fps >= BK_TICK_HZ) ? 1u : (BK_TICK_HZ + fps - 1u) / fps;
+}
+
 void bk_console_tick(bk_console_t *c)
 {
     bk_buttons_t held = 0;
@@ -556,12 +573,23 @@ void bk_console_tick(bk_console_t *c)
     }
     bk_console_step(c, held);
     bk_console_render(c);
-    if (c->hal->display.present != NULL && (!c->shown_valid || !bk_frame_equal(&c->frame, &c->shown))) {
-        c->hal->display.present(c->hal->display.ctx, &c->frame);
-        memcpy(c->shown.bits, c->frame.bits, bk_frame_bytes(&c->frame));
-        c->shown.width = c->frame.width;
-        c->shown.height = c->frame.height;
-        c->shown.stride = c->frame.stride;
-        c->shown_valid = true;
+    if (c->hal->display.present == NULL) {
+        return;
     }
+    if (c->shown_valid && bk_frame_equal(&c->frame, &c->shown)) {
+        return;
+    }
+    /* A changed picture waits for the panel; it is re-rendered every tick, so what finally goes out is the latest one. */
+    if (c->shown_valid && c->ticks - c->presented_tick < present_interval(c)) {
+        c->dropped_frames++;
+        return;
+    }
+    c->hal->display.present(c->hal->display.ctx, &c->frame);
+    memcpy(c->shown.bits, c->frame.bits, bk_frame_bytes(&c->frame));
+    c->shown.width = c->frame.width;
+    c->shown.height = c->frame.height;
+    c->shown.stride = c->frame.stride;
+    c->shown_valid = true;
+    c->presented_tick = c->ticks;
+    c->presents++;
 }

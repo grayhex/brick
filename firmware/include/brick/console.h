@@ -3,24 +3,27 @@
  * the running game, records, sound and front light. It talks to the outside world only through bk_hal_t.
  *
  * Driving it (one call per 60 Hz tick):
- *     bk_console_tick(&console);         // read buttons -> step -> compose -> present if the picture changed
+ *     bk_console_tick(&console);         // read buttons -> step -> compose -> present if the picture changed and the
+ *                                        // panel can take it (bk_display_port_t.max_fps)
  * or, in tests / headless runs, bk_console_step() + bk_console_render() without touching the display port.
  *
- * ---- Controls (PROPOSED, ADR-025; the roles of the function keys are OPEN in the PRD) ----
+ * ---- Controls (PROPOSED, ADR-025) ----
+ * The physical keys are CONFIRMED by the PRD (CTRL-01..03): four separate direction keys, one large ACTION key and
+ * three keys labelled MODE / SELECT / START directly under the LCD. What each of them does is a proposal.
  *
- *   key      | menu (HOME)                      | settings          | playing         | paused / game over
- *   ---------+----------------------------------+-------------------+-----------------+--------------------------
- *   LEFT/RIGHT| previous / next game            | change value      | game: move      | -
- *   UP/DOWN  | value of the focused item +/-1   | move cursor       | game: UP rotate | -
- *            |  (MODE, SPEED or LEVEL)          |                   |   DOWN soft drop|
- *   ACTION   | start the game                   | activate / change | game: rotate    | resume / play again
- *   FN1      | start the game                   | activate / change | pause           | resume / play again
- *   FN2      | focus MODE -> SPEED -> LEVEL     | -                 | front light     | front light
- *   FN3      | open SETTINGS                    | back              | pause           | back to the menu
+ *   key       | menu (HOME)                       | settings          | playing          | paused / game over
+ *   ----------+-----------------------------------+-------------------+------------------+--------------------------
+ *   LEFT/RIGHT| previous / next game              | change value      | game: move       | -
+ *   UP/DOWN   | value in focus +/-1 (variant,     | move cursor       | UP rotate,       | -
+ *             |  SPEED or LEVEL)                  |                   | DOWN soft drop   |
+ *   ACTION    | start the game                    | activate / change | game: rotate     | resume / play again
+ *   START     | start the game                    | activate / change | pause            | resume / play again
+ *   SELECT    | focus: variant -> SPEED -> LEVEL  | -                 | front light      | front light
+ *   MODE      | open SETTINGS                     | back              | pause            | back to the menu
  *
- * The console is the only place that knows about FN keys: games see just the D-pad and the big ACTION button
- * (as ROTATE). Leaving a running game takes two FN3 presses (first pauses, second leaves), so a stray press cannot
- * lose a game. There is no mapping for the engine's FIRE key (hard drop): the console has one action button.
+ * The console is the only place that knows about MODE / SELECT / START: games see just the direction keys and the big
+ * ACTION button (as ROTATE). Leaving a running game takes two MODE presses (the first pauses, the second leaves), so a
+ * stray press cannot lose a game. There is no mapping for the engine's FIRE key (hard drop): one action button.
  */
 #ifndef BRICK_CONSOLE_H
 #define BRICK_CONSOLE_H
@@ -114,6 +117,9 @@ typedef struct {
     bk_frame_t frame;
     bk_frame_t shown; /* what the display port has last been given */
     bool shown_valid;
+    uint32_t presented_tick; /* tick of the last present() */
+    uint32_t presents;       /* pictures given to the display port */
+    uint32_t dropped_frames; /* changed pictures that had to wait because of max_fps (diagnostics) */
 
     bk_scene_t scene; /* scratch for rendering, kept here so the core has no global state */
     char label[24];
@@ -122,6 +128,10 @@ typedef struct {
 /* Returns false on bad arguments (empty catalog, odd cell size, a game whose state does not fit). */
 bool bk_console_init(bk_console_t *c, const bk_catalog_entry_t *catalog, size_t count, const bk_hal_t *hal,
                      unsigned cell_dots);
+
+/* Same, with a layout fitted to a native panel (bk_layout_fit) instead of the reference design grid. */
+bool bk_console_init_layout(bk_console_t *c, const bk_catalog_entry_t *catalog, size_t count, const bk_hal_t *hal,
+                            const bk_layout_t *layout);
 
 void bk_console_step(bk_console_t *c, bk_buttons_t held);
 const bk_frame_t *bk_console_render(bk_console_t *c);

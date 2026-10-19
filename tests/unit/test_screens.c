@@ -64,6 +64,47 @@ static void check_golden(const char *name)
     free(want);
 }
 
+/* Native-panel frames are checked by a hash of their bits (an ASCII picture of 336 x 536 dots would be 180 KB); the
+ * hashes live in tests/golden/fit.hashes, one "name hex" line per frame. BK_DUMP_DIR still writes the PBM to look at. */
+static void check_hash(const char *name, const bk_frame_t *f)
+{
+    uint32_t h = 0x811c9dc5u;
+    h = (h ^ f->width) * 0x01000193u;
+    h = (h ^ f->height) * 0x01000193u;
+    for (size_t i = 0; i < bk_frame_bytes(f); i++) {
+        h = (h ^ f->bits[i]) * 0x01000193u;
+    }
+    char line[64];
+    snprintf(line, sizeof line, "%s %08x\n", name, h);
+
+    char path[512];
+    snprintf(path, sizeof path, "%s/fit.hashes", golden_dir);
+    if (getenv("BK_DUMP_DIR") != NULL) {
+        char pbm[512];
+        snprintf(pbm, sizeof pbm, "%s/%s.pbm", getenv("BK_DUMP_DIR"), name);
+        bk_frame_write_pbm(f, pbm);
+    }
+    if (getenv("BK_UPDATE_GOLDEN") != NULL) {
+        static int first = 1;
+        FILE *fp = fopen(path, first ? "wb" : "ab");
+        first = 0;
+        CHECK(fp != NULL);
+        if (fp != NULL) {
+            fputs(line, fp);
+            fclose(fp);
+        }
+        return;
+    }
+    char *all = jv_read_file(path);
+    bool ok = all != NULL && strstr(all, line) != NULL;
+    if (!ok) {
+        fprintf(stderr, "FAIL [%s] hash differs from %s, expected line: %s", name, path, line);
+        bk_test_failures++;
+    }
+    bk_test_checks++;
+    free(all);
+}
+
 static void boot(const bk_catalog_entry_t *cat, size_t n)
 {
     CHECK(bk_console_init(&con, cat, n, &hal.hal, 8));
@@ -112,8 +153,8 @@ static void test_home_two_digit_glyph_and_mode_focus(void)
     fake_hal_init(&hal);
     boot(CAT_MULTI, 2);
     run(BK_SPLASH_TICKS, 0);
-    tap(BK_BTN_FN2); /* LEVEL */
-    tap(BK_BTN_FN2); /* MODE: the mode number blinks */
+    tap(BK_BTN_SELECT); /* LEVEL */
+    tap(BK_BTN_SELECT); /* MODE: the mode number blinks */
     tap(BK_BTN_UP);
     tap(BK_BTN_UP); /* mode 3 */
     run(30, 0);     /* back into the lit blink phase: 2 * BK_BLINK_HALF_TICKS later */
@@ -148,10 +189,10 @@ static void test_game_screens(void)
     CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
     run(1, 0);
     check_golden("game_tetris");
-    bk_console_step(&con, BK_BTN_FN1);
+    bk_console_step(&con, BK_BTN_START);
     run(1, 0);
     check_golden("game_tetris_paused");
-    tap(BK_BTN_FN1);
+    tap(BK_BTN_START);
 
     unsigned guard = 0;
     while (con.game->phase != BK_PHASE_OVER && guard++ < 40000) {
@@ -166,7 +207,7 @@ static void test_text_screens(void)
     fake_hal_init(&hal);
     boot(CAT_TETRIS, 1);
     run(BK_SPLASH_TICKS, 0);
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
     tap(BK_BTN_DOWN);
     CHECK_EQ(con.screen, BK_SCREEN_SETTINGS);
     check_golden("settings");
@@ -174,15 +215,44 @@ static void test_text_screens(void)
         tap(BK_BTN_DOWN);
     }
     tap(BK_BTN_ACTION);
-    run(1, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_FN2);
+    run(1, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_SELECT);
     CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
     check_golden("buttons");
-    run(1, BK_BTN_FN1 | BK_BTN_FN2 | BK_BTN_FN3);
+    run(1, BK_BTN_START | BK_BTN_SELECT | BK_BTN_MODE);
     run(1, 0);
     tap(BK_BTN_DOWN);
     tap(BK_BTN_ACTION);
     CHECK_EQ(con.screen, BK_SCREEN_ABOUT);
     check_golden("about");
+}
+
+/* The same console, fitted to the native panels of docs/DISPLAY_CANDIDATES.md (candidates only, none approved). */
+static void test_native_panels(void)
+{
+    static const struct {
+        const char *name;
+        unsigned w, h;
+    } panels[] = {{"lcd316", 336, 536}, {"lcd44", 240, 320}, {"lcd27", 240, 400}};
+    for (unsigned i = 0; i < sizeof panels / sizeof panels[0]; i++) {
+        fake_hal_init(&hal);
+        seed_profile(BK_TETRIS_UID, 0, 123456, 3, 4);
+        bk_layout_t l;
+        CHECK(bk_layout_fit(&l, panels[i].w, panels[i].h));
+        CHECK(bk_console_init_layout(&con, CAT_TETRIS, 1, &hal.hal, &l));
+        run(BK_SPLASH_TICKS, 0);
+        char name[64];
+        snprintf(name, sizeof name, "%s_home", panels[i].name);
+        check_hash(name, bk_console_render(&con));
+        tap(BK_BTN_START);
+        play_tetris_to(600);
+        CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+        run(1, 0);
+        snprintf(name, sizeof name, "%s_game", panels[i].name);
+        const bk_frame_t *f = bk_console_render(&con);
+        CHECK_EQ(f->width, panels[i].w);
+        CHECK_EQ(f->height, panels[i].h);
+        check_hash(name, f);
+    }
 }
 
 int main(int argc, char **argv)
@@ -192,5 +262,6 @@ int main(int argc, char **argv)
     TEST_RUN(test_home_two_digit_glyph_and_mode_focus);
     TEST_RUN(test_game_screens);
     TEST_RUN(test_text_screens);
+    TEST_RUN(test_native_panels);
     return bk_test_finish("screens");
 }

@@ -187,12 +187,107 @@ static void test_text_page_fits(void)
     for (unsigned p = BK_MIN_CELL_DOTS; p <= BK_MAX_CELL_DOTS; p += 2) {
         bk_layout_t l;
         CHECK(bk_layout_init(&l, p));
-        bk_render_text_page(&l, "SETTINGS", rows, 5, 2, "BACK FN3", &frame);
+        bk_render_text_page(&l, "SETTINGS", rows, 5, 2, "BACK MODE", &frame);
         CHECK_EQ(frame.width, l.width);
         CHECK(ink_in(&frame, 0, 0, l.width, l.height) > 100);
         /* the value column is right-aligned inside the margin: the last dot column of the frame stays clear */
         CHECK_EQ(ink_in(&frame, l.width - 1, 0, l.width, l.height), 0);
     }
+}
+
+/* Native panel sizes from docs/DISPLAY_CANDIDATES.md (candidates only; no panel is approved). */
+typedef struct {
+    const char *name;
+    unsigned w, h;
+    unsigned cell;   /* expected dots per cell */
+    unsigned status; /* expected status column width incl. divider */
+} panel_t;
+
+static const panel_t PANELS[] = {
+    {"LS032B7DD02 3.16in portrait", 336, 536, 26, 76},
+    {"LS044Q7DH01 4.4in rotated", 240, 320, 16, 80},
+    {"LS027B7DH01 2.7in rotated", 240, 400, 20, 40},
+};
+
+static void test_fit_reference_identity(void)
+{
+    bk_layout_t a;
+    bk_layout_t b;
+    CHECK(bk_layout_init(&a, 8));
+    CHECK(bk_layout_fit(&b, 132, 160));
+    CHECK(memcmp(&a, &b, sizeof a) == 0); /* fitting to exactly the reference frame gives the reference layout */
+}
+
+static void test_fit_native_panels(void)
+{
+    for (unsigned i = 0; i < sizeof PANELS / sizeof PANELS[0]; i++) {
+        const panel_t *p = &PANELS[i];
+        bk_layout_t l;
+        CHECK(bk_layout_fit(&l, p->w, p->h));
+        CHECK_EQ(l.cell, p->cell);
+        CHECK_EQ(l.field_w, p->cell * 10);                                           /* cells are square: 10 columns ... */
+        CHECK_EQ(l.field_y * 2 + p->cell * 20, p->h - ((p->h - p->cell * 20) % 2u)); /* ... 20 rows, centred vertically */
+        CHECK_EQ(l.width, p->w);
+        CHECK_EQ(l.height, p->h);
+        CHECK_EQ(l.panel_w + l.ring, p->status); /* the status column takes all the width that is left */
+        CHECK(l.panel_w >= BK_MIN_STATUS_DOTS - l.ring);
+
+        /* a full scene on an empty playfield: ink only in the divider and the status column, none cut off */
+        memset(&scene, 0, sizeof scene);
+        scene.score = scene.hi_score = 9999999;
+        scene.show_score = true;
+        scene.speed = scene.level = 8;
+        scene.sound_on = scene.paused = scene.has_preview = true;
+        memset(scene.preview, BK_CELL_ON, sizeof scene.preview);
+        bk_render_scene(&l, &scene, &frame);
+        CHECK_EQ(frame.width, p->w);
+        CHECK_EQ(frame.height, p->h);
+        CHECK_EQ(ink_in(&frame, 0, 0, l.field_w, l.height), 0);
+        CHECK_EQ(ink_in(&frame, l.width - 1, 0, l.width, l.height), 0); /* right edge clear */
+        CHECK(ink_in(&frame, l.panel_x, 0, l.width, l.height) > 0);
+
+        /* the playfield starts below the top margin of the panel and keeps its cell pitch */
+        memset(&scene, 0, sizeof scene);
+        scene.cells[0] = BK_CELL_ON;
+        scene.cells[BK_CELLS - 1] = BK_CELL_ON;
+        bk_render_scene(&l, &scene, &frame);
+        CHECK(bk_frame_get(&frame, 0, l.field_y));
+        CHECK_EQ(ink_in(&frame, 0, 0, l.field_w, l.field_y), 0);
+        CHECK(bk_frame_get(&frame, l.field_w - 1 - l.gap, l.field_y + l.cell * 20 - 1 - l.gap));
+
+        /* text pages fit as well */
+        static const bk_text_row_t rows[] = {
+            {"SOUND", "ON"}, {"LIGHT", "HIGH"}, {"RECORDS", "CLEAR"}, {"BUTTONS", "TEST"}, {"ABOUT", NULL}};
+        bk_render_text_page(&l, "SETTINGS", rows, 5, 1, "BACK MODE", &frame);
+        CHECK(ink_in(&frame, 0, 0, l.width, l.height) > 100);
+        CHECK_EQ(ink_in(&frame, l.width - 1, 0, l.width, l.height), 0);
+    }
+}
+
+static void test_fit_rejects_what_does_not_fit(void)
+{
+    bk_layout_t l;
+    CHECK(!bk_layout_fit(&l, 100, 400));                /* not even eight dots per cell leave room for the status column */
+    CHECK(!bk_layout_fit(&l, 336, 100));                /* shorter than 20 cells of the minimum size */
+    CHECK(!bk_layout_fit(&l, BK_FRAME_MAX_W + 1, 536)); /* larger than the frame buffer */
+    CHECK(bk_layout_fit(&l, 200, 400));                 /* narrower panel: a smaller cell, more vertical margin */
+    CHECK(l.cell < 20 && l.field_y > 0);
+    CHECK_EQ(l.field_w % 10u, 0);
+    CHECK_EQ(l.field_w / 10u, l.cell);
+}
+
+static void test_narrow_status_column_stays_legible(void)
+{
+    /* On the narrowest accepted column seven digits still have a positive width and the preview shrinks to fit. */
+    bk_layout_t l;
+    CHECK(bk_layout_fit(&l, 240, 400));
+    CHECK(l.digit_w >= 3 && l.digit_h >= 5 && (l.digit_h % 2u) == 1u);
+    CHECK(l.preview_cell > 0 && l.preview_cell < l.cell);
+    CHECK(l.preview_cell * 4 <= l.panel_w);
+    CHECK(7 * (l.digit_w + l.digit_gap) <= l.panel_w - 2 * l.ring + l.digit_gap);
+    /* wide columns keep the preview at the full cell pitch */
+    CHECK(bk_layout_init(&l, 8));
+    CHECK_EQ(l.preview_cell, 8);
 }
 
 static void test_frame_ops(void)
@@ -231,6 +326,10 @@ int main(void)
     TEST_RUN(test_digits);
     TEST_RUN(test_text);
     TEST_RUN(test_text_page_fits);
+    TEST_RUN(test_fit_reference_identity);
+    TEST_RUN(test_fit_native_panels);
+    TEST_RUN(test_fit_rejects_what_does_not_fit);
+    TEST_RUN(test_narrow_status_column_stays_legible);
     TEST_RUN(test_frame_ops);
     return bk_test_finish("render");
 }

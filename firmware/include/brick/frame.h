@@ -14,16 +14,24 @@
 
 BK_EXTERN_C_BEGIN
 
-/* Design grid: dots per game cell (even, BK_MIN_CELL_DOTS..BK_MAX_CELL_DOTS). The panel resolution is OPEN, so the
- * compositor is parametric; 8 is the reference grid used by the golden screens. */
+/* Reference design grid: dots per game cell (even, BK_MIN_CELL_DOTS..BK_MAX_CELL_DOTS); 8 is the grid of the golden
+ * screens. The panel resolution is OPEN, so the compositor can also fit a native panel size (bk_layout_fit). */
 #define BK_MIN_CELL_DOTS 8
 #ifndef BK_MAX_CELL_DOTS
 #define BK_MAX_CELL_DOTS 16
 #endif
 
-/* Whole screen = 10 playfield columns + 6.5 columns of status panel, 20 rows (ADR-016). */
-#define BK_FRAME_MAX_W      (BK_MAX_CELL_DOTS * 33 / 2)
-#define BK_FRAME_MAX_H      (BK_MAX_CELL_DOTS * BK_ROWS)
+/*
+ * Largest frame the buffer can hold, in dots. The default is the biggest reference design grid (16.5 x 20 cells);
+ * a project defines BK_FRAME_MAX_W / BK_FRAME_MAX_H for its panel (the CMake cache variables BRICK_FRAME_MAX_W/H do
+ * that for the whole build, because the buffer is part of bk_frame_t and of everything that contains it).
+ */
+#ifndef BK_FRAME_MAX_W
+#define BK_FRAME_MAX_W (BK_MAX_CELL_DOTS * 33 / 2)
+#endif
+#ifndef BK_FRAME_MAX_H
+#define BK_FRAME_MAX_H (BK_MAX_CELL_DOTS * BK_ROWS)
+#endif
 #define BK_FRAME_MAX_STRIDE ((BK_FRAME_MAX_W + 7) / 8)
 
 typedef struct {

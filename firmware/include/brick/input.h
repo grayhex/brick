@@ -2,9 +2,10 @@
  * Input abstractions.
  *
  * Two layers:
- *  - bk_button_t : physical controls of the console (D-pad, one ACTION, three FUNCTION keys).
- *                  Meaning of the function keys is a shell concern (see console.h) and is OPEN in the PRD.
- *  - bk_key_t    : logical keys a *game* sees. Games never see function keys. FIRE exists in the engine
+ *  - bk_button_t : physical controls of the console (PRD CTRL-01..03, CONFIRMED): four separate direction keys,
+ *                  one large ACTION key and three small keys labelled MODE / SELECT / START under the LCD.
+ *                  What MODE, SELECT and START do is a shell concern (see console.h) and is PROPOSED.
+ *  - bk_key_t    : logical keys a *game* sees. Games never see the MODE / SELECT / START keys. FIRE exists in the engine
  *                  (hard drop, shooting) but has no physical button on the console; the shell decides
  *                  whether and how it is mapped (PRD section 5, one action button).
  */
@@ -22,9 +23,9 @@ typedef enum {
     BK_BTN_LEFT = 1u << 2,
     BK_BTN_RIGHT = 1u << 3,
     BK_BTN_ACTION = 1u << 4,
-    BK_BTN_FN1 = 1u << 5,
-    BK_BTN_FN2 = 1u << 6,
-    BK_BTN_FN3 = 1u << 7
+    BK_BTN_MODE = 1u << 5,   /* left of the three keys under the LCD */
+    BK_BTN_SELECT = 1u << 6, /* middle */
+    BK_BTN_START = 1u << 7   /* right */
 } bk_button_t;
 
 typedef uint16_t bk_buttons_t;

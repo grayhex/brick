@@ -33,3 +33,8 @@ add_executable(test_cpp_headers api/test_cpp_headers.cpp)
 target_link_libraries(test_cpp_headers PRIVATE brickcore)
 target_compile_options(test_cpp_headers PRIVATE -Wall -Wextra -Wpedantic -Wshadow)
 add_test(NAME test_cpp_headers COMMAND test_cpp_headers)
+
+# Reproducible arithmetic behind docs/DISPLAY_CANDIDATES-related notes (not a test of correctness).
+add_executable(panel_fit ${CMAKE_SOURCE_DIR}/tools/experiments/panel_fit.c)
+target_link_libraries(panel_fit PRIVATE brickcore)
+add_test(NAME panel_fit_runs COMMAND panel_fit)

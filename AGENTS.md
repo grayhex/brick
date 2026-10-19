@@ -53,3 +53,6 @@ Do not invent supplier stock, prices, battery life or test outcomes.
 - Golden screens (`tests/golden`) change only on purpose: update with `BK_UPDATE_GOLDEN=1`, review the diff, refresh `docs/img`.
 - Every new game: pinned reference SHA, fidelity label (verified vs approximation), licence check, conformance traces, ADR; see `docs/FIRMWARE_ARCHITECTURE.md` section 11.
 - Keep the logical frame strictly 1 bit, positive polarity, with the status panel to the right (ADR-003/015/016).
+- Never assume a 60 Hz display: 60 Hz is the simulation tick. The panel rate is `bk_display_port_t.max_fps`; test playability at 10/15/20/30 FPS on hardware before approving a panel (see the CRITICAL LCD throughput gate above).
+- The status column is not fixed to 6.5 cells: fit the compositor to the real panel with `bk_layout_fit` and check legibility in millimetres (`tools/experiments/panel_fit.c`); the frame buffer size is the build option `BRICK_FRAME_MAX_W/H`.
+- Physical buttons are the confirmed R0.2 set (four separate direction keys, ACTION, MODE / SELECT / START under the LCD); firmware names are `BK_BTN_*`. What each key does is PROPOSED (ADR-025).

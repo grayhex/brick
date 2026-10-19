@@ -85,7 +85,7 @@ static void test_splash(void)
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
 
     fresh(CAT_STUBS, 2);
-    bk_console_step(&con, BK_BTN_FN2); /* any button skips the splash and is not otherwise used */
+    bk_console_step(&con, BK_BTN_SELECT); /* any button skips the splash and is not otherwise used */
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
     CHECK_EQ(con.focus, BK_MENU_SPEED);
 }
@@ -103,19 +103,19 @@ static void test_home_navigation(void)
     tap(BK_BTN_UP);
     CHECK_EQ(con.speed, 0);
 
-    tap(BK_BTN_FN2); /* SPEED -> LEVEL */
+    tap(BK_BTN_SELECT); /* SPEED -> LEVEL */
     CHECK_EQ(con.focus, BK_MENU_LEVEL);
     tap(BK_BTN_UP);
     tap(BK_BTN_UP);
     CHECK_EQ(con.level, 2);
-    tap(BK_BTN_FN2); /* LEVEL -> MODE (this game has 3 modes) */
+    tap(BK_BTN_SELECT); /* LEVEL -> MODE (this game has 3 modes) */
     CHECK_EQ(con.focus, BK_MENU_MODE);
     tap(BK_BTN_UP);
     CHECK_EQ(con.mode, 1);
     tap(BK_BTN_DOWN);
     tap(BK_BTN_DOWN);
     CHECK_EQ(con.mode, 2); /* wraps 0 -> 2 */
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(con.focus, BK_MENU_SPEED);
 
     /* the next game: the mode restarts from the first one, SPEED and LEVEL stay */
@@ -130,9 +130,9 @@ static void test_home_navigation(void)
 
     /* a single-mode game has no MODE step in the focus cycle; UP on MODE would be silent */
     CHECK_EQ(con.focus, BK_MENU_SPEED);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(con.focus, BK_MENU_LEVEL);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(con.focus, BK_MENU_SPEED);
 }
 
@@ -146,9 +146,9 @@ static void test_single_game_catalog_is_silent(void)
     tap(BK_BTN_LEFT);
     CHECK_EQ(con.game_index, 0);
     CHECK_EQ(con.events.count, 0);
-    tap(BK_BTN_FN2); /* Tetris has one mode: the focus cycles between SPEED and LEVEL only */
+    tap(BK_BTN_SELECT); /* Tetris has one mode: the focus cycles between SPEED and LEVEL only */
     CHECK_EQ(con.focus, BK_MENU_LEVEL);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(con.focus, BK_MENU_SPEED);
 }
 
@@ -156,8 +156,8 @@ static void test_mode_focus_dropped_when_game_has_one_mode(void)
 {
     fresh(CAT_STUBS, 2);
     to_home();
-    tap(BK_BTN_FN2);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(con.focus, BK_MENU_MODE);
     tap(BK_BTN_RIGHT); /* the new game has one mode: focus must not rest on MODE */
     CHECK_EQ(con.game_index, 1);
@@ -190,11 +190,11 @@ static void test_start_game_uses_menu_choices(void)
     for (int i = 0; i < 4; i++) {
         tap(BK_BTN_UP); /* speed 4 */
     }
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     for (int i = 0; i < 2; i++) {
         tap(BK_BTN_UP); /* level 2 */
     }
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     tap(BK_BTN_UP); /* mode 1 */
     hal.writes = 0;
     fake_hal_clear_tones(&hal);
@@ -218,7 +218,7 @@ static void test_fn1_also_starts(void)
 {
     fresh(CAT_STUBS, 2);
     to_home();
-    tap(BK_BTN_FN1);
+    tap(BK_BTN_START);
     CHECK_EQ(con.screen, BK_SCREEN_GAME);
 }
 
@@ -228,7 +228,7 @@ static void test_controls_mapping_in_game(void)
     to_home();
     tap(BK_BTN_ACTION);
     stub_game_t *s = (stub_game_t *)con.game;
-    bk_console_step(&con, BK_BTN_LEFT | BK_BTN_FN2); /* the function key in the same tick is not part of the game input */
+    bk_console_step(&con, BK_BTN_LEFT | BK_BTN_SELECT); /* the function key in the same tick is not part of the game input */
     CHECK_EQ(s->last_held, BK_KEY_LEFT);
     bk_console_step(&con, 0);
     bk_console_step(&con, BK_BTN_ACTION); /* the one big button is ROTATE for the game */
@@ -237,7 +237,7 @@ static void test_controls_mapping_in_game(void)
     bk_console_step(&con, 0);
     bk_console_step(&con, BK_BTN_UP | BK_BTN_DOWN | BK_BTN_RIGHT);
     CHECK_EQ(s->last_held, BK_KEY_UP | BK_KEY_DOWN | BK_KEY_RIGHT);
-    CHECK_EQ(bk_buttons_to_keys(BK_BTN_FN1 | BK_BTN_FN2 | BK_BTN_FN3), 0); /* function keys never reach a game */
+    CHECK_EQ(bk_buttons_to_keys(BK_BTN_START | BK_BTN_SELECT | BK_BTN_MODE), 0); /* function keys never reach a game */
 }
 
 static void test_pause_resume_and_two_step_exit(void)
@@ -249,7 +249,7 @@ static void test_pause_resume_and_two_step_exit(void)
     idle(5);
     uint32_t steps = s->steps;
 
-    bk_console_step(&con, BK_BTN_FN1);
+    bk_console_step(&con, BK_BTN_START);
     CHECK_EQ(con.game->phase, BK_PHASE_PAUSED);
     CHECK(has_event(BK_EV_PAUSED));
     idle(20);
@@ -262,12 +262,12 @@ static void test_pause_resume_and_two_step_exit(void)
     CHECK(has_event(BK_EV_RESUMED));
     bk_console_step(&con, 0);
 
-    /* FN3 while playing only pauses: a stray press cannot lose the game */
-    bk_console_step(&con, BK_BTN_FN3);
+    /* MODE while playing only pauses: a stray press cannot lose the game */
+    bk_console_step(&con, BK_BTN_MODE);
     CHECK_EQ(con.game->phase, BK_PHASE_PAUSED);
     CHECK_EQ(con.screen, BK_SCREEN_GAME);
     bk_console_step(&con, 0);
-    bk_console_step(&con, BK_BTN_FN3); /* the second press leaves */
+    bk_console_step(&con, BK_BTN_MODE); /* the second press leaves */
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
     CHECK(con.game == NULL);
     CHECK(has_event(BK_EV_UI_BACK));
@@ -302,8 +302,8 @@ static void test_game_over_record_and_replay(void)
         tap(BK_BTN_ACTION);
     }
     CHECK_EQ(con.game->score, 20); /* below the record: nothing to save */
-    tap(BK_BTN_FN3);
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
+    tap(BK_BTN_MODE);
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
     CHECK_EQ(bk_profile_get_record(&con.profile, 100, 0), 30);
 
@@ -318,8 +318,8 @@ static void test_records_are_per_game_and_mode(void)
 {
     fresh(CAT_STUBS, 2);
     to_home();
-    tap(BK_BTN_FN2);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
+    tap(BK_BTN_SELECT);
     tap(BK_BTN_UP); /* mode 1: the goal is 31 */
     tap(BK_BTN_ACTION);
     for (int i = 0; i < 4; i++) {
@@ -338,7 +338,7 @@ static void test_settings_sound_and_light(void)
 {
     fresh(CAT_STUBS, 2);
     to_home();
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
     CHECK_EQ(con.screen, BK_SCREEN_SETTINGS);
     CHECK_EQ(con.cursor, BK_SET_SOUND);
 
@@ -364,7 +364,7 @@ static void test_settings_sound_and_light(void)
     CHECK_EQ(hal.light, 2); /* LEFT goes backwards */
     CHECK_EQ(con.profile.settings.light_level, 2);
 
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
 
     /* settings survive a reboot and are applied at boot */
@@ -387,7 +387,7 @@ static void test_settings_clear_records_needs_confirmation(void)
     bk_save_store(&hal.hal.storage, &p);
     boot(CAT_STUBS, 2);
     to_home();
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
     tap(BK_BTN_DOWN);
     tap(BK_BTN_DOWN);
     CHECK_EQ(con.cursor, BK_SET_RECORDS);
@@ -409,24 +409,52 @@ static void test_button_test_and_about(void)
 {
     fresh(CAT_STUBS, 2);
     to_home();
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
     for (int i = 0; i < 3; i++) {
         tap(BK_BTN_DOWN);
     }
     CHECK_EQ(con.cursor, BK_SET_BUTTONS);
     tap(BK_BTN_ACTION);
     CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
-    bk_console_step(&con, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_FN3); /* pressing keys only lights them up */
+    bk_console_step(&con, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_MODE); /* pressing keys only lights them up */
     CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
-    bk_console_step(&con, BK_BTN_FN1 | BK_BTN_FN2 | BK_BTN_FN3); /* the three function keys together leave */
+    bk_console_step(&con, BK_BTN_START | BK_BTN_SELECT | BK_BTN_MODE); /* the three function keys together leave */
     CHECK_EQ(con.screen, BK_SCREEN_SETTINGS);
     bk_console_step(&con, 0);
     tap(BK_BTN_DOWN);
     CHECK_EQ(con.cursor, BK_SET_ABOUT);
     tap(BK_BTN_ACTION);
     CHECK_EQ(con.screen, BK_SCREEN_ABOUT);
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
     CHECK_EQ(con.screen, BK_SCREEN_SETTINGS);
+}
+
+static void test_button_test_lights_each_button_on_its_own_row(void)
+{
+    static const char *const names[8] = {"UP", "DOWN", "LEFT", "RIGHT", "ACTION", "MODE", "SELECT", "START"};
+    static const bk_button_t bits[8] = {BK_BTN_UP,     BK_BTN_DOWN, BK_BTN_LEFT,   BK_BTN_RIGHT,
+                                        BK_BTN_ACTION, BK_BTN_MODE, BK_BTN_SELECT, BK_BTN_START};
+    static bk_frame_t expected;
+    for (int pressed = 0; pressed < 8; pressed++) {
+        fresh(CAT_STUBS, 2);
+        to_home();
+        tap(BK_BTN_MODE);
+        for (int i = 0; i < 3; i++) {
+            tap(BK_BTN_DOWN);
+        }
+        tap(BK_BTN_ACTION);
+        CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
+        bk_console_step(&con, bits[pressed]);
+        const bk_frame_t *shown = bk_console_render(&con);
+
+        bk_text_row_t rows[8];
+        for (int i = 0; i < 8; i++) {
+            rows[i].label = names[i];
+            rows[i].value = i == pressed ? "ON" : "--";
+        }
+        bk_render_text_page(&con.layout, "BUTTONS", rows, 8, -1, "EXIT MODE+SELECT+START", &expected);
+        CHECK(bk_frame_equal(shown, &expected)); /* exactly this button's row is lit, in the order printed on the housing */
+    }
 }
 
 static void test_front_light_in_game(void)
@@ -435,11 +463,11 @@ static void test_front_light_in_game(void)
     to_home();
     tap(BK_BTN_ACTION);
     CHECK_EQ(hal.light, 0);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(hal.light, 1);
     CHECK_EQ(con.game->phase, BK_PHASE_PLAYING); /* the light key never pauses or otherwise disturbs the game */
-    tap(BK_BTN_FN2);
-    tap(BK_BTN_FN2);
+    tap(BK_BTN_SELECT);
+    tap(BK_BTN_SELECT);
     CHECK_EQ(hal.light, 0);
 }
 
@@ -454,13 +482,13 @@ static void test_present_only_on_change(void)
     }
     CHECK_EQ(hal.presents, 1); /* splash is static: no redundant refresh of the panel */
 
-    hal.buttons = BK_BTN_FN3; /* to the settings page */
+    hal.buttons = BK_BTN_MODE; /* to the settings page */
     bk_console_tick(&con);
     hal.buttons = 0;
     for (int i = 0; i < 2; i++) {
         bk_console_tick(&con);
     }
-    hal.buttons = BK_BTN_FN3;
+    hal.buttons = BK_BTN_MODE;
     bk_console_tick(&con);
     hal.buttons = 0;
     bk_console_tick(&con);
@@ -472,7 +500,7 @@ static void test_present_only_on_change(void)
     CHECK_EQ(hal.presents, before); /* a static page costs nothing */
 
     /* the menu blinks the focused value: a refresh only when the blink phase flips */
-    hal.buttons = BK_BTN_FN3;
+    hal.buttons = BK_BTN_MODE;
     bk_console_tick(&con);
     hal.buttons = 0;
     bk_console_tick(&con);
@@ -485,6 +513,55 @@ static void test_present_only_on_change(void)
     CHECK(flips >= 3 && flips <= 5);
 }
 
+/* The display is never assumed to run at 60 Hz (AGENTS.md, LS032B7DD02 quotes 1-10 Hz): pictures that change faster
+ * than the panel allows are dropped, the latest one always goes out, and the game keeps its own 60 Hz tick. */
+static void test_display_rate_limit(void)
+{
+    static const unsigned fps_list[] = {0, 60, 30, 20, 15, 10};
+    for (unsigned k = 0; k < sizeof fps_list / sizeof fps_list[0]; k++) {
+        unsigned fps = fps_list[k];
+        unsigned interval = (fps == 0 || fps >= BK_TICK_HZ) ? 1 : (BK_TICK_HZ + fps - 1) / fps;
+        fake_hal_init(&hal);
+        hal.hal.display.max_fps = (uint8_t)fps;
+        boot(CAT_STUBS, 2);
+
+        hal.buttons = BK_BTN_START; /* skip the splash, then start the game: the stub changes its picture on every tick */
+        bk_console_tick(&con);
+        hal.buttons = 0;
+        bk_console_tick(&con);
+        hal.buttons = BK_BTN_START;
+        bk_console_tick(&con);
+        hal.buttons = 0;
+        CHECK_EQ(con.screen, BK_SCREEN_GAME);
+
+        unsigned last_present_tick = con.presented_tick;
+        unsigned seen = 0;
+        for (unsigned i = 0; i < 120; i++) {
+            unsigned before = hal.presents;
+            bk_console_tick(&con);
+            if (hal.presents != before) {
+                CHECK(con.ticks - last_present_tick >= interval); /* never faster than the panel allows */
+                last_present_tick = con.ticks;
+                seen++;
+            }
+        }
+        CHECK(seen + 1 >= 120 / interval && seen <= 120 / interval + 1); /* and not slower either */
+        CHECK_EQ(con.game->tick >= 100, 1);                              /* the simulation was not slowed down */
+        if (interval > 1) {
+            CHECK(con.dropped_frames > 0);
+        }
+
+        /* once the picture stops changing, the latest one reaches the panel within one interval */
+        hal.buttons = BK_BTN_START; /* pause: the picture is now static */
+        bk_console_tick(&con);
+        hal.buttons = 0;
+        for (unsigned i = 0; i < interval + 1; i++) {
+            bk_console_tick(&con);
+        }
+        CHECK(bk_frame_equal(&hal.last_frame, bk_console_render(&con)));
+    }
+}
+
 static void test_storage_failure_does_not_stop_the_console(void)
 {
     fresh(CAT_STUBS, 2);
@@ -494,8 +571,8 @@ static void test_storage_failure_does_not_stop_the_console(void)
     tap(BK_BTN_ACTION);
     CHECK_EQ(con.save_errors, 1); /* the failed write is counted, the game starts anyway */
     CHECK_EQ(con.screen, BK_SCREEN_GAME);
-    tap(BK_BTN_FN3);
-    tap(BK_BTN_FN3);
+    tap(BK_BTN_MODE);
+    tap(BK_BTN_MODE);
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
 }
 
@@ -546,8 +623,10 @@ int main(void)
     TEST_RUN(test_settings_sound_and_light);
     TEST_RUN(test_settings_clear_records_needs_confirmation);
     TEST_RUN(test_button_test_and_about);
+    TEST_RUN(test_button_test_lights_each_button_on_its_own_row);
     TEST_RUN(test_front_light_in_game);
     TEST_RUN(test_present_only_on_change);
+    TEST_RUN(test_display_rate_limit);
     TEST_RUN(test_storage_failure_does_not_stop_the_console);
     TEST_RUN(test_tetris_in_the_console);
     return bk_test_finish("console");

@@ -4,22 +4,63 @@
 
 #include "brick/font.h"
 
-bool bk_layout_init(bk_layout_t *l, unsigned cell_dots)
+/* Everything below the frame size and the cell pitch follows from these two (plus the vertical margin). */
+static bool layout_build(bk_layout_t *l, unsigned cell, unsigned width, unsigned height, unsigned field_y)
 {
-    if (cell_dots < BK_MIN_CELL_DOTS || cell_dots > BK_MAX_CELL_DOTS || (cell_dots % 2u) != 0u) {
+    if (width > BK_FRAME_MAX_W || height > BK_FRAME_MAX_H || cell < BK_MIN_CELL_DOTS) {
         return false;
     }
-    l->cell = (uint8_t)cell_dots;
-    l->width = (uint16_t)(cell_dots * 33u / 2u);
-    l->height = (uint16_t)(cell_dots * BK_ROWS);
-    l->field_w = (uint16_t)(cell_dots * BK_COLS);
-    l->gap = (uint8_t)((cell_dots + 4u) / 8u);
-    l->ring = l->gap;
-    l->panel_x = (uint16_t)(l->field_w + l->ring);
-    l->panel_w = (uint16_t)(l->width - l->panel_x);
-    l->label_scale = (uint8_t)(cell_dots / 8u);
-    l->text_scale = (uint8_t)(cell_dots / 4u);
+    bk_layout_t t;
+    memset(&t, 0, sizeof t);
+    t.cell = (uint8_t)cell;
+    t.width = (uint16_t)width;
+    t.height = (uint16_t)height;
+    t.field_y = (uint16_t)field_y;
+    t.field_w = (uint16_t)(cell * BK_COLS);
+    t.gap = (uint8_t)((cell + 4u) / 8u);
+    t.ring = t.gap;
+    t.panel_x = (uint16_t)(t.field_w + t.ring);
+    if (t.panel_x >= width) {
+        return false;
+    }
+    t.panel_w = (uint16_t)(width - t.panel_x);
+
+    /* Panel content is sized from the width actually available, so a narrow status column still holds seven digits. */
+    const unsigned inner = t.panel_w - 2u * t.ring;
+    const unsigned pitch = inner / 7u;
+    t.digit_gap = (uint8_t)(pitch / 7u > 1u ? pitch / 7u : 1u);
+    t.digit_w = (uint8_t)(pitch - t.digit_gap);
+    t.digit_h = (uint8_t)((t.digit_w * 9u / 5u) | 1u);
+    t.digit_t = (uint8_t)(t.digit_h / 7u > 1u ? t.digit_h / 7u : 1u); /* thick enough to be a stroke, not a hairline */
+    /* Labels are about 0.6 cell tall (5 dots * scale); never wider than the column ("SCORE" = 19 dots * scale). */
+    unsigned ls = (cell * 3u + 12u) / 25u;
+    if (ls > inner / 19u) {
+        ls = inner / 19u;
+    }
+    t.label_scale = (uint8_t)(ls > 1u ? ls : 1u);
+    t.text_scale = (uint8_t)(width / 66u > 1u ? width / 66u : 1u);
+    t.preview_cell = (uint8_t)(inner / 4u < cell ? inner / 4u : cell);
+    *l = t;
     return true;
+}
+
+bool bk_layout_init(bk_layout_t *l, unsigned cell_dots)
+{
+    if (cell_dots > BK_MAX_CELL_DOTS || (cell_dots % 2u) != 0u) {
+        return false;
+    }
+    return layout_build(l, cell_dots, cell_dots * 33u / 2u, cell_dots * BK_ROWS, 0u);
+}
+
+bool bk_layout_fit(bk_layout_t *l, unsigned width, unsigned height)
+{
+    for (unsigned cell = height / BK_ROWS; cell >= BK_MIN_CELL_DOTS; cell--) {
+        unsigned ring = (cell + 4u) / 8u;
+        if (cell * BK_COLS + ring + BK_MIN_STATUS_DOTS <= width) {
+            return layout_build(l, cell, width, height, (height - cell * BK_ROWS) / 2u);
+        }
+    }
+    return false;
 }
 
 bool bk_blink_phase(uint32_t tick)
@@ -29,11 +70,13 @@ bool bk_blink_phase(uint32_t tick)
 
 /* ---------------------------------------------------------------- cells */
 
-/* One lit cell: outline, gap, core (classic LCD look) when the pitch allows; always a square. */
-static void draw_cell(bk_frame_t *f, const bk_layout_t *l, int x, int y)
+/* One lit cell: outline, gap, core (classic LCD look); always a square. The preview uses a smaller pitch on a narrow panel.
+ */
+static void draw_cell(bk_frame_t *f, int pitch, int x, int y)
 {
-    int box = l->cell - l->gap;
-    int t = l->ring;
+    int gap = (pitch + 4) / 8;
+    int box = pitch - gap;
+    int t = gap;
     bk_frame_fill_rect(f, x, y, box, box, true);
     bk_frame_fill_rect(f, x + t, y + t, box - 2 * t, box - 2 * t, false);
     bk_frame_fill_rect(f, x + 2 * t, y + 2 * t, box - 4 * t, box - 4 * t, true);
@@ -113,11 +156,7 @@ static const char *const ICON_PAUSE[7] = {"##.##", "##.##", "##.##", "##.##", "#
 /* ---------------------------------------------------------------- game screen */
 
 #define D(n) ((int)(n) * (int)l->cell / 8) /* design dots (cell = 8) -> real dots */
-
-static int odd_up(int v)
-{
-    return v | 1;
-}
+#define Y(n) ((int)l->field_y + D(n))      /* the same, below the vertical margin of a native panel */
 
 void bk_render_scene(const bk_layout_t *l, const bk_scene_t *s, bk_frame_t *out)
 {
@@ -131,18 +170,18 @@ void bk_render_scene(const bk_layout_t *l, const bk_scene_t *s, bk_frame_t *out)
             uint8_t v = s->cells[row * BK_COLS + col];
             bool lit = v == BK_CELL_ON || (v == BK_CELL_BLINK && blink_on) || row >= BK_ROWS - (int)s->over_fill;
             if (lit) {
-                draw_cell(out, l, col * P, row * P);
+                draw_cell(out, P, col * P, (int)l->field_y + row * P);
             }
         }
     }
 
     /* optional captions (menu: game title and mode label), centred in the playfield */
     if (s->caption1 != NULL) {
-        bk_text_draw(out, (l->field_w - bk_text_width(s->caption1, l->label_scale)) / 2, D(105), l->label_scale,
+        bk_text_draw(out, (l->field_w - bk_text_width(s->caption1, l->label_scale)) / 2, Y(105), l->label_scale,
                      s->caption1);
     }
     if (s->caption2 != NULL) {
-        bk_text_draw(out, (l->field_w - bk_text_width(s->caption2, l->label_scale)) / 2, D(113), l->label_scale,
+        bk_text_draw(out, (l->field_w - bk_text_width(s->caption2, l->label_scale)) / 2, Y(113), l->label_scale,
                      s->caption2);
     }
 
@@ -150,54 +189,53 @@ void bk_render_scene(const bk_layout_t *l, const bk_scene_t *s, bk_frame_t *out)
     bk_frame_fill_rect(out, l->field_w, 0, l->ring, l->height, true);
 
     /* status panel */
-    const int pad = l->ring;
-    const int x0 = l->panel_x + pad;
-    const int inner_w = l->panel_w - 2 * pad;
+    const int x0 = l->panel_x + l->ring;
+    const int inner_w = l->panel_w - 2 * l->ring;
     const int ls = l->label_scale;
-    const int thick = l->ring;
-    const int dgap = l->gap;
-    const int digit_pitch = inner_w / 7;
-    const int digit_w = digit_pitch - dgap;
-    const int digit_h = odd_up(D(11));
+    const int dw = l->digit_w;
+    const int dh = l->digit_h;
+    const int dt = l->digit_t;
+    const int dg = l->digit_gap;
     const int x_right = x0 + inner_w;
 
-    bk_text_draw(out, x0, D(2), ls, "HI");
-    bk_draw_number7(out, x_right, D(9), digit_w, digit_h, thick, dgap, s->hi_score, 7);
+    bk_text_draw(out, x0, Y(2), ls, "HI");
+    bk_draw_number7(out, x_right, Y(9), dw, dh, dt, dg, s->hi_score, 7);
 
     if (s->show_score) {
-        bk_text_draw(out, x0, D(26), ls, "SCORE");
-        bk_draw_number7(out, x_right, D(33), digit_w, digit_h, thick, dgap, s->score, 7);
+        bk_text_draw(out, x0, Y(26), ls, "SCORE");
+        bk_draw_number7(out, x_right, Y(33), dw, dh, dt, dg, s->score, 7);
     }
 
-    /* NEXT preview: 4 x 4 cells at the full cell pitch */
-    bk_text_draw(out, x0, D(52), ls, "NEXT");
+    /* NEXT preview: 4 x 4 cells, at the full cell pitch when the panel is wide enough, smaller otherwise */
+    bk_text_draw(out, x0, Y(52), ls, "NEXT");
     if (s->has_preview) {
-        int px = l->panel_x + (l->panel_w - BK_PREVIEW_COLS * P) / 2;
-        int py = D(60);
+        const int pc = l->preview_cell;
+        int px = l->panel_x + (l->panel_w - BK_PREVIEW_COLS * pc) / 2;
+        int py = Y(60);
         for (int r = 0; r < BK_PREVIEW_ROWS; r++) {
             for (int c = 0; c < BK_PREVIEW_COLS; c++) {
                 uint8_t v = s->preview[r * BK_PREVIEW_COLS + c];
                 if (v == BK_CELL_ON || (v == BK_CELL_BLINK && blink_on)) {
-                    draw_cell(out, l, px + c * P, py + r * P);
+                    draw_cell(out, pc, px + c * pc, py + r * pc);
                 }
             }
         }
     }
 
     /* SPEED / LEVEL: single digits; the focused one blinks while the menu waits for input */
-    bk_text_draw(out, x0, D(100), ls, "SPEED");
+    bk_text_draw(out, x0, Y(100), ls, "SPEED");
     if (s->focus != BK_FOCUS_SPEED || blink_on) {
-        bk_draw_number7(out, x0 + digit_w, D(108), digit_w, digit_h, thick, dgap, s->speed, 1);
+        bk_draw_number7(out, x0 + dw, Y(108), dw, dh, dt, dg, s->speed, 1);
     }
-    bk_text_draw(out, x0, D(124), ls, "LEVEL");
+    bk_text_draw(out, x0, Y(124), ls, "LEVEL");
     if (s->focus != BK_FOCUS_LEVEL || blink_on) {
-        bk_draw_number7(out, x0 + digit_w, D(132), digit_w, digit_h, thick, dgap, s->level, 1);
+        bk_draw_number7(out, x0 + dw, Y(132), dw, dh, dt, dg, s->level, 1);
     }
 
     /* state icons */
-    draw_bitmap(out, x0, D(148), ls, s->sound_on ? ICON_SOUND_ON : ICON_SOUND_OFF, 7);
+    draw_bitmap(out, x0, Y(148), ls, s->sound_on ? ICON_SOUND_ON : ICON_SOUND_OFF, 7);
     if (s->paused) {
-        draw_bitmap(out, x0 + inner_w - 5 * ls, D(148), ls, ICON_PAUSE, 7);
+        draw_bitmap(out, x0 + inner_w - 5 * ls, Y(148), ls, ICON_PAUSE, 7);
     }
 }
 
