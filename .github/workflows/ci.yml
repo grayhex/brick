@@ -96,3 +96,28 @@ jobs:
         run: >
           python3 -I tools/cad_review/stl_review.py mechanical/inbox/buildcad-r0.1/ecf3a131-untitled-part-stl.zip
           --verify mechanical/inbox/buildcad-r0.1/measurements.json --png-dir "$RUNNER_TEMP/cad-png"
+
+  wasm:
+    name: simulator as WebAssembly (same results as native)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang lld ninja-build cmake
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        env:
+          CC: clang
+          CXX: clang++
+      - run: cmake --build build
+      - name: The WebAssembly test must be part of the run (not skipped)
+        run: ctest --test-dir build -N | grep -q test_wasm
+      - run: ctest --test-dir build --output-on-failure -R 'test_wasm|test_sim|test_minlibc'
+      - name: Single-file simulator page
+        run: sh platform/sim/web/build_wasm.sh --html build-wasm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brick-simulator
+          path: build-wasm/brick-sim.html
+          retention-days: 14

@@ -23,7 +23,7 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 Переносимое игровое ядро на C11, не привязанное к дисплею, разрешению, MCU или плате (ADR-023…030):
 
 - **Ядро** `firmware/`: игра = POD-структура с таблицей функций, фиксированный такт 60 Гц, детерминированный ГСЧ, нет кучи и глобального состояния; граница с железом — `bk_hal_t` (ввод, дисплей, звук, хранилище, подсветка).
-- **Tetris, базовый вариант 01**, перенесён из [ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames) и **сверяется с эталоном на каждом такте**: 68 сценариев, 59 357 тактов ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)). Остальные 50 вариантов и ПК-симулятор — вне этого PR ([docs/GAME_TETRIS.md](docs/GAME_TETRIS.md)).
+- **Tetris, базовый вариант 01**, перенесён из [ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames) и **сверяется с эталоном на каждом такте**: 68 сценариев, 59 357 тактов ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)). Остальные 50 вариантов не нужны на этом этапе ([docs/GAME_TETRIS.md](docs/GAME_TETRIS.md)); **ПК-симулятор** (терминал и браузер, ядро как WebAssembly) — [docs/SIMULATOR.md](docs/SIMULATOR.md).
 - **Экран:** 1-битный логический кадр, позитивная полярность, поле 10×20 + статус-колонка справа; эталонная сетка и **подгонка под нативный размер панели** (клетка 26 точек и колонка 76 точек для 336×536), ограничитель частоты показа `max_fps` — 60 Гц это частота симуляции, не панели ([docs/UI_MENU.md](docs/UI_MENU.md)).
 - **Меню:** номер/буква игры, номер режима, миниатюра, SPEED/LEVEL, настройки; четыре кнопки направлений, одна кнопка действия и кнопки MODE / SELECT / START (физический набор подтверждён PRD).
 - Размер ядра под Cortex-M4F: ≈ 23,5 КБ flash, `.data = .bss = 0` (**только компиляция**, на железе не измерялось).
@@ -43,6 +43,7 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 - [Hardware research and decision gates](docs/HARDWARE_RESEARCH.md) — LCD, SoC, battery, BLE, sound, production, provisional BOM.
 - [Display shortlist and physical pixel fit](docs/DISPLAY_CANDIDATES.md) — concrete Sharp MIP displays, Azumo frontlight, 10×20+right-side HUD fit, sourcing risks.
 - [Enclosure R0.2 concept](docs/MECHANICAL_CONCEPT.md) — preferred classic straight-sided silhouette, 175×80 mm, proposed 20–22 mm thickness, corrected 8 buttons and front speaker.
+- [PC simulator](docs/SIMULATOR.md) — the firmware core in a terminal and in a browser (WebAssembly): menus, controls, native-size LCD, panel refresh limit, session record/replay.
 - [First CAD mockup review](docs/MECHANICAL_MOCKUP_REVIEW.md) — measured STL mockup (buildcad.ai) against R0.2: what matches, 14 open items (button pitch, window, USB-C opening, side controls); archive in `mechanical/inbox/`, tool in `tools/cad_review/`.
 - [CAD agent handoff prompt](docs/CAD_HANDOFF_PROMPT.md) — ready-to-use editable parametric CAD task, part hierarchy, fit checks, STEP/STL exports.
 - [R0.2 three finish variants](design/concepts/brick-family-r02.svg) · [orthographic views](design/concepts/brick-orthographic-r02.svg) · [exploded concept](design/concepts/brick-exploded-r02.svg) — new SVG images with **current** controls.
@@ -83,13 +84,15 @@ brick/
 │   ├── include/brick/            # public API: game, hal, console, render, audio, save, ...
 │   ├── core/                     # game base, input, rng, frame, font, render, audio, save, console
 │   └── games/tetris/             # base Tetris variant
-├── tests/                        # unit, conformance (recorded reference traces), golden screens
+├── platform/sim/                 # PC simulator: window-less driver, terminal and WebAssembly front-ends
+├── tests/                        # unit, conformance (recorded reference traces), golden screens, simulator sessions
 │   ├── fixtures/tetris/          # traces exported from the TypeScript reference
 │   └── golden/                   # ASCII pictures of every console screen
 ├── tools/
 │   ├── conformance/              # exporter of reference fixtures (Node, only for regeneration)
 │   ├── frames/                   # golden frame -> PNG
 │   ├── cad_review/               # measure the STL mockup against R0.2 (Python, numpy, Pillow)
+│   ├── sim/                      # writes the simulator session fixtures
 │   └── experiments/              # reproducible experiments behind ADRs
 ├── hardware/        # (planned) KiCad schematic, PCB, BOM and fabrication outputs
 ├── mechanical/      # inbox/ — archived first mockup (STL); (planned) CAD, enclosure, buttons, STEP
