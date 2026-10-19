@@ -12,7 +12,7 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 - Large recognizable **classic Brick Game silhouette**; elegant contemporary execution, not a mini handheld.
 - **Strict black-and-white pixel output**, readable with lighting off; optional subtle **white illumination** for darkness (prefer reflective/transflective LCD; not emissive OLED by default).
 - D-pad, **one large action button**, **three function buttons**, dedicated physical power switch, and physical wheel/slider volume control (exact control type TBD).
-- USB-C **on bottom**, no 3.5 mm audio jack; integrated speaker. Bluetooth is required; whether standard wireless headphones are required is **unresolved** (BLE-only configuration link does not provide conventional BT headphone audio).
+- USB-C **on bottom**, no 3.5 mm audio jack; integrated speaker. **BLE is required for phone connection, settings and synchronization. All audio is through the built-in speaker; Bluetooth headphones are not supported or required.**
 - Target **20–30 hours** runtime under a precisely defined test profile; rechargeable battery.
 - Launch with approximately **10 classic games**, extend through firmware updates.
 - Reuse game rules and regression fixtures from [grayhex/ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames); do not assume its browser/TypeScript code runs unmodified on an MCU.
@@ -50,7 +50,7 @@ Directories marked as planned do not exist until implementation begins.
 ## Immediate priorities
 
 1. Validate two monochrome reflective-display families **with physical samples**, including white illumination and visibility with light off.
-2. Resolve whether Bluetooth means **phone configuration over BLE only** or **real headphone audio**.
+2. Prototype BLE connection to phone for configuration and sync; no wireless audio streaming.
 3. Select 10 launch games and map their controls; check whether one action button is sufficient for every game.
 4. Benchmark prospective MCU + LCD + audio power consumption and frame update latency.
 5. Prototype physical ergonomics and acoustics **before** defining PCB outline and ordering tooling.
