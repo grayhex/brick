@@ -52,6 +52,10 @@
 - Azumo 4.4 модуль + frontlight: https://www.azumotech.com/products/4-4-monochrome-display-12561-06/
 - Sharp 4.4 розница: https://www.digikey.be/en/products/detail/sharp-microelectronics/LS044Q7DH01/5054070
 
+## КРИТИЧНЫЙ РИСК ПО FPS
+
+Официальная полная документация Sharp LS032B7DD02 называет **частоту кадров `fSCS` от 1 до 10 Гц** (EXTMODE влияет на минимум); максимальный SPI `fSCLK` 2 МГц, типичное время реакции пикселя ~30 мс. Это потенциальный **stop/go blocker** для игровых кадров Tetris/Tanks/Racing: на практике 10 FPS может быть недостаточно. Нужно уточнить у Sharp/Azumo, относятся ли ограничения к полному изображению или к другой функции периодического обновления; произвести эксперимент с реальным модулем на 10/15/20/30 Гц (полные и выборочные строки). Не заказывать партию до проверки. Источник: https://www.data-modul.com/sites/default/files/products/LS032B7DD02-specification-12047826.pdf ; комплект Azumo: https://pages.azumotech.com/hubfs/Data%20Sheets/Product%20Specification/15648-01_X1%203.2%20Sharp%20Product%20Specification%20Datasheet_To%20Customers.pdf .
+
 ## Что проверить до фиксации LCD и платы
 
 1. **Ориентация и оптика:** позитивная полярность, контраст, углы обзора и реальные фото с белым светом выключенным/включённым.
