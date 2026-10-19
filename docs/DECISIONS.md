@@ -9,6 +9,7 @@ Use statuses **CONFIRMED**, **TARGET**, **PROPOSED**, **OPEN**, **REJECTED**. Ne
 | ADR-003 | 2026-10-19 | CONFIRMED | **Black/white only**, optional subtle white illumination for darkness; no color/UI palettes. Supersedes earlier **color AMOLED** concept. |
 | ADR-004 | 2026-10-19 | PROPOSED | Evaluate reflective Memory LCD with frontlight and transflective/FSTN with integrated white backlight; select by measured optical/electrical performance and supplier constraints. |
 | ADR-015 | 2026-10-19 | CONFIRMED | **Positive LCD polarity**: black/dark pixels on a light neutral gray/white-looking reflective background, readable in ambient light with illumination OFF. No negative-polarity white-on-black display. White night illumination only; exact LCD/optics still OPEN. |
+| ADR-016 | 2026-10-19 | CONFIRMED | Maintain original Brick Game screen geometry: **10×20 logical cell playfield plus persistent information/status zone to the RIGHT**. Native pixel resolution, sidebar width and exact overall physical dimensions are OPEN. |
 | ADR-005 | 2026-10-19 | CONFIRMED | D-pad + one big Action + 3 function keys + physical On/Off + physical volume wheel or slider. |
 | ADR-006 | 2026-10-19 | CONFIRMED | USB-C on bottom, integrated loudspeaker, **no 3.5 mm audio jack**. |
 | ADR-007 | 2026-10-19 | CONFIRMED | **Bluetooth LE only** for phone connection, settings and sync. All audio only through built-in speaker; no Bluetooth headphones, A2DP or LE Audio required. |
