@@ -17,6 +17,8 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 
 **Decision gate:** procure 2–3 physical sample panels, test positive-polarity contrast (black pixel vs light unlit background), outdoor/night legibility, update rate (game dirty rectangles), white lighting uniformity, thickness, integration complexity, availability and volume pricing; then freeze display dimensions/interface **before** MCU/PCB. Reflective Memory LCD typically needs a separate FRONTLIGHT optical solution; transflective LCD can use a compatible white BACKLIGHT. Do not treat either as automatically integrated.
 
+**Display geometry confirmed:** classical 10 columns × 20 rows of game cells plus a **right-side information strip** for score/level/mode/other status. This is not a 10×20 physical pixel panel; whole active area must accommodate the side information zone while preserving game-cell aspect ratio. Compare candidate LCD active-area shape and effective usable pixels accordingly; exact geometry and sidebar width are still open.
+
 ## 2. MCU / FPGA candidates
 
 | Candidate | Strengths | Constraints / decision |
