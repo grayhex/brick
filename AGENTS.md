@@ -1,6 +1,6 @@
 # Instructions for coding and engineering agents
 
-Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
+Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
 
 ## Source of truth
 - User-confirmed choices have status **CONFIRMED** in the PRD. Preserve them unless explicitly changed.
@@ -27,6 +27,7 @@ Read `README.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `
 
 ## Hardware validation gates
 - Compare reflective Memory LCD and transflective monochrome LCD. Screen controller/pinout, viewing angle, illumination method, MOQ, long-term availability and actual measured consumption must be confirmed before PCB freeze.
+- **CRITICAL LCD throughput gate:** Sharp LS032B7DD02 documentation quotes `fSCS` 1–10 Hz, SPI max 2 MHz. Clarify with manufacturer and TEST whether it restricts playable full-frame updates to 10 FPS; record 10/15/20/30 FPS screen results before approving this panel. Never assume 60 Hz.
 - Battery capacity and hours of operation are goals, not guarantees. Include display, MCU, audio, BLE and regulator losses in power budget.
 - CONFIRMED: BLE only for connecting to a phone, settings and synchronization. All sound uses onboard speaker; no Bluetooth headphone streaming, Classic A2DP or LE Audio. Do not introduce dedicated Bluetooth audio hardware.
 - Factory test pads, SWD/recovery programming, reverse/ESD protection, battery safety, USB-C CC/power control, DFM, regulatory constraints are mandatory review items.
