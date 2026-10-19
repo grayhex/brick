@@ -1,5 +1,5 @@
 /*
- * Experiment behind ADR-018: does an exact integer gravity timer behave like the reference's double arithmetic?
+ * Experiment behind ADR-024: does an exact integer gravity timer behave like the reference's double arithmetic?
  *
  * The reference keeps the time of the last gravity step as a double and does `last = tick - fmod(tick - last, period)`.
  * The period is rational (counts * 2048 / 11500 ticks), so an integer phase counter in 1/11500-tick units is exact.
@@ -8,7 +8,7 @@
  *
  *   cc -O2 -ffp-contract=off tools/experiments/gravity_timer.c -o gravity_timer -lm && ./gravity_timer
  *
- * Result recorded in docs/DECISIONS.md (ADR-018). Not part of the build or the test suite.
+ * Result recorded in docs/DECISIONS.md (ADR-024). Not part of the build or the test suite.
  */
 #include <math.h>
 #include <stdint.h>

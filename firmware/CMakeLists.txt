@@ -26,7 +26,7 @@ target_compile_options(brickcore PRIVATE
   # Bit-exact conformance with the reference needs IEEE double results without fused multiply-add.
   -ffp-contract=off)
 
-# libm: fmod() in the gravity timer (ADR-018).
+# libm: fmod() in the gravity timer (ADR-024).
 target_link_libraries(brickcore PUBLIC m)
 
 # Size report of the core (meaningful for the ARM cross build; works on the host too).

@@ -6,7 +6,7 @@
  *     bk_console_tick(&console);         // read buttons -> step -> compose -> present if the picture changed
  * or, in tests / headless runs, bk_console_step() + bk_console_render() without touching the display port.
  *
- * ---- Controls (PROPOSED, ADR-019; the roles of the function keys are OPEN in the PRD) ----
+ * ---- Controls (PROPOSED, ADR-025; the roles of the function keys are OPEN in the PRD) ----
  *
  *   key      | menu (HOME)                      | settings          | playing         | paused / game over
  *   ---------+----------------------------------+-------------------+-----------------+--------------------------

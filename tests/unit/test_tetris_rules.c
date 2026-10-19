@@ -63,7 +63,7 @@ static void test_piece_alignment(void)
             CHECK_EQ(p.min_y, s == LINE ? line_lowest[a] : 0);
             CHECK(p.min_x >= -2);
             CHECK(p.max_x <= 2);
-            /* the spawn column math relies on the anchor never being negative (ADR-018, erase animation) */
+            /* the spawn column math relies on the anchor never being negative (ADR-024, erase animation) */
             CHECK(p.min_x <= 0);
         }
     }

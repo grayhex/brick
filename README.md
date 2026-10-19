@@ -11,8 +11,8 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 
 - Large recognizable **classic Brick Game silhouette**; elegant contemporary execution, not a mini handheld.
 - **CONFIRMED positive monochrome LCD appearance:** dark/black pixels on a light neutral-gray reflective background, legible without powered illumination in adequate ambient light; optional subtle **white illumination** only for darkness. No reverse/negative LCD theme, greyscale or color UI required. Panel technology and illuminator are still unselected.
-- D-pad, **one large action button**, **three function buttons**, dedicated physical power switch, and physical wheel/slider volume control (exact control type TBD).
-- USB-C **on bottom**, no 3.5 mm audio jack; integrated speaker. **BLE is required for phone connection, settings and synchronization. All audio is through the built-in speaker; Bluetooth headphones are not supported or required.**
+- **Four separate small yellow round directional buttons**, **one large smooth yellow action button**, and **three labeled yellow function buttons directly BELOW the LCD (MODE / SELECT / START)**, plus physical power and volume wheel/slider.
+- USB-C **centered on the bottom as its only opening**, no 3.5 mm audio jack; **single speaker grille on FRONT near bottom center**. **BLE is required for phone connection, settings and synchronization. All audio is through the built-in speaker; Bluetooth headphones are not supported or required.**
 - Target **20–30 hours** runtime under a precisely defined test profile; rechargeable battery.
 - Launch with approximately **10 classic games**, extend through firmware updates.
 - Reuse game rules and regression fixtures from [grayhex/ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames); do not assume its browser/TypeScript code runs unmodified on an MCU.
@@ -20,7 +20,7 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 
 ## Программный прототип (0.1)
 
-Переносимое игровое ядро на C11, не привязанное к дисплею, разрешению, MCU или плате (ADR-017…023):
+Переносимое игровое ядро на C11, не привязанное к дисплею, разрешению, MCU или плате (ADR-023…029):
 
 - **Ядро** `firmware/`: игра = POD-структура с таблицей функций, фиксированный такт 60 Гц, детерминированный ГСЧ, нет кучи и глобального состояния; граница с железом — `bk_hal_t` (ввод, дисплей, звук, хранилище, подсветка).
 - **Tetris, базовый вариант 01**, перенесён из [ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames) и **сверяется с эталоном на каждом такте**: 68 сценариев, 59 357 тактов ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)). Остальные 50 вариантов и ПК-симулятор — вне этого PR ([docs/GAME_TETRIS.md](docs/GAME_TETRIS.md)).
@@ -41,6 +41,11 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 
 - [Product requirements](docs/PRODUCT_REQUIREMENTS.md) — authoritative confirmed requirements vs open choices.
 - [Hardware research and decision gates](docs/HARDWARE_RESEARCH.md) — LCD, SoC, battery, BLE, sound, production, provisional BOM.
+- [Display shortlist and physical pixel fit](docs/DISPLAY_CANDIDATES.md) — concrete Sharp MIP displays, Azumo frontlight, 10×20+right-side HUD fit, sourcing risks.
+- [Enclosure R0.2 concept](docs/MECHANICAL_CONCEPT.md) — preferred classic straight-sided silhouette, 175×80 mm, proposed 20–22 mm thickness, corrected 8 buttons and front speaker.
+- [CAD agent handoff prompt](docs/CAD_HANDOFF_PROMPT.md) — ready-to-use editable parametric CAD task, part hierarchy, fit checks, STEP/STL exports.
+- [R0.2 three finish variants](design/concepts/brick-family-r02.svg) · [orthographic views](design/concepts/brick-orthographic-r02.svg) · [exploded concept](design/concepts/brick-exploded-r02.svg) — new SVG images with **current** controls.
+- [Older R0.1 drawing](design/brick-envelope-r01.svg) — **ARCHIVED**, not the approved button placement.
 - [Game portability plan](docs/GAME_PORTING.md) — factual source mapping and safe migration.
 - [Decision log](docs/DECISIONS.md) — status and rationale.
 - [Архитектура прошивки](docs/FIRMWARE_ARCHITECTURE.md) — слои, HAL, память, порт на ARM MCU, как добавить игру.
@@ -48,14 +53,27 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 - [Сторонние материалы](THIRD_PARTY.md) — происхождение и лицензии.
 - [Agent instructions](AGENTS.md) — constraints and first execution steps.
 
+## Visual reference — Brick R0.2
+
+The following pictures are **vector concept drawings**, not photorealistic renderings or fabrication CAD. They encode the corrected controls and are kept directly in this repository. The user's preferred **original photorealistic triptych** sets the proportions and silhouette; its older D-pad / low function buttons / side-bottom speaker holes are superseded by R0.2 requirements.
+
+![Three finishes of Brick R0.2](design/concepts/brick-family-r02.svg)
+
+![Orthographic layout and USB-C-only bottom](design/concepts/brick-orthographic-r02.svg)
+
+![Exploded conceptual component layout](design/concepts/brick-exploded-r02.svg)
+
+**Use for CAD:** [docs/CAD_HANDOFF_PROMPT.md](docs/CAD_HANDOFF_PROMPT.md). Do not infer real PCB routing, RF design, battery capacity, speaker acoustics, or FPC geometry from these visualizations.
+
 ## Repository layout
 
 ```text
 brick/
 ├── README.md, AGENTS.md, THIRD_PARTY.md
 ├── CMakeLists.txt, cmake/        # host build and the Cortex-M4F cross-compile smoke test
-├── docs/                         # requirements, research, decisions, firmware architecture, UI, conformance
+├── docs/                         # requirements, research, decisions, display, mechanics, firmware architecture, UI, conformance
 │   └── img/                      # illustrations of the logical frame (generated from tests/golden)
+├── design/                       # concept SVG images and source-reference notes (mechanical R0.2)
 ├── firmware/                     # portable core (no board, no display, no MCU)
 │   ├── include/brick/            # public API: game, hal, console, render, audio, save, ...
 │   ├── core/                     # game base, input, rng, frame, font, render, audio, save, console
@@ -67,7 +85,6 @@ brick/
 │   ├── conformance/              # exporter of reference fixtures (Node, only for regeneration)
 │   ├── frames/                   # golden frame -> PNG
 │   └── experiments/              # reproducible experiments behind ADRs
-├── design/          # (planned) reference mockups, licensed assets
 ├── hardware/        # (planned) KiCad schematic, PCB, BOM and fabrication outputs
 ├── mechanical/      # (planned) CAD, enclosure, buttons, STEP
 └── manufacturing/   # (planned) assembly/test instructions, DFM, QA
@@ -81,6 +98,6 @@ Directories marked *(planned)* do not exist until implementation begins. PCB wor
 2. Prototype BLE connection to phone for configuration and sync; no wireless audio streaming.
 3. Select 10 launch games and map their controls; check whether one action button is sufficient for every game.
 4. Benchmark prospective MCU + LCD + audio power consumption and frame update latency.
-5. Prototype physical ergonomics and acoustics **before** defining PCB outline and ordering tooling.
+5. Use current R0.2 drawings + CAD handoff to prototype ergonomics/acoustics **before** defining PCB outline and ordering tooling.
 
 No FPGA is justified solely by classic Brick Game mechanics; assess it only if hardware-faithful reproduction becomes an explicit separate requirement.

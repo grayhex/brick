@@ -1,4 +1,4 @@
-# Brick — Product Requirements Document (PRD), revision 0.4
+# Brick — Product Requirements Document (PRD), revision 0.6
 
 **Date:** 2026-10-19  
 **Stage:** concept and engineering feasibility study  
@@ -15,19 +15,20 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 
 | ID | Requirement | Status | Notes |
 | --- | --- | --- | --- |
-| MECH-01 | Tall, familiar classic Brick Game silhouette, relatively large rather than mini | CONFIRMED | Exact size not approved |
+| MECH-01 | Tall, familiar classic Brick Game silhouette, relatively large rather than mini | CONFIRMED | Owner chose **preliminary outer footprint 175×80 mm**; exact CAD tolerances and final size pending physical mockup |
+| MECH-02 | Preliminary enclosure thickness **~20–22 mm**, ergonomic acceptance pending | PROPOSED | Azumo frontlight protrusions and LiPo packaging to be included; see `MECHANICAL_CONCEPT.md` |
 | DISP-01 | **Strict black/white** gameplay and UI | CONFIRMED | No color palette required |
 | DISP-02 | Subtle **white lighting only for darkness**, user switchable | CONFIRMED | Daylight legibility without lighting is intended; LCD technology must be validated |
 | DISP-03 | **Positive monochrome LCD**: dark/black active pixels on a light neutral-gray / near-white background | CONFIRMED | User explicitly chose traditional light LCD with black cells, not reverse/negative display; optical white is a visual reference, not a specific material chromaticity |
 | DISP-04 | **Classic layout: main playfield 10 columns × 20 rows and a separate information/status zone on its RIGHT** | CONFIRMED | Preserve classic relative proportions, no gameplay cropping or distortion; sidebar for score, level, mode, status; whole panel dimensions/pixel resolution OPEN |
-| CTRL-01 | Physical D-pad | CONFIRMED | Final mechanics under review |
-| CTRL-02 | **One** prominent large action button | CONFIRMED | No pair of action buttons |
-| CTRL-03 | **Three** dedicated function buttons | CONFIRMED | Meaning/keycaps to be set |
+| CTRL-01 | **FOUR separate yellow circular directional buttons** (no unified cross), smaller and visibly spaced to reduce combined accidental presses | CONFIRMED | final diameter/spacing pending ergonomic mockup |
+| CTRL-02 | **One** prominent large **smooth yellow circular** action button | CONFIRMED | No legend, symbol or secondary action button |
+| CTRL-03 | **Three yellow round functional keys BELOW LCD** labeled **MODE / SELECT / START** | CONFIRMED | exact placement/size pending ergonomic mockup, NOT below gameplay keys |
 | CTRL-04 | Separate on/off power control | CONFIRMED | True low-idle/off behavior needed |
 | CTRL-05 | Physical **wheel or slider** for volume | CONFIRMED / exact type OPEN | Must be easily adjusted without using menu |
 | IO-01 | USB-C on **bottom** edge | CONFIRMED | Data + charging, update/recovery route |
 | IO-02 | Do **not** include 3.5 mm analog headphone jack | CONFIRMED | Speaker integrated |
-| AUDIO-01 | Built-in high quality sound / loudspeaker | CONFIRMED | Acoustic chamber/volume calibration required |
+| AUDIO-01 | Built-in high quality sound / loudspeaker, **single grille FRONT at bottom center** | CONFIRMED | no speaker apertures on bottom/sides/rear; acoustic chamber/volume calibration required |
 | BT-01 | **Bluetooth Low Energy (BLE)** to connect to phone, configure settings, synchronize data | CONFIRMED | GATT services, security and protocol design OPEN |
 | BT-02 | No Bluetooth headphone audio (neither A2DP nor LE Audio); speaker is the **only audio output** | CONFIRMED | No Bluetooth audio transmitter or codec required |
 | PWR-01 | USB-C rechargeable battery | CONFIRMED | Chemistry/capacity/vendor OPEN |
@@ -40,14 +41,14 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 
 ## 3. Enclosure layout (intent, not dimensioned CAD)
 
-- Front: large portrait monochrome playfield, D-pad, one large action button, three labelled function buttons.
+- Front: large portrait monochrome playfield; immediately below screen three labeled MODE / SELECT / START; below them four *separate* small yellow direction keys (left) and one large smooth yellow action (right); single lower-center **front** loudspeaker grille.
 - Side: physical power switch and volume wheel/slider (exact locations OPEN). Optional accessible microSD on side is **not confirmed**.
-- Bottom: USB-C; **no** mini-jack. Consider clearances for a cable while device is handheld or placed on a desk.
-- Rear or bottom: speaker outlet connected to designed acoustic cavity. Avoid obstruction when held.
+- Bottom: **only centered USB-C**; **no** mini-jack, no speaker slots/holes or decorative ports. Consider clearances for cable while handheld.
+- Rear and bottom must NOT have speaker outlet; front-center lower perforations link to designed acoustic cavity. Avoid hand blockage.
 - Finish: premium, smooth mechanical fit; material, transparent shell/black PCB aesthetic, coating and window details OPEN.
 - Product inspiration includes Analogue Pocket build quality while preserving Brick Game outer shape.
 
-**Dimension proposal for ergonomics only:** investigate 145–165 mm height and fit of battery/cell/display; not approved.
+**Current owner's preliminary choice:** approx. **175×80 mm**, see [MECHANICAL_CONCEPT.md](MECHANICAL_CONCEPT.md) and [front/rear/side dimensional SVG](../design/brick-envelope-r01.svg). Thickness **~20–22 mm** is an engineering proposal, not an owner-approved manufacturing dimension.
 
 ## 4. Screen and UI requirements
 
@@ -61,10 +62,11 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 - In case of larger native display resolution, integer scaling, black margins and separate status HUD are acceptable, subject to review.
 - Main candidates: reflective Memory LCD with custom frontlight vs monochrome transflective/FSTN with backlight. **E-ink is not default** due to refresh/ghosting challenges; **OLED is emissive and cannot behave as passive LCD**.
 - Quantify contrast, outdoor readability, scan/update latency, unit price/MOQ and the optical impact of custom illumination.
+- **CRITICAL OPEN ITEM:** Sharp LS032B7DD02 datasheet specifies `fSCS` 1–10 Hz. Its implications for gameplay refresh rate must be tested with representative 10/15/20/30 FPS motion before approval. See [DISPLAY_CANDIDATES.md](DISPLAY_CANDIDATES.md).
 
 ## 5. Controls and game compatibility
 
-Target physical controls: Up/Down/Left/Right, one Action, three Function keys, Power, and analog-feeling volume knob/slider. Function allocation (Start/Pause, Game/Mode, Reset/Back, etc.) requires per-game mapping and ergonomic testing.
+Target physical controls: four individual yellow round Up/Down/Left/Right keys, one larger smooth yellow Action, three yellow Mode/Select/Start keys **under screen**, Power and analog-feeling volume knob/slider. Logical bindings for games (including Pause/Back/Reset semantics) require per-game mapping and ergonomic testing.
 
 Check reference game quirks before fixing a matrix: some library titles historically expect rotate vs fire and some require both. Consider safe **contextual mapping or long-press alternatives**, not extra physical action buttons, unless user approves a product change.
 
@@ -85,7 +87,7 @@ These are TEST PROPOSALS, not demonstrated results:
 - Comfortable visible display in ambient light with white illumination fully disabled.
 - Night illumination with no excessive light bleed or hotspots.
 - Robust USB update including interrupted-upgrade recovery.
-- No false diagonals or stuck buttons in normal use; button-actuation feel approved by owner.
+- No false diagonals or stuck buttons in normal use; verify that four separate yellow direction buttons cannot easily be actuated together unintentionally; button feel approved by owner.
 - Stable audio without mechanical rattles at intended maximum volume.
 - Thermal, battery safety and basic EMC/RF verification before shipment.
 
@@ -96,6 +98,8 @@ These are TEST PROPOSALS, not demonstrated results:
 3. Preferred enclosure material/finish: opaque matte, smoked transparent (black PCB visible), or both?
 4. Is a microSD slot still desired on the side, or is internal Flash enough for games and updates?
 5. What is the acceptable target retail price / max manufactured unit cost? This governs enclosure tooling and LCD sourcing.
+
+- **Mechanical R0.2:** preferred silhouette comes from the user's first Monolith/Clear Smoke/Ceramic photorealistic picture; latest changes override the buttons/speaker of that old picture. New editable vector visualizations and ready CAD prompt at `design/concepts/*r02.svg` and `docs/CAD_HANDOFF_PROMPT.md`.
 
 ## 9. Links to concept references
 

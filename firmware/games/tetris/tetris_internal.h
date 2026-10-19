@@ -30,7 +30,7 @@ typedef struct {
     int piece_y;
     bkt_piece_t next_piece;
     bool falling_finished; /* landed; the next piece appears on the next fall step */
-    double last_fall;      /* tick of the last gravity step, fractional (see ADR-018) */
+    double last_fall;      /* tick of the last gravity step, fractional (see ADR-024) */
     bool over;
 
     uint32_t move_cnt[2]; /* auto-repeat counters: LEFT, RIGHT */
