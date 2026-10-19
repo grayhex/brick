@@ -57,6 +57,10 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 
 The following pictures are **vector concept drawings**, not photorealistic renderings or fabrication CAD. They encode the corrected controls and are kept directly in this repository. The user's preferred **original photorealistic triptych** sets the proportions and silhouette; its older D-pad / low function buttons / side-bottom speaker holes are superseded by R0.2 requirements.
 
+**Preferred original silhouette:** [locally archived JPG thumbnail](design/reference-original/preferred-render-thumb.jpg) ([reference notes](design/reference-original/README.md)). The complete high-resolution source PNG still needs binary upload; this archived thumbnail is only 150×137 px.
+
+![User-preferred original visual proportions — preview only](design/reference-original/preferred-render-thumb.jpg)
+
 ![Three finishes of Brick R0.2](design/concepts/brick-family-r02.svg)
 
 ![Orthographic layout and USB-C-only bottom](design/concepts/brick-orthographic-r02.svg)
@@ -73,7 +77,7 @@ brick/
 ├── CMakeLists.txt, cmake/        # host build and the Cortex-M4F cross-compile smoke test
 ├── docs/                         # requirements, research, decisions, display, mechanics, firmware architecture, UI, conformance
 │   └── img/                      # illustrations of the logical frame (generated from tests/golden)
-├── design/                       # concept SVG images and source-reference notes (mechanical R0.2)
+├── design/                       # concept SVG images, original-photo thumbnail and source-reference notes (mechanical R0.2)
 ├── firmware/                     # portable core (no board, no display, no MCU)
 │   ├── include/brick/            # public API: game, hal, console, render, audio, save, ...
 │   ├── core/                     # game base, input, rng, frame, font, render, audio, save, console

@@ -8,7 +8,7 @@
 
 **Важно:** старый референс содержит **устаревшую** крестовину, три функции в нижней области, динамик слева / нижние звуковые отверстия. **Эти детали не копировать.** Согласованные позднее изменения ниже имеют больший приоритет.
 
-CAD-задание: [CAD_HANDOFF_PROMPT.md](CAD_HANDOFF_PROMPT.md). Ревизия визуальных чертежей: [brick-family-r02.svg](../design/concepts/brick-family-r02.svg), [brick-orthographic-r02.svg](../design/concepts/brick-orthographic-r02.svg), [brick-exploded-r02.svg](../design/concepts/brick-exploded-r02.svg).
+[Миниатюра предпочтительного раннего рендера](../design/reference-original/preferred-render-thumb.jpg) уже в GitHub; полный PNG пока требует отдельной бинарной загрузки. CAD-задание: [CAD_HANDOFF_PROMPT.md](CAD_HANDOFF_PROMPT.md). Ревизия визуальных чертежей: [brick-family-r02.svg](../design/concepts/brick-family-r02.svg), [brick-orthographic-r02.svg](../design/concepts/brick-orthographic-r02.svg), [brick-exploded-r02.svg](../design/concepts/brick-exploded-r02.svg).
 
 ## 1. Утверждено
 
