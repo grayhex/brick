@@ -1,0 +1,14 @@
+{
+  "name": "brick-conformance-tools",
+  "private": true,
+  "type": "module",
+  "description": "Exports golden conformance fixtures from the TypeScript reference (grayhex/ApolloBrickGames). Needed only to regenerate fixtures; the C tests never run Node.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node build.mjs",
+    "export:tetris": "node build.mjs && node dist/export_tetris.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

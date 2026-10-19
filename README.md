@@ -1,6 +1,6 @@
 # Brick — premium handheld Brick Game
 
-**Status:** concept / pre-prototype. **Visibility:** private. **Documentation language:** Russian.
+**Status:** concept / pre-prototype; **first software prototype added** (portable game core, base Tetris, menu — see below). **Visibility:** private. **Documentation language:** Russian.
 
 An original, premium, rechargeable handheld inspired by classic vertical Brick Game devices. The project emphasizes authentic strictly monochrome pixel graphics, physical controls, high-quality sound, long battery life and upgradeable firmware — without emulating a general-purpose game console.
 
@@ -18,6 +18,25 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 - Reuse game rules and regression fixtures from [grayhex/ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames); do not assume its browser/TypeScript code runs unmodified on an MCU.
 - Initial manufacturing volume: **100–500 units**. Repository stays private for now.
 
+## Программный прототип (0.1)
+
+Переносимое игровое ядро на C11, не привязанное к дисплею, разрешению, MCU или плате (ADR-023…030):
+
+- **Ядро** `firmware/`: игра = POD-структура с таблицей функций, фиксированный такт 60 Гц, детерминированный ГСЧ, нет кучи и глобального состояния; граница с железом — `bk_hal_t` (ввод, дисплей, звук, хранилище, подсветка).
+- **Tetris, базовый вариант 01**, перенесён из [ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames) и **сверяется с эталоном на каждом такте**: 68 сценариев, 59 357 тактов ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)). Остальные 50 вариантов и ПК-симулятор — вне этого PR ([docs/GAME_TETRIS.md](docs/GAME_TETRIS.md)).
+- **Экран:** 1-битный логический кадр, позитивная полярность, поле 10×20 + статус-колонка справа; эталонная сетка и **подгонка под нативный размер панели** (клетка 26 точек и колонка 76 точек для 336×536), ограничитель частоты показа `max_fps` — 60 Гц это частота симуляции, не панели ([docs/UI_MENU.md](docs/UI_MENU.md)).
+- **Меню:** номер/буква игры, номер режима, миниатюра, SPEED/LEVEL, настройки; четыре кнопки направлений, одна кнопка действия и кнопки MODE / SELECT / START (физический набор подтверждён PRD).
+- Размер ядра под Cortex-M4F: ≈ 23,5 КБ flash, `.data = .bss = 0` (**только компиляция**, на железе не измерялось).
+
+```sh
+cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build --output-on-failure
+cmake -S . -B build-asan -G Ninja -DBRICK_SANITIZE=ON && cmake --build build-asan && ctest --test-dir build-asan   # ASan + UBSan
+cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake -DCMAKE_BUILD_TYPE=Release -DBRICK_BUILD_TESTS=OFF \
+  && cmake --build build-m4 && cmake --build build-m4 --target brickcore_size                                       # проверка переносимости
+```
+
+Нужны CMake ≥ 3.16 и компилятор C11/C++17; Node ≥ 20 — только для регенерации фикстур соответствия.
+
 ## Documentation
 
 - [Product requirements](docs/PRODUCT_REQUIREMENTS.md) — authoritative confirmed requirements vs open choices.
@@ -29,6 +48,9 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 - [Older R0.1 drawing](design/brick-envelope-r01.svg) — **ARCHIVED**, not the approved button placement.
 - [Game portability plan](docs/GAME_PORTING.md) — factual source mapping and safe migration.
 - [Decision log](docs/DECISIONS.md) — status and rationale.
+- [Архитектура прошивки](docs/FIRMWARE_ARCHITECTURE.md) — слои, HAL, память, порт на ARM MCU, как добавить игру.
+- [Tetris: что портировано](docs/GAME_TETRIS.md), [соответствие эталону](docs/CONFORMANCE.md), [меню и управление](docs/UI_MENU.md).
+- [Сторонние материалы](THIRD_PARTY.md) — происхождение и лицензии.
 - [Agent instructions](AGENTS.md) — constraints and first execution steps.
 
 ## Visual reference — Brick R0.2
@@ -47,27 +69,32 @@ The following pictures are **vector concept drawings**, not photorealistic rende
 
 **Use for CAD:** [docs/CAD_HANDOFF_PROMPT.md](docs/CAD_HANDOFF_PROMPT.md). Do not infer real PCB routing, RF design, battery capacity, speaker acoustics, or FPC geometry from these visualizations.
 
-## Planned repository layout
+## Repository layout
 
 ```text
 brick/
-├── README.md
-├── AGENTS.md
-├── docs/
-│   ├── PRODUCT_REQUIREMENTS.md
-│   ├── HARDWARE_RESEARCH.md
-│   ├── CAD_HANDOFF_PROMPT.md
-│   ├── GAME_PORTING.md
-│   └── DECISIONS.md
-├── design/          # concept SVG images and original-photo thumbnail
-├── hardware/        # KiCad schematic, PCB, BOM and fabrication outputs
-├── mechanical/      # CAD, enclosure, buttons, STEP
-├── firmware/        # bootloader, platform HAL, games, audio, menu
-├── tests/           # reusable gameplay fixtures and HIL tests
-└── manufacturing/   # assembly/test instructions, DFM, QA
+├── README.md, AGENTS.md, THIRD_PARTY.md
+├── CMakeLists.txt, cmake/        # host build and the Cortex-M4F cross-compile smoke test
+├── docs/                         # requirements, research, decisions, display, mechanics, firmware architecture, UI, conformance
+│   └── img/                      # illustrations of the logical frame (generated from tests/golden)
+├── design/                       # concept SVG images, original-photo thumbnail and source-reference notes (mechanical R0.2)
+├── firmware/                     # portable core (no board, no display, no MCU)
+│   ├── include/brick/            # public API: game, hal, console, render, audio, save, ...
+│   ├── core/                     # game base, input, rng, frame, font, render, audio, save, console
+│   └── games/tetris/             # base Tetris variant
+├── tests/                        # unit, conformance (recorded reference traces), golden screens
+│   ├── fixtures/tetris/          # traces exported from the TypeScript reference
+│   └── golden/                   # ASCII pictures of every console screen
+├── tools/
+│   ├── conformance/              # exporter of reference fixtures (Node, only for regeneration)
+│   ├── frames/                   # golden frame -> PNG
+│   └── experiments/              # reproducible experiments behind ADRs
+├── hardware/        # (planned) KiCad schematic, PCB, BOM and fabrication outputs
+├── mechanical/      # (planned) CAD, enclosure, buttons, STEP
+└── manufacturing/   # (planned) assembly/test instructions, DFM, QA
 ```
 
-Directories marked as planned do not exist until implementation begins.
+Directories marked *(planned)* do not exist until implementation begins. PCB work has not started.
 
 ## Immediate priorities
 
