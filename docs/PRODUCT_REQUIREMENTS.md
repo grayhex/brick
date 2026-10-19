@@ -1,4 +1,4 @@
-# Brick — Product Requirements Document (PRD), revision 0.2
+# Brick — Product Requirements Document (PRD), revision 0.3
 
 **Date:** 2026-10-19  
 **Stage:** concept and engineering feasibility study  
@@ -18,6 +18,7 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 | MECH-01 | Tall, familiar classic Brick Game silhouette, relatively large rather than mini | CONFIRMED | Exact size not approved |
 | DISP-01 | **Strict black/white** gameplay and UI | CONFIRMED | No color palette required |
 | DISP-02 | Subtle **white lighting only for darkness**, user switchable | CONFIRMED | Daylight legibility without lighting is intended; LCD technology must be validated |
+| DISP-03 | **Positive monochrome LCD**: dark/black active pixels on a light neutral-gray / near-white background | CONFIRMED | User explicitly chose traditional light LCD with black cells, not reverse/negative display; optical white is a visual reference, not a specific material chromaticity |
 | CTRL-01 | Physical D-pad | CONFIRMED | Final mechanics under review |
 | CTRL-02 | **One** prominent large action button | CONFIRMED | No pair of action buttons |
 | CTRL-03 | **Three** dedicated function buttons | CONFIRMED | Meaning/keycaps to be set |
@@ -49,9 +50,9 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 
 ## 4. Screen and UI requirements
 
-- Logical screen is monochrome; pixel states BLACK and WHITE. Do not infer requirement for RGB or greyscale.
-- Passive/reflected readability is preferred so illumination can be off in daylight.
-- White illumination shall be uniform, free of obvious hotspots and independently controllable.
+- Logical screen is monochrome, only two pixel states; positive polarity: dark/black pixels against a light neutral reflective background. Do not infer requirement for RGB, greyscale, or negative black-background / white-pixel theme.
+- **Ambient-light readability without active lighting is CONFIRMED**; select panel technology and contrast/reflectivity accordingly. Background may appear neutral-light gray rather than literal pure white.
+- White illumination shall be uniform, free of obvious hotspots and independently controllable; reflective LCD requires separately evaluated frontlight/optical stack whereas transflective LCD can use compatible white backlight.
 - Menu to preserve classic game letter/number, schematic game preview and mode, plus modern settings.
 - Portrait playfield shall preserve aspect and cells for original games without distorted geometry.
 - In case of larger native display resolution, integer scaling, black margins and separate status HUD are acceptable, subject to review.
