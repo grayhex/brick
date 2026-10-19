@@ -1,10 +1,10 @@
-# Hardware architecture / engineering research (preselection, rev 0.1)
+# Hardware architecture / engineering research (preselection, rev 0.2)
 
 **All candidate parts below are UNVERIFIED** for the final display, supply and 100–500 unit build. Do not treat them as an approved BOM.
 
 ## 1. Crucial correction: display technology
 
-Earlier architecture exploration assumed **color AMOLED**. Owner has now confirmed **strict black/white** image and **very subtle optional white lighting for darkness**. Therefore the previous AMOLED screen and battery/power estimates are superseded.
+Earlier architecture exploration assumed **color AMOLED**. Owner has now confirmed **strict black/white** image with **positive polarity (dark pixels on a light neutral-gray / white-looking reflective field)** and **very subtle optional white lighting for darkness**. Negative-polarity black screens with glowing white pixels are not requested. Therefore the previous AMOLED screen and battery/power estimates are superseded.
 
 AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; they do not provide classic unlit-LCD experience. Instead sample:
 
@@ -15,7 +15,7 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 | E-ink/e-paper | Truly unlit monochrome experience | Ghosting, refresh latency, animations; not primary candidate |
 | Small monochrome emissive OLED | Simple contrast and rendering | Not visible as intended with illumination off; does not meet passive LCD feel |
 
-**Decision gate:** procure 2–3 physical sample panels, test outdoor/night legibility, update rate (game dirty rectangles), white lighting uniformity, thickness, integration complexity, availability and volume pricing; then freeze display dimensions/interface **before** MCU/PCB.
+**Decision gate:** procure 2–3 physical sample panels, test positive-polarity contrast (black pixel vs light unlit background), outdoor/night legibility, update rate (game dirty rectangles), white lighting uniformity, thickness, integration complexity, availability and volume pricing; then freeze display dimensions/interface **before** MCU/PCB. Reflective Memory LCD typically needs a separate FRONTLIGHT optical solution; transflective LCD can use a compatible white BACKLIGHT. Do not treat either as automatically integrated.
 
 ## 2. MCU / FPGA candidates
 
