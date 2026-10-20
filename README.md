@@ -65,6 +65,10 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 
 ## Visual reference — Brick R0.2
 
+**Updated photographic-style render gallery:** [design/renders/README.md](design/renders/README.md) — 3 new photorealistic concepts (family, studio, tabletop), existing Monolith/Smoke studies and 6 UI panels. The **CERAMIC** color reference has been revised to warm **light gray / beige-gray**, inspired by the owner's classic Brick Game photograph (ADR-034); this is a plastic finish and color study, not validated manufacturing data.
+
+![Updated BRICK R0.2 family: light gray Ceramic](design/renders/brick-family-classic-gray.webp)
+
 The following pictures are **vector concept drawings**, not photorealistic renderings or fabrication CAD. They encode the corrected controls and are kept directly in this repository. The user's preferred **original photorealistic triptych** sets the proportions and silhouette; its older D-pad / low function buttons / side-bottom speaker holes are superseded by R0.2 requirements.
 
 **Preferred original silhouette:** [locally archived JPG thumbnail](design/reference-original/preferred-render-thumb.jpg) ([reference notes](design/reference-original/README.md)). The complete high-resolution source PNG still needs binary upload; this archived thumbnail is only 150×137 px.

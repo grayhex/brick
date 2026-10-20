@@ -34,7 +34,7 @@ Read `README.md`, `docs/REPOSITORY_STRUCTURE.md`, `docs/REFERENCE_PROJECTS.md`, 
 - Factory test pads, SWD/recovery programming, reverse/ESD protection, battery safety, USB-C CC/power control, DFM, regulatory constraints are mandatory review items.
 - Never assert compliance/certification without relevant test records.
 
-- Three finishes share ONE mechanical master: MONOLITH (matte black), CLEAR SMOKE (translucent black, black PCB), CERAMIC (warm ivory plastic). **Original photorealistic triptych** is silhouette reference, but its old buttons and speaker outlets are obsolete. **Current SVG**: `design/concepts/*r02.svg`; `design/brick-envelope-r01.svg` is archived and outdated.
+- Three finishes share ONE mechanical master: MONOLITH (matte black), CLEAR SMOKE (translucent black, black PCB), CERAMIC (classic warm light gray / beige-gray plastic, ADR-034). **Original photorealistic triptych** is silhouette reference, but its old buttons and speaker outlets are obsolete. **Current SVG**: `design/concepts/*r02.svg`; `design/brick-envelope-r01.svg` is archived and outdated.
 - CAD is a **separate task** from firmware/game agent; do not edit `firmware/` or game logic just for mechanical model.
 
 ## Repository ownership
