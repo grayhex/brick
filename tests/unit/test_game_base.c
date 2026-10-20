@@ -408,6 +408,126 @@ static void test_level_overflow_raises_the_speed_and_wraps_it(void)
     CHECK_EQ(q.items[0].a, 1);
 }
 
+/* ---------------------------------------------------------------- extra lives, explosion, longer clear scene (Racing) */
+
+static void test_an_extra_life_per_multiple_of_the_threshold(void)
+{
+    bk_event_queue_t q;
+    bk_game_t *g = make_life(1, 1);
+    bk_events_clear(&q);
+    g->out = &q;
+    g->scores_to_extra_life = 100;
+    bk_game_set_lives(g, 2);
+    bk_game_set_score(g, 99);
+    CHECK_EQ(g->lives, 2);
+    CHECK_EQ(q.count, 0);
+    bk_game_set_score(g, 100);
+    CHECK_EQ(g->lives, 3);
+    CHECK_EQ(g->extra_lives, 1);
+    CHECK_EQ(q.count, 1);
+    CHECK_EQ(q.items[0].type, BK_EV_BONUS);
+    bk_game_set_score(g, 100); /* the same multiple is not paid twice */
+    CHECK_EQ(g->lives, 3);
+    CHECK_EQ(q.count, 1);
+    bk_game_set_score(g, 350); /* two multiples at once: one life more and, with full lives, ten percent as points */
+    CHECK_EQ(g->extra_lives, 3);
+    CHECK_EQ(g->lives, BK_MAX_LIVES);
+    CHECK_EQ(g->score, 350 + 10);
+    CHECK_EQ(q.count, 3);
+    CHECK(g->hi_score >= g->score);
+    g->out = NULL;
+}
+
+static void test_a_game_without_lives_or_a_threshold_earns_nothing(void)
+{
+    bk_game_t *g = make_life(1, 1);
+    g->scores_to_extra_life = 0;
+    bk_game_set_lives(g, 1);
+    bk_game_set_score(g, 100000);
+    CHECK_EQ(g->lives, 1);
+    g->scores_to_extra_life = 100;
+    g->lives = -1;
+    bk_game_set_score(g, 200000);
+    CHECK_EQ(g->lives, -1);
+    CHECK_EQ(g->extra_lives, 0);
+}
+
+static void test_a_new_party_forgets_the_earned_extra_lives(void)
+{
+    bk_game_t *g = make_life(1, 1);
+    g->scores_to_extra_life = 100;
+    bk_game_set_score(g, 300);
+    CHECK_EQ(g->extra_lives, 3);
+    bk_game_restart(g);
+    CHECK_EQ(g->extra_lives, 0);
+}
+
+static void test_the_clear_scene_after_a_life_can_be_longer(void)
+{
+    bk_event_queue_t q;
+    bk_game_t *g = make_life(1, 1);
+    bk_events_clear(&q);
+    g->out = &q;
+    bk_game_lose_life_ticks(g, SCENE_LOSE, BK_CLEAR_LOSE_TICKS);
+    g->out = NULL;
+    CHECK_EQ(g->lives, 2);
+    CHECK_EQ(g->scene_total, BK_CLEAR_LOSE_TICKS);
+    CHECK_EQ(BK_CLEAR_LOSE_TICKS, 72);
+    for (int t = 1; t < BK_CLEAR_LOSE_TICKS; t++) {
+        bk_events_clear(&q);
+        step(g, 0, 0, &q);
+        CHECK_EQ(life_mem.lose_done, 0);
+    }
+    step(g, 0, 0, &q);
+    CHECK_EQ(life_mem.lose_done, 1);
+}
+
+static void test_the_explosion_paints_waves_over_the_field_and_stays_inside(void)
+{
+    bk_game_t *g = make_life(1, 1);
+    uint8_t base[BK_CELLS];
+    memset(base, BK_CELL_ON, sizeof base);
+    base[0] = BK_CELL_BLINK; /* an attribute outside the 5 x 5 square survives */
+    uint8_t *out;
+
+    bk_game_paint_kaboom(g, base, 5, 10, 0); /* wave 0: a small ring, the rest of the square is erased */
+    out = bk_game_overlay(g);
+    CHECK_EQ(out[8 * 10 + 3], BK_CELL_OFF);  /* a corner of the square */
+    CHECK_EQ(out[9 * 10 + 4], BK_CELL_ON);   /* the ring */
+    CHECK_EQ(out[10 * 10 + 5], BK_CELL_OFF); /* the hole in the middle of the ring */
+    CHECK_EQ(out[10 * 10 + 8], BK_CELL_ON);  /* outside the square: the field as it was */
+    CHECK_EQ(out[0], BK_CELL_BLINK);
+
+    bk_game_paint_kaboom(g, base, 5, 10, BK_KABOOM_WAVE_TICKS); /* wave 1: the frame of the square */
+    out = bk_game_overlay(g);
+    CHECK_EQ(out[8 * 10 + 3], BK_CELL_ON);
+    CHECK_EQ(out[9 * 10 + 4], BK_CELL_OFF);
+
+    bk_game_paint_kaboom(g, base, 5, 10, 6 * BK_KABOOM_WAVE_TICKS); /* wave 6: empty */
+    out = bk_game_overlay(g);
+    CHECK_EQ(out[8 * 10 + 3], BK_CELL_OFF);
+    CHECK_EQ(out[10 * 10 + 5], BK_CELL_OFF);
+    CHECK_EQ(out[10 * 10 + 8], BK_CELL_ON);
+
+    bk_game_paint_kaboom(g, base, 5, 10, 7 * BK_KABOOM_WAVE_TICKS); /* the second pass starts with wave 0 */
+    out = bk_game_overlay(g);
+    CHECK_EQ(out[8 * 10 + 3], BK_CELL_OFF);
+    CHECK_EQ(out[9 * 10 + 4], BK_CELL_ON);
+
+    /* the centre is moved inside the field: an explosion at a corner covers cells 0..4 x 0..4 and writes nothing outside */
+    bk_game_paint_kaboom(g, base, 0, 0, BK_KABOOM_WAVE_TICKS); /* the frame wave */
+    out = bk_game_overlay(g);
+    CHECK_EQ(out[0], BK_CELL_ON); /* the corner of the frame replaced the blink attribute */
+    CHECK_EQ(out[4 * 10 + 4], BK_CELL_ON);
+    CHECK_EQ(out[1 * 10 + 1], BK_CELL_OFF);
+    CHECK_EQ(out[5 * 10 + 5], BK_CELL_ON); /* outside */
+    bk_game_paint_kaboom(g, base, 9, 19, BK_KABOOM_WAVE_TICKS);
+    out = bk_game_overlay(g);
+    CHECK_EQ(out[19 * 10 + 9], BK_CELL_ON); /* the far corner of the frame */
+    CHECK_EQ(out[18 * 10 + 8], BK_CELL_OFF);
+    CHECK_EQ(BK_KABOOM_TICKS, 112);
+}
+
 int main(void)
 {
     TEST_RUN(test_options_are_normalised);
@@ -424,5 +544,10 @@ int main(void)
     TEST_RUN(test_the_last_life_ends_the_game);
     TEST_RUN(test_a_won_level_scores_and_advances);
     TEST_RUN(test_level_overflow_raises_the_speed_and_wraps_it);
+    TEST_RUN(test_an_extra_life_per_multiple_of_the_threshold);
+    TEST_RUN(test_a_game_without_lives_or_a_threshold_earns_nothing);
+    TEST_RUN(test_a_new_party_forgets_the_earned_extra_lives);
+    TEST_RUN(test_the_clear_scene_after_a_life_can_be_longer);
+    TEST_RUN(test_the_explosion_paints_waves_over_the_field_and_stays_inside);
     return bk_test_finish("game_base");
 }

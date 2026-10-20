@@ -51,6 +51,7 @@ static void fresh_game(bk_game_t *g)
     g->over_timer = 0;
     g->scene_on = false;
     g->overlay_on = false;
+    g->extra_lives = 0;
     g->vt->reset(g);
 }
 
@@ -194,6 +195,23 @@ void bk_game_set_score(bk_game_t *g, uint32_t value)
     if (g->score > g->hi_score) {
         g->hi_score = g->score;
     }
+    if (g->scores_to_extra_life > 0u && g->lives >= 0) {
+        /* BrickBase.setScore: an extra life per multiple passed, or a bonus when the four lives are full */
+        uint32_t earned = g->score / g->scores_to_extra_life;
+        while (earned > g->extra_lives) {
+            g->extra_lives++;
+            bk_game_emit(g, BK_EV_BONUS, 0, 0, 0);
+            if (g->lives < BK_MAX_LIVES) {
+                g->lives++;
+            } else {
+                uint64_t bonus = (uint64_t)g->score + g->scores_to_extra_life / 10u;
+                g->score = bonus > BK_MAX_SCORE ? BK_MAX_SCORE : (uint32_t)bonus;
+            }
+        }
+        if (g->score > g->hi_score) {
+            g->hi_score = g->score;
+        }
+    }
 }
 
 void bk_game_add_score(bk_game_t *g, uint32_t points)
@@ -294,13 +312,18 @@ void bk_game_paint_clear(bk_game_t *g, uint32_t total, uint16_t elapsed)
 
 void bk_game_lose_life(bk_game_t *g, uint8_t scene_kind)
 {
+    bk_game_lose_life_ticks(g, scene_kind, BK_CLEAR_SCENE_TICKS);
+}
+
+void bk_game_lose_life_ticks(bk_game_t *g, uint8_t scene_kind, uint32_t ticks)
+{
     int left = (g->lives < 0 ? 1 : g->lives) - 1;
     bk_game_set_lives(g, left < 0 ? 0 : left);
     bk_game_emit(g, BK_EV_LIFE_LOST, 0, 0, 0);
     if (g->lives == 0) {
         bk_game_game_over(g);
     } else {
-        bk_game_cutscene(g, scene_kind, BK_CLEAR_SCENE_TICKS);
+        bk_game_cutscene(g, scene_kind, ticks);
     }
 }
 
@@ -309,4 +332,28 @@ void bk_game_win_level(bk_game_t *g, uint8_t scene_kind)
     bk_game_add_score(g, 100);
     bk_game_emit(g, BK_EV_WIN, 0, 0, 0);
     bk_game_cutscene(g, scene_kind, BK_CLEAR_SCENE_TICKS);
+}
+
+/* Explosion waves of the donor (Game.kaboom), 5 x 5, '#' lit. */
+#define KABOOM_SIZE 5
+static const char *const KABOOM_WAVES[7][KABOOM_SIZE] = {
+    {".....", ".###.", ".#.#.", ".###.", "....."}, {"#####", "#...#", "#...#", "#...#", "#####"},
+    {"#.#.#", ".....", "#...#", ".....", "#.#.#"}, {"#.#.#", ".###.", "##.##", ".###.", "#.#.#"},
+    {".....", ".###.", ".#.#.", ".###.", "....."}, {".....", ".....", "..#..", ".....", "....."},
+    {".....", ".....", ".....", ".....", "....."},
+};
+
+void bk_game_paint_kaboom(bk_game_t *g, const uint8_t base[BK_CELLS], int x, int y, uint16_t elapsed)
+{
+    int half = (KABOOM_SIZE - 1) / 2;
+    int cx = x < half ? half : (x > BK_COLS - 1 - half ? BK_COLS - 1 - half : x);
+    int cy = y < half ? half : (y > BK_ROWS - 1 - half ? BK_ROWS - 1 - half : y);
+    const char *const *wave = KABOOM_WAVES[(elapsed / BK_KABOOM_WAVE_TICKS) % 7u];
+    uint8_t *out = bk_game_overlay(g);
+    memcpy(out, base, BK_CELLS);
+    for (int dy = 0; dy < KABOOM_SIZE; dy++) {
+        for (int dx = 0; dx < KABOOM_SIZE; dx++) {
+            out[(cy - half + dy) * BK_COLS + (cx - half + dx)] = wave[dy][dx] == '#' ? BK_CELL_ON : BK_CELL_OFF;
+        }
+    }
 }

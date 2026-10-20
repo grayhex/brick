@@ -1,5 +1,5 @@
-add_library(bktest STATIC support/bk_test.c support/tetris_lab.c support/mini_json.c support/bk_digest.c support/frame_dump.c support/fake_hal.c support/stub_game.c support/conf_runner.c support/snake_lab.c)
-target_include_directories(bktest PUBLIC support ${CMAKE_SOURCE_DIR}/firmware/games/tetris ${CMAKE_SOURCE_DIR}/firmware/games/snake)
+add_library(bktest STATIC support/bk_test.c support/tetris_lab.c support/mini_json.c support/bk_digest.c support/frame_dump.c support/fake_hal.c support/stub_game.c support/conf_runner.c support/snake_lab.c support/racing_lab.c)
+target_include_directories(bktest PUBLIC support ${CMAKE_SOURCE_DIR}/firmware/games/tetris ${CMAKE_SOURCE_DIR}/firmware/games/snake ${CMAKE_SOURCE_DIR}/firmware/games/racing)
 target_link_libraries(bktest PUBLIC brickcore)
 target_compile_options(bktest PRIVATE -Wall -Wextra -Wpedantic -Wshadow)
 
@@ -25,6 +25,14 @@ add_test(NAME test_snake_conformance
          COMMAND test_snake_conformance ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/snake/snake.conformance.json)
 
 brick_test(test_snake_rules unit/test_snake_rules.c)
+brick_test(test_racing_rules unit/test_racing_rules.c)
+
+add_executable(test_racing_conformance conformance/test_racing_conformance.c)
+target_link_libraries(test_racing_conformance PRIVATE bktest)
+target_compile_options(test_racing_conformance PRIVATE -Wall -Wextra -Wpedantic -Wshadow)
+add_test(NAME test_racing_conformance
+         COMMAND test_racing_conformance ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/racing/racing.conformance.json)
+
 brick_test(test_render unit/test_render.c)
 brick_test(test_save unit/test_save.c)
 brick_test(test_audio unit/test_audio.c)

@@ -61,7 +61,10 @@ struct bk_game {
 
     /* ---- base-class internals ---- */
     bk_rng_t rng;
-    uint16_t mode; /* normalised variant */
+    uint32_t
+        scores_to_extra_life; /* > 0: every this many points an extra life (BrickBase.scoresToExtraLife); set by the game */
+    uint16_t extra_lives;     /* extra lives earned in this party */
+    uint16_t mode;            /* normalised variant */
     uint16_t mode_count;
     uint8_t start_speed;
     uint8_t start_level;
@@ -100,7 +103,8 @@ uint8_t *bk_game_overlay(bk_game_t *g);                                  /* writ
 
 /* ---- lives and "clear the field" scenes (BrickBase.setLives / animateClear / nextLevel, LibraryGame.lose / win) ---- */
 #define BK_MAX_LIVES         4  /* lives shown by the indicator */
-#define BK_CLEAR_SCENE_TICKS 60 /* the clear animation after a lost life or a won level */
+#define BK_CLEAR_SCENE_TICKS 60 /* the clear animation after a lost life or a won level (library games) */
+#define BK_CLEAR_LOSE_TICKS  72 /* the same after a lost life in games derived straight from BrickBase (CLEAR_LOSE_TICKS) */
 
 void bk_game_set_lives(bk_game_t *g, int count); /* clamped to 0..BK_MAX_LIVES */
 /* Level + 1; past BK_MAX_LEVEL it wraps to 1 and the speed goes up by one (wrapping 10 -> 1). Emits BK_EV_LEVEL_UP. */
@@ -111,6 +115,16 @@ void bk_game_paint_clear(bk_game_t *g, uint32_t total, uint16_t elapsed);
 /* A life is lost: lives - 1, BK_EV_LIFE_LOST, then game over when none is left, else a clear scene of `scene_kind`
  * (BK_CLEAR_SCENE_TICKS) after which the game's scene_done hook must restart the round. */
 void bk_game_lose_life(bk_game_t *g, uint8_t scene_kind);
+/* The same with the length of the clear scene chosen by the game (BK_CLEAR_LOSE_TICKS for BrickBase games). */
+void bk_game_lose_life_ticks(bk_game_t *g, uint8_t scene_kind, uint32_t ticks);
+
+/* The explosion of BrickBase.animateKaboom: four passes over seven 5 x 5 waves around the cell (x, y) of the screen (column,
+ * row from the top; the centre is moved inside the field), BK_KABOOM_WAVE_TICKS ticks per wave. Paints frame `elapsed` of
+ * the BK_KABOOM_TICKS long scene into the overlay over a copy of `base` (the field as it was when the explosion began, which
+ * the game must keep). */
+#define BK_KABOOM_WAVE_TICKS 4
+#define BK_KABOOM_TICKS      (4 * 7 * BK_KABOOM_WAVE_TICKS)
+void bk_game_paint_kaboom(bk_game_t *g, const uint8_t base[BK_CELLS], int x, int y, uint16_t elapsed);
 /* The level is won: +100 points, BK_EV_WIN, a clear scene of `scene_kind` after which scene_done must call
  * bk_game_next_level() and restart the round. */
 void bk_game_win_level(bk_game_t *g, uint8_t scene_kind);

@@ -15,7 +15,7 @@ CC=${CC:-clang}
 "$CC" --target=wasm32 -O2 -ffreestanding -nostdlib -fuse-ld=lld \
     -ffp-contract=off -Wall -Wextra -Wpedantic -Wshadow -Wno-unused-parameter \
     -std=c11 -DBK_MINLIBC_ALIASES -DBK_FRAME_MAX_W=336 -DBK_FRAME_MAX_H=536 \
-    -I"$here/libc" -I"$root/firmware/include" -I"$root/firmware/games/tetris" -I"$root/firmware/games/snake" -I"$root/platform/sim" \
+    -I"$here/libc" -I"$root/firmware/include" -I"$root/firmware/games/tetris" -I"$root/firmware/games/snake" -I"$root/firmware/games/racing" -I"$root/platform/sim" \
     -Wl,--no-entry -Wl,--export-dynamic -Wl,-z,stack-size=65536 -Wl,--strip-all \
     -o "$out/brick-sim.wasm" \
     "$here/sim_wasm.c" "$root/platform/sim/sim.c" "$root/firmware/catalog/catalog.c" "$here/libc/libc_min.c" \

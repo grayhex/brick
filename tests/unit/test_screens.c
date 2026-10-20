@@ -9,6 +9,7 @@
 
 #include "bk_test.h"
 #include "brick/console.h"
+#include "brick/games/racing.h"
 #include "brick/games/snake.h"
 #include "brick/games/tetris.h"
 #include "fake_hal.h"
@@ -126,6 +127,7 @@ static void tap(bk_buttons_t b)
 
 static const bk_catalog_entry_t CAT_TETRIS[] = {{&bk_tetris_def, "1"}};
 static const bk_catalog_entry_t CAT_TWO[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}};
+static const bk_catalog_entry_t CAT_THREE[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}, {&bk_racing_def, "3"}};
 static const bk_catalog_entry_t CAT_MULTI[] = {{&stub_def_multi, "12"}, {&stub_def_single, "A"}};
 
 static void seed_profile(uint16_t uid, uint16_t mode, uint32_t score, uint8_t speed, uint8_t level)
@@ -238,6 +240,34 @@ static void test_snake_screens(void)
     check_golden("game_snake_clear");
 }
 
+static void test_racing_screens(void)
+{
+    fake_hal_init(&hal);
+    seed_profile(BK_RACING_UID, 0, 1234, 3, 1);
+    boot(CAT_THREE, 3);
+    run(BK_SPLASH_TICKS, 0);
+    tap(BK_BTN_RIGHT); /* game 2 */
+    tap(BK_BTN_RIGHT); /* game 3 */
+    run(30, 0);
+    check_golden("home_racing");
+    tap(BK_BTN_START);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    run(130, 0); /* the start melody (90 ticks) is over and the road runs */
+    tap(BK_BTN_LEFT);
+    run(15, 0);
+    CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+    CHECK_EQ(con.game->lives, 4);
+    check_golden("game_racing");
+    /* the explosion of the first crash */
+    unsigned guard = 0;
+    while (!bk_game_busy(con.game) && guard++ < 5000) {
+        bk_console_step(&con, 0);
+    }
+    CHECK(bk_game_busy(con.game));
+    run(20, 0);
+    check_golden("game_racing_kaboom");
+}
+
 static void test_text_screens(void)
 {
     fake_hal_init(&hal);
@@ -298,6 +328,7 @@ int main(int argc, char **argv)
     TEST_RUN(test_home_two_digit_glyph_and_mode_focus);
     TEST_RUN(test_game_screens);
     TEST_RUN(test_snake_screens);
+    TEST_RUN(test_racing_screens);
     TEST_RUN(test_text_screens);
     TEST_RUN(test_native_panels);
     return bk_test_finish("screens");
