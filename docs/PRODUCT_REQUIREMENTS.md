@@ -36,6 +36,7 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 | GAMES-01 | Approx. 10 classic games at launch | CONFIRMED | Exact selection OPEN |
 | GAMES-02 | Additional games via firmware updates | CONFIRMED | Safe/recoverable update needed |
 | GAMES-03 | Reuse logic/rules and tests from ApolloBrickGames | CONFIRMED | Port/reimplement for target platform |
+| GAMES-04 | **First firmware version = four games: Tetris, Racing, Snake, Tank** (owner, 2026-10-20); Dice is not to be ported; other candidates only as later firmware updates (GAMES-02) | CONFIRMED | Racing and Tank rules are reconstructions, not ROM-verified (docs/GAME_CANDIDATES.md); the ~10-game target of GAMES-01 stays |
 | PROD-01 | Initial production target **100–500 units** | CONFIRMED | Pilot run first |
 | REPO-01 | Hardware project in new **private** repository `grayhex/brick` | CONFIRMED | Source repository stays distinct |
 
@@ -94,7 +95,7 @@ These are TEST PROPOSALS, not demonstrated results:
 ## 8. Unresolved product questions
 
 1. What features must the BLE phone companion have at launch beyond settings/sync (e.g. game statistics, saves, firmware update)?
-2. Which exact classic **10 launch games**, and which three labelled function-button roles?
+2. Which further classic games complete the ~10-game target after the four of the first firmware version (GAMES-04), and which three labelled function-button roles?
 3. Preferred enclosure material/finish: opaque matte, smoked transparent (black PCB visible), or both?
 4. Is a microSD slot still desired on the side, or is internal Flash enough for games and updates?
 5. What is the acceptable target retail price / max manufactured unit cost? This governs enclosure tooling and LCD sourcing.
