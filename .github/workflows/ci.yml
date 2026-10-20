@@ -1,8 +1,15 @@
 name: ci
 
 on:
+  # Run once for a PR update rather than twice (push+PR) for each feature-branch commit.
   push:
+    branches: [main]
   pull_request:
+
+# Superseded jobs from quick successive commits need not consume additional CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
