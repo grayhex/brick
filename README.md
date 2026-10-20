@@ -5,7 +5,7 @@
 Оригинальная премиальная аккумуляторная карманная игра по мотивам классических вертикальных устройств Brick Game. Упор на подлинную строго монохромную пиксельную графику, физические кнопки, качественный звук, долгую работу от батареи и обновляемую прошивку; это не эмулятор универсальной игровой консоли.
 
 > [!IMPORTANT]
-> Репозиторий на стадии требований и исследования. Ни процессор, ни панель LCD, ни батарея, ни плата, ни размеры корпуса не утверждены к производству. См. `docs/PRODUCT_REQUIREMENTS.md` и `docs/HARDWARE_RESEARCH.md`.
+> Репозиторий на стадии требований и исследования. **Процессорная платформа для прошивки выбрана: Nordic nRF52840**. LCD, конкретная PCB, батарея и итоговая механика **не утверждены к производству**. См. `docs/PRODUCT_REQUIREMENTS.md` и `docs/HARDWARE_RESEARCH.md`.
 
 ## Подтверждённое направление продукта
 
@@ -79,6 +79,9 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 
 **Прошивка и игры**
 
+- [Платформа Nordic nRF52840 и выбор SDK](docs/MCU_PLATFORM_NRF52840.md) — принятое MCU-решение для V1, модуль и RAM/flash budget.
+- [Обновление/защита/восстановление прошивки](docs/FIRMWARE_UPDATE_NRF52840.md) — MCUboot, USB DFU/recovery, QSPI slot1, откат и выпуск ключей.
+- [Системная реализация на nRF52840](platform/nrf52840/README.md) — будущая Zephyr-обёртка над переносимым ядром.
 - [Архитектура прошивки](docs/FIRMWARE_ARCHITECTURE.md) — слои, HAL, память, порт на ARM, как добавить игру.
 - [План переноса игр](docs/GAME_PORTING.md) — соответствие исходникам и безопасный порядок миграции.
 - [Кандидаты на порт](docs/GAME_CANDIDATES.md) — опись игр ApolloBrickGames (размер, достоверность, кнопки), порядок работ.
@@ -102,6 +105,12 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 | Версии изделия | [releases](releases/README.md), [чек-лист](docs/RELEASE_COMPLETENESS_CHECKLIST.md) |
 
 Рабочие `firmware/`, `platform/`, `tests/`, `tools/` и присланный первый макет `mechanical/inbox/` **лежат по прежним путям**. Новые подпапки содержат инструкции, шаблоны и черновики со статусом PROPOSED, а **не** утверждённые схемы, готовый CAD, Gerber или результаты заводских испытаний.
+
+## Выбранная MCU-платформа Brick V1
+
+**Nordic nRF52840** (ARM Cortex-M4F 64 МГц, 1 МиБ Flash, 256 КиБ RAM; BLE+USB+QSPI), reference-модуль **Raytac MDBT50Q-P1MV2** (пока не квалифицирован к закупке). **nRF Connect SDK 3.4.1 LTS / Zephyr / MCUboot**: USB-C подписанное DFU с независимым recovery и откатом. Внешняя QSPI NOR под второй образ прошивки; на официальной **nRF52840 DK** уже есть 8 МиБ внешней Flash. Игры/симулятор остаются аппаратно-независимыми на C11.
+
+См. [MCU decision](docs/MCU_PLATFORM_NRF52840.md), [архитектура обновления](docs/FIRMWARE_UPDATE_NRF52840.md), [точка входа системного ПО](platform/nrf52840/README.md). **Ни bootloader, ни образ для nRF52840 пока не собраны/испытаны**; это следующее задание агенту.
 
 ## Ближайшие приоритеты
 

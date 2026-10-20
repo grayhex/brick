@@ -46,7 +46,8 @@ References: [REFERENCE_PROJECTS.md](REFERENCE_PROJECTS.md). Current prototype au
 
 ## Gate 3 — electronics architecture and custom PCB
 
-- [ ] Approved block diagram; final MCU/BLE module (currently **nRF52840 PROPOSED**, not selected), PCB memory, audio amp, charger/protection/power rails.
+- [x] **MCU architecture chosen for firmware**: Nordic nRF52840 + NCS 3.4.1 LTS, MCUboot/USB-C/QSPI design, official DK for testing: [MCU decision](MCU_PLATFORM_NRF52840.md), [DFU design](FIRMWARE_UPDATE_NRF52840.md). **Architecture only; not a finished circuit.**
+- [ ] RF module Raytac MDBT50Q-P1MV2, secondary QSPI NOR, PCB design, audio, battery and power fully **qualified physically** with parts and suppliers for 100–500 units.
 - [ ] Measured current budget and 20–30 h battery discharge profile at representative gameplay/volume/backlight; include active 60Hz core, panel refresh, BLE and deep sleep currents.
 - [ ] USB-C connector design incl. CC resistors, charging/USB data, ESD/overvoltage, status/protection and recovery pinout.
 - [ ] Electrical power path for charging while using device, battery protection, thermal supervision/NTC, low-battery behavior, safe hard-off and user power switch.
@@ -105,6 +106,6 @@ References: [REFERENCE_PROJECTS.md](REFERENCE_PROJECTS.md). Current prototype au
 2. **Parameterized printed shell** in common geometry, actual components' fit and speaker/frontlight constraints — [issue #3](https://github.com/grayhex/brick/issues/3).
 3. **Interactive gameplay UX** with throttled screen refresh — [issue #4](https://github.com/grayhex/brick/issues/4).
 4. Resolve launch-game/FIRE mapping and first-round BOM cost target.
-5. Then—and only then—freeze MCU/display choices, FPC and PCB outline.
+5. **MCU architecture is now selected**; after display / physical RF module qualification and DFU prototype, freeze LCD/FPC pinout, exact hardware MPN, QSPI partitions and PCB outline.
 
 **Rule for agents:** Treat unchecked items as tasks/risks, not as existing deliverables. Document experimental and completed status separately; do not prematurely change a `[ ]` to `[x]` without a link to reproducible proof or test result.

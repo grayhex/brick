@@ -17,6 +17,8 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 
 **New sourced shortlist:** [DISPLAY_CANDIDATES.md](DISPLAY_CANDIDATES.md) compares Sharp LS032B7DD02 3.16-inch (provisional favorite), LS044Q7DH01 4.4-inch and LS027B7DH01 2.7-inch, including full 10×20 + right status pixel-fit and Azumo frontlight assembly procurement caveat. **No display has been approved.**
 
+**MCU architecture exception:** nRF52840 + NCS 3.4.1 LTS is now **selected for firmware work** by ADR-037; this does NOT approve Sharp screen, RF module footprint or final PCB. USB-C MCUboot/QSPI update architecture is documented in [MCU_PLATFORM_NRF52840.md](MCU_PLATFORM_NRF52840.md) and [FIRMWARE_UPDATE_NRF52840.md](FIRMWARE_UPDATE_NRF52840.md).
+
 **Decision gate:** procure 2–3 physical sample panels, test positive-polarity contrast (black pixel vs light unlit background), outdoor/night legibility, update rate (game dirty rectangles), white lighting uniformity, thickness, integration complexity, availability and volume pricing; then freeze display dimensions/interface **before** MCU/PCB. Reflective Memory LCD typically needs a separate FRONTLIGHT optical solution; transflective LCD can use a compatible white BACKLIGHT. Do not treat either as automatically integrated.
 
 **Display geometry confirmed:** classical 10 columns × 20 rows of game cells plus a **right-side information strip** for score/level/mode/other status. This is not a 10×20 physical pixel panel; whole active area must accommodate the side information zone while preserving game-cell aspect ratio. Compare candidate LCD active-area shape and effective usable pixels accordingly; exact geometry and sidebar width are still open.
@@ -25,14 +27,14 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 
 | Candidate | Strengths | Constraints / decision |
 | --- | --- | --- |
-| **nRF52840 module** (Raytac MDBT50Q family; exact SKU validation pending) | **Preferred candidate:** BLE phone configuration/sync, USB and modest power | 64 MHz Cortex-M4F; 256 KB RAM; verify selected LCD interface, firmware/DFU footprint and power |
+| **nRF52840 (SELECTED V1 MCU)**, Raytac **MDBT50Q-P1MV2** engineering reference module | BLE, USB CDC ACM, QSPI, 1MiB internal Flash/256KiB RAM, official DK | **Module still CANDIDATE for production** until datasheet, RF keep-out, samples, supply, power, USB/DFU and fit validation; Zephyr/NCS 3.4.1 LTS + MCUboot architecture now decided |
 | **nRF5340** (module if possible) | Newer dual-core Nordic Bluetooth SoC, more headroom | Complexity not justified by audio (headphones not required); evaluate only if memory/performance needs demand |
 | **ESP32-S3** module | Greater CPU/UI headroom, USB and BLE | Wi-Fi unnecessary unless justified; benchmark real sleep and gameplay energy |
 | **ESP32 original / ESP32-WROVER** | Classic Bluetooth capability in relevant firmware stacks | Not preferred: headset audio is explicitly out of scope; no reason to add Classic BT hardware |
 | **STM32WB55** | Mature MCU with BLE, USB | No automatic standard headphone audio; alternate if STM32 ecosystem preferred |
 | **FPGA** (e.g. Lattice ECP5) | Hardware recreation of original logic possible | No benefit to simple custom pixel games, requires BLE/USB/power support chips, RTL development and extra validation; NOT default |
 
-**Default engineering direction, with BLE-only phone connectivity confirmed and display bench still pending:** low-power MCU with integrated BLE, likely nRF52840 module. FPGA is a research option, not a product prerequisite.
+**Firmware CPU target LOCKED: nRF52840 + NCS 3.4.1 LTS.** Module Raytac MDBT50Q-P1MV2 is a pre-qualified **candidate** (not yet physically measured or stocked for our build). FPGA is not required. LCD and PCB remain independent unverified decisions.
 
 ## 3. Bluetooth decision (CONFIRMED)
 
@@ -40,7 +42,7 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 - All sound uses the **built-in speaker**. No Bluetooth headphones, Classic A2DP, LE Audio, 3.5 mm output or additional wireless-audio transmitter.
 - Proposed phone GATT work: read device/firmware info, battery level, write settings, and sync selected game data. Exact schema, authorization and pairing are OPEN.
 - USB-C wired firmware recovery/update is baseline; BLE OTA is optional for a later version.
-- A low-power integrated-BLE MCU such as the nRF52840 is now the preferred candidate, pending LCD integration, power and firmware validation.
+- nRF52840 selected for V1 firmware; SDK/bootloader/USB/Flash design in dedicated docs. Physical module and PCB remain unqualified pending display, RF, battery and power testing.
 
 ## 4. Preliminary subsystem design
 
@@ -48,7 +50,7 @@ AMOLED/OLED pixels emit light and are not passive reflective monochrome panels; 
 USB-C 5 V ─ ESD/CC ─ power-path charging ─ Li-ion/LiPo 1S with protection + NTC
                          │
                      regulated rails ───────┬── BLE MCU ─ LCD controller / monochrome framebuffer
-                                          ├── external Flash (if justified)
+                                          ├── QSPI NOR Flash (**required for external secondary signed firmware image in product**)
                                           ├── buzzer/DAC or I2S class-D ─ speaker + acoustic cavity
                                           ├── D-pad + 1 action + 3 function keys
                                           ├── volume control (wheel or slider; input analog/digital)
