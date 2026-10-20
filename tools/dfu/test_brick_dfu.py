@@ -14,6 +14,7 @@ import io
 import struct
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -227,6 +228,78 @@ class TestAndRecover(Base):
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.dev.slot[0].version, "0.3.0")
         self.assertEqual(self.confirm_requests(), [])
+
+
+class FakePorts:
+    """pyserial port list that changes with time: [(until_seconds, [(device, product), ...]), ...]."""
+
+    def __init__(self, script):
+        self.script = script
+        self.t0 = None
+
+    def comports(self):
+        import time as _t
+        self.t0 = self.t0 or _t.monotonic()
+        dt = _t.monotonic() - self.t0
+        for until, ports in self.script:
+            if dt < until:
+                break
+        return [type("P", (), {"device": d, "product": prod})() for d, prod in ports]
+
+
+class WaitForPort(unittest.TestCase):
+    """After a reset the old port name must not be trusted (Windows renumbers COM ports)."""
+
+    def setUp(self):
+        self._saved = (dfu.list_ports.comports, dfu.POLL_S, dfu.GONE_WAIT_S)
+        dfu.POLL_S, dfu.GONE_WAIT_S = 0.005, 0.5
+
+    def tearDown(self):
+        dfu.list_ports.comports, dfu.POLL_S, dfu.GONE_WAIT_S = self._saved
+
+    def use(self, script):
+        dfu.list_ports.comports = FakePorts(script).comports
+
+    APP = "Brick V1 (DEV)"
+
+    def test_explicit_port_that_comes_back_under_a_new_name(self):
+        self.use([(0.05, [("COM3", self.APP)]), (0.10, []), (9, [("COM5", self.APP)])])
+        self.assertEqual(dfu.wait_for_port("COM3", 5, "app"), "COM5")
+
+    def test_explicit_port_that_comes_back_under_the_same_name(self):
+        self.use([(0.05, [("COM3", self.APP)]), (0.10, []), (9, [("COM3", self.APP)])])
+        self.assertEqual(dfu.wait_for_port("COM3", 5, "app"), "COM3")
+
+    def test_explicit_port_back_under_the_same_name_without_product_string(self):
+        # some systems do not report the USB product string: the chosen name is still trusted once it is back
+        self.use([(0.05, [("COM3", None)]), (0.10, []), (9, [("COM3", None)])])
+        self.assertEqual(dfu.wait_for_port("COM3", 5, "app"), "COM3")
+
+    def test_explicit_port_is_not_returned_while_the_device_is_gone(self):
+        self.use([(0.05, [("COM3", self.APP)]), (0.30, []), (9, [("COM3", self.APP)])])
+        t0 = time.monotonic()
+        self.assertEqual(dfu.wait_for_port("COM3", 5, "app"), "COM3")
+        self.assertGreaterEqual(time.monotonic() - t0, 0.29)
+
+    def test_reset_that_never_happens_does_not_hang_forever(self):
+        self.use([(99, [("COM3", self.APP)])])
+        self.assertEqual(dfu.wait_for_port("COM3", 5, "app"), "COM3")
+
+    def test_several_devices_and_a_new_name_is_ambiguous(self):
+        self.use([(0.05, [("COM3", self.APP), ("COM4", self.APP)]), (0.10, []),
+                  (9, [("COM5", self.APP), ("COM6", self.APP)])])
+        with self.assertRaises(dfu.Fail) as cm:
+            dfu.wait_for_port("COM3", 0.5, "app")
+        self.assertIn("several", str(cm.exception))
+
+    def test_auto_detection_waits_for_the_device(self):
+        self.use([(0.10, []), (9, [("COM7", self.APP)])])
+        self.assertEqual(dfu.wait_for_port("auto", 5, "app"), "COM7")
+
+    def test_timeout_is_reported(self):
+        self.use([(99, [])])
+        with self.assertRaises(dfu.Fail):
+            dfu.wait_for_port("auto", 0.1, "app")
 
 
 class Ports(unittest.TestCase):

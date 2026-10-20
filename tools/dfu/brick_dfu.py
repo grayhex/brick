@@ -9,9 +9,10 @@
     brick_dfu.py reset                  reboot the device
     brick_dfu.py recover signed.bin     device held in MCUboot serial recovery: write slot 0, reset
 
-STATUS: written against the SMP protocol and checked only against Zephyr's MCUmgr server
-running on native_sim (platform/nrf52840/tests/native_sim_smp.sh). It has NOT been run
-against a real Brick or nRF52840 DK yet (docs/NRF52840_BRINGUP.md).
+STATUS: the tool's decisions are tested only against a SIMULATED device
+(tools/dfu/test_brick_dfu.py). It has NOT been run against a real Brick, an nRF52840 DK, or any real
+SMP server, so the SMP wire protocol (via the smpclient library), USB CDC ACM and MCUboot behaviour are
+unverified (docs/NRF52840_BRINGUP.md, platform/nrf52840/tests/HIL_TESTPLAN.md).
 
 The tool never confirms an image: confirmation belongs to the new application after its
 self-test (docs/FIRMWARE_UPDATE_NRF52840.md). Only signed files produced by the build
@@ -36,6 +37,8 @@ from serial.tools import list_ports
 # DEV identity (Zephyr project VID). Replace by the production VID/PID when it exists.
 DEV_VIDS = {0x2FE3, 0x1915}
 SETTLE_S = 1.0  # pause around a reset so the old USB device is really gone
+POLL_S = 0.5  # how often to look for the device after a reset
+GONE_WAIT_S = 10.0  # how long to wait for the old port to vanish after the reset request
 NAME_HINT = "brick"
 RECOVERY_HINT = "recovery"
 
@@ -70,16 +73,37 @@ def pick_port(requested: str | None, want: str | None = None) -> str:
     raise Fail("several Brick ports found, pick one with --port: " + ", ".join(ports))
 
 
+def all_port_names() -> set[str]:
+    return {p.device for p in list_ports.comports()}
+
+
 def wait_for_port(requested: str | None, timeout: float, want: str | None = None) -> str:
-    """After a reset the device re-enumerates; its name may change (COM numbers)."""
-    deadline = time.monotonic() + timeout
+    """Find the device again after a reset; it re-enumerates and its name may change (COM numbers).
+
+    With an explicit port the old name is NOT trusted: wait until it has disappeared (or GONE_WAIT_S
+    passed without the reset showing), then accept the same name if it came back, otherwise the one
+    Brick port of the wanted kind that appeared under a new name. If several Brick devices are
+    attached and the name changed, the choice is ambiguous and the caller is asked to pick.
+    """
+    explicit = bool(requested) and requested != "auto"
+    start = time.monotonic()
+    deadline = start + timeout
+    gone = not explicit  # with auto-detection there is nothing to wait for
     last: Fail | None = None
     while time.monotonic() < deadline:
+        if not gone:
+            if requested not in all_port_names() or time.monotonic() - start > GONE_WAIT_S:
+                gone = True
+            else:
+                time.sleep(POLL_S)
+                continue
+        if explicit and requested in all_port_names():
+            return requested
         try:
-            return pick_port(requested, want)
+            return pick_port("auto", want)
         except Fail as e:
             last = e
-            time.sleep(0.5)
+            time.sleep(POLL_S)
     raise Fail(f"device did not come back within {timeout:.0f} s ({last})")
 
 
