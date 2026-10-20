@@ -22,7 +22,8 @@ static const int DX[4] = {0, 1, 0, -1};
 static const int DY[4] = {-1, 0, 1, 0};
 
 /* E88 8 in 1, game 5, executed in BrickEmuPy (reference e88.ts): complete movement periods in milliseconds. */
-static const double E88_SNAKE_MS[10] = {332.358, 299.334, 266.316, 233.764, 200.738, 168.178, 135.156, 102.128, 70.056, 37.038};
+static const double E88_SNAKE_MS[10] = {332.358, 299.334, 266.316, 233.764, 200.738,
+                                        168.178, 135.156, 102.128, 70.056,  37.038};
 
 static inline bks_game_t *self(bk_game_t *g)
 {

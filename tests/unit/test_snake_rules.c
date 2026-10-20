@@ -203,7 +203,8 @@ static void test_leaving_the_field_or_hitting_the_body_costs_a_life(void)
     CHECK_EQ(lab.game.len, 3);
     CHECK_EQ(lab.game.body[0], 19 * 10 + 5);
 
-    int coil[] = {44, 54, 55, 45, 35, 34, 24, 25}; /* head (4,4); the cell to its right, (5,4), is the fourth cell of the body */
+    int coil[] = {44, 54, 55, 45,
+                  35, 34, 24, 25}; /* head (4,4); the cell to its right, (5,4), is the fourth cell of the body */
     snake_lab_set_worm(&lab, 1, coil, 8);
     lab.game.food = 0;
     step(BK_KEY_RIGHT, BK_KEY_RIGHT);

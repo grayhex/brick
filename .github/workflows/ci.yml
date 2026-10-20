@@ -77,14 +77,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: The fixture names the same reference commit
-        run: grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/tetris/tetris.conformance.json
+      - name: The fixtures name the same reference commit
+        run: |
+          grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/tetris/tetris.conformance.json
+          grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/snake/snake.conformance.json
       - name: Regenerate and compare
         working-directory: tools/conformance
         run: |
           npm ci --no-audit --no-fund
-          APOLLO_BRICK_GAMES="$GITHUB_WORKSPACE/ApolloBrickGames" npm run export:tetris -- --out /tmp/tetris.conformance.json
-          cmp /tmp/tetris.conformance.json ../../tests/fixtures/tetris/tetris.conformance.json
+          for game in tetris snake; do
+            APOLLO_BRICK_GAMES="$GITHUB_WORKSPACE/ApolloBrickGames" npm run "export:$game" -- --out "/tmp/$game.conformance.json"
+            cmp "/tmp/$game.conformance.json" "../../tests/fixtures/$game/$game.conformance.json"
+          done
 
   cad-review:
     name: STL mockup measurements are reproducible

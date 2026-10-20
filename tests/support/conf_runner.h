@@ -13,8 +13,8 @@
 #include "mini_json.h"
 
 typedef struct {
-    const char *game;     /* "game" member of the fixture */
-    size_t lab_size;      /* bytes the lab needs; the runner allocates and zeroes it */
+    const char *game;                                      /* "game" member of the fixture */
+    size_t lab_size;                                       /* bytes the lab needs; the runner allocates and zeroes it */
     void (*init)(void *lab, const bk_game_options_t *opt); /* create AND start, like the reference plainLab */
     bk_game_t *(*game_of)(void *lab);
     /* Applies one setup operation of the fixture trace. Events raised by it (outside a step) are pushed to `pending` and

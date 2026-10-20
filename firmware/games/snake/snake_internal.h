@@ -23,7 +23,7 @@ typedef struct {
     uint8_t dir;
     uint8_t food;
     uint8_t eaten;
-    bool frame; /* variant 02: a one-cell frame round the field */
+    bool frame;   /* variant 02: a one-cell frame round the field */
     double timer; /* ticks since the last step, fractional (the ROM periods are not whole ticks, see ADR-024) */
 } bks_game_t;
 
