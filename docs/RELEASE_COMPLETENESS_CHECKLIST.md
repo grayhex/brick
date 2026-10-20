@@ -61,9 +61,9 @@ References: [REFERENCE_PROJECTS.md](REFERENCE_PROJECTS.md). Current prototype au
 ## Gate 4 — firmware, games, BLE companion
 
 - [x] Portable C11 core, simulation 60Hz, game/scene API, 1bpp renderer and HAL boundaries: `firmware/`.
-- [x] Base Tetris, pinned ApolloBrickGames reference, tick-level fixtures and tests: `tests/`, `docs/CONFORMANCE.md`. **Not full set of ten games.**
+- [x] Base Tetris **and Snake (NORMAL/FRAME)**, pinned ApolloBrickGames reference, tick-level fixtures and tests: `tests/`, `docs/CONFORMANCE.md`, `docs/GAME_SNAKE.md`. **Not full set of ten games; some Snake mechanics are reconstructed.**
 - [x] Core host CI/compiler/sanitizer and Cortex-M4 cross-compile smoke test: `.github/workflows/ci.yml`. **Not full linked+flashed ARM firmware.**
-- [ ] Interactive desktop simulator with physical controls and 10/15/20/30Hz display emulation; measure usability and score legibility.
+- [x] Interactive **terminal + browser/WebAssembly simulator**, physical-layout clickable keys and adjustable display FPS: `platform/sim/`, `docs/SIMULATOR.md`. **Does not validate real panel response, subjective readability or actual MCU performance.**
 - [ ] Port selected launch titles with correctness tests and a documented mapping for independent FIRE/ROTATE where applicable.
 - [ ] Board-specific startup/linker/SDK, hardware HAL implementations (SPI LCD, buttons debounce, frontlight, audio, flash, power, USB), built and **executed on real hardware**.
 - [ ] Measure CPU, peak stack, linker RAM/flash map, GPU/bitmap composition duty cycle, actual FPS, watchdog and low-power runtime.
