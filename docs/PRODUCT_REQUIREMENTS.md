@@ -1,4 +1,4 @@
-# Brick — Product Requirements Document (PRD), revision 0.6
+# Brick — Product Requirements Document (PRD), revision 0.7
 
 **Date:** 2026-10-19  
 **Stage:** concept and engineering feasibility study  
@@ -31,9 +31,12 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 | AUDIO-01 | Built-in high quality sound / loudspeaker, **single grille FRONT at bottom center** | CONFIRMED | no speaker apertures on bottom/sides/rear; acoustic chamber/volume calibration required |
 | BT-01 | **Bluetooth Low Energy (BLE)** to connect to phone, configure settings, synchronize data | CONFIRMED | GATT services, security and protocol design OPEN |
 | BT-02 | No Bluetooth headphone audio (neither A2DP nor LE Audio); speaker is the **only audio output** | CONFIRMED | No Bluetooth audio transmitter or codec required |
+| MCU-01 | **Nordic nRF52840** is the MCU platform for **V1 firmware development** | CONFIRMED (architecture) | Raytac MDBT50Q-P1MV2 is reference production module, **not yet QUALIFIED**; nRF52840 DK for development. [MCU decision](MCU_PLATFORM_NRF52840.md) |
+| SYS-01 | nRF Connect SDK **3.4.1 LTS / Zephyr**, MCUboot + signed images, **USB-C DFU and independent MCUboot USB recovery**, test/revert upgrade | CONFIRMED (design, not implemented) | [DFU design](FIRMWARE_UPDATE_NRF52840.md); SWD factory access mandatory |
+| SYS-02 | External QSPI NOR secondary firmware slot for signed updates and recovery; startup/save data isolated from app slot | CONFIRMED (architecture) | Minimum 8 MiB, 16 MiB reference for production; actual NOR SKU and partitions TBD after real sysbuild testing |
 | PWR-01 | USB-C rechargeable battery | CONFIRMED | Chemistry/capacity/vendor OPEN |
 | PWR-02 | **20–30 hours gameplay** | TARGET | Define test profile, validate measured whole-device runtime |
-| GAMES-01 | Approx. 10 classic games at launch | CONFIRMED | Exact selection OPEN |
+| GAMES-01 | Long-term target of about 10 classic games across firmware updates | TARGET | **First firmware is four games** (GAMES-04, ADR-035), not ten at launch |
 | GAMES-02 | Additional games via firmware updates | CONFIRMED | Safe/recoverable update needed |
 | GAMES-03 | Reuse logic/rules and tests from ApolloBrickGames | CONFIRMED | Port/reimplement for target platform |
 | GAMES-04 | **First firmware version = four games: Tetris, Racing, Snake, Tank** (owner, 2026-10-20, ADR-035); Dice is not to be ported; other candidates only as later firmware updates (GAMES-02) | CONFIRMED | Racing and Tank rules are reconstructions, not ROM-verified (docs/GAME_CANDIDATES.md); the ~10-game target of GAMES-01 stays |
@@ -76,8 +79,8 @@ Check reference game quirks before fixing a matrix: some library titles historic
 
 - Built-in curated game selection, no user-installed code requirement at launch.
 - Platform-neutral game interface: fixed ticks, button bitmask, deterministic RNG/state, tile grid output, sound events, settings/save.
-- User-friendly USB-C update and recoverable boot path; optional BLE firmware update only after protocol/security review.
-- Versioned saves, firmware signatures/checksums, reliable power-failure behavior and regression test matrix.
+- **MCUboot signed images with trial/rollback**, independent serial recovery on MCU USB-C even if the application cannot boot; user-friendly USB-C update through MCUmgr/SMP. Exact partitions and firmware/bootloader implementation to be proven on nRF52840 DK. BLE firmware update remains optional.
+- Versioned saves outside application image slots, ECDSA-signed firmware, recovery after power loss, revision compatibility checks, separate production/development signing keys and regression test matrix.
 - Persist records and sound/lighting settings.
 - Phone connection via BLE for settings and synchronization is required; app UI/services/security specifics OPEN. USB DFU remains baseline; BLE firmware update optional.
 

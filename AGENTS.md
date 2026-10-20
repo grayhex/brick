@@ -1,6 +1,6 @@
 # Instructions for coding and engineering agents
 
-Read `README.md`, `docs/REPOSITORY_STRUCTURE.md`, `docs/REFERENCE_PROJECTS.md`, `docs/RELEASE_COMPLETENESS_CHECKLIST.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/CAD_HANDOFF_PROMPT.md`, `docs/CAD_WORKFLOW.md`, `docs/ENGINEERING_REVIEW_2026-10-20.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
+Read `README.md`, `docs/MCU_PLATFORM_NRF52840.md`, `docs/FIRMWARE_UPDATE_NRF52840.md`, `docs/REPOSITORY_STRUCTURE.md`, `docs/REFERENCE_PROJECTS.md`, `docs/RELEASE_COMPLETENESS_CHECKLIST.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/CAD_HANDOFF_PROMPT.md`, `docs/CAD_WORKFLOW.md`, `docs/ENGINEERING_REVIEW_2026-10-20.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
 
 ## Source of truth
 - User-confirmed choices have status **CONFIRMED** in the PRD. Preserve them unless explicitly changed.
@@ -25,6 +25,13 @@ Read `README.md`, `docs/REPOSITORY_STRUCTURE.md`, `docs/REFERENCE_PROJECTS.md`, 
 - Extract a platform-neutral interface (tick/input/events/cells/save), golden fixtures and deterministic replay, then port selected rules to embedded C/C++ OR test a measured lightweight interpreter approach. Do not assume direct portability.
 - Maintain a reproducible cross-language conformance harness with fixed RNG seeds and input traces.
 - Some games in the reference repository are approximations, not verified ROM implementations. Clearly label them as such.
+
+## Locked V1 firmware platform (ADR-037–039)
+
+- **Nordic nRF52840 is SELECTED for V1 firmware; nRF Connect SDK v3.4.1 LTS / Zephyr, MCUboot signed DFU, USB CDC ACM app update + independent MCUboot serial recovery, swap/test/revert.** nRF52840 DK is the validation board. Raytac MDBT50Q-P1MV2 is a proposed reference product module, still unqualified. Any switch of MCU requires owner approval and an ADR.
+- **External QSPI NOR required in production** for MCUboot secondary signed image; 8 MiB minimum, 16 MiB reference. Partition addresses and bootloader size are UNVERIFIED until a real DK build/USB recovery/power-loss test; never claim that sketches are working overlays.
+- **Do not import Nordic/Zephyr headers into `firmware/`**. Implement OS/USB/BLE/driver code only under `platform/nrf52840/`, bridging existing `bk_hal_t`. Preserve host test and conformance behavior.
+- Recovery should be possible without working application via MCUboot USB CDC, not only app MCUmgr; SWD pads also required. Signed production keys must be generated/stored outside the repo; dev keys never used for release.
 
 ## Hardware validation gates
 - Compare reflective Memory LCD and transflective monochrome LCD. Screen controller/pinout, viewing angle, illumination method, MOQ, long-term availability and actual measured consumption must be confirmed before PCB freeze.
