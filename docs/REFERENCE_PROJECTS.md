@@ -38,7 +38,7 @@ Maintain Brick's `THIRD_PARTY.md` + future provenance/asset attribution records.
 
 ## Adopt into Brick, without migrating or disrupting the current working software core
 
-- Keep existing `firmware/`, `tests/`, `tools/`, `docs/`, `design/`, `AGENTS.md` and CMake.
+- Keep existing `firmware/`, `platform/sim/`, `tests/`, `tools/`, `docs/`, `design/`, `AGENTS.md` and CMake.
 - `mechanical/` (CAD master/scripts, measured assembly, STEP/STL prototype, drawings), based on Pi Tin's physical designs and documented fit.
 - `hardware/` (KiCad source, symbol/footprint library, schematics, native PCB, BOM, fab outputs, power/display/BLE/USB work), based on ENGAGE and STM-boy.
 - `manufacturing/` (assembly maps, SMT pick-and-place, test jig, calibration, QA serial tracking), inspired by Arduboy Kit / STM-boy.
