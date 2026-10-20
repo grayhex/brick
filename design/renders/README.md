@@ -12,6 +12,8 @@
 
 
 
+### R0.2 historical gallery
+
 **Status:** industrial-design visual studies, **not** physical photographs, validated hardware CAD, manufactured prototypes, PCB designs, display optical measurements or accurate firmware captures. Added 2026-10-20.
 
 ## Updated appearance — three finishes
