@@ -98,6 +98,23 @@ void bk_game_cutscene(bk_game_t *g, uint8_t kind, uint32_t total_ticks); /* no-i
 bool bk_game_busy(const bk_game_t *g);                                   /* cutscene or game-over animation running */
 uint8_t *bk_game_overlay(bk_game_t *g);                                  /* writable overlay; marks it as displayed */
 
+/* ---- lives and "clear the field" scenes (BrickBase.setLives / animateClear / nextLevel, LibraryGame.lose / win) ---- */
+#define BK_MAX_LIVES         4  /* lives shown by the indicator */
+#define BK_CLEAR_SCENE_TICKS 60 /* the clear animation after a lost life or a won level */
+
+void bk_game_set_lives(bk_game_t *g, int count); /* clamped to 0..BK_MAX_LIVES */
+/* Level + 1; past BK_MAX_LEVEL it wraps to 1 and the speed goes up by one (wrapping 10 -> 1). Emits BK_EV_LEVEL_UP. */
+void bk_game_next_level(bk_game_t *g);
+/* Paints the clear animation frame `elapsed` of a `total` tick scene into the overlay: the field floods from the bottom
+ * in the first half and is erased from the top in the second. Call it from the game's scene_frame hook. */
+void bk_game_paint_clear(bk_game_t *g, uint32_t total, uint16_t elapsed);
+/* A life is lost: lives - 1, BK_EV_LIFE_LOST, then game over when none is left, else a clear scene of `scene_kind`
+ * (BK_CLEAR_SCENE_TICKS) after which the game's scene_done hook must restart the round. */
+void bk_game_lose_life(bk_game_t *g, uint8_t scene_kind);
+/* The level is won: +100 points, BK_EV_WIN, a clear scene of `scene_kind` after which scene_done must call
+ * bk_game_next_level() and restart the round. */
+void bk_game_win_level(bk_game_t *g, uint8_t scene_kind);
+
 /* Ticks of the flood animation per row (reference: 127 ms at 60 Hz, 7.62 ticks) and total length. */
 #define BK_GAME_OVER_ROW_MS     127
 #define BK_GAME_OVER_HOLD_TICKS 30

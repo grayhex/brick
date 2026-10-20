@@ -20,13 +20,14 @@ An original, premium, rechargeable handheld inspired by classic vertical Brick G
 
 ## Программный прототип (0.1)
 
-Переносимое игровое ядро на C11, не привязанное к дисплею, разрешению, MCU или плате (ADR-023…030):
+Переносимое игровое ядро на C11, не привязанное к дисплею, разрешению, MCU или плате (ADR-023…033):
 
 - **Ядро** `firmware/`: игра = POD-структура с таблицей функций, фиксированный такт 60 Гц, детерминированный ГСЧ, нет кучи и глобального состояния; граница с железом — `bk_hal_t` (ввод, дисплей, звук, хранилище, подсветка).
 - **Tetris, базовый вариант 01**, перенесён из [ApolloBrickGames](https://github.com/grayhex/ApolloBrickGames) и **сверяется с эталоном на каждом такте**: 68 сценариев, 59 357 тактов ([docs/CONFORMANCE.md](docs/CONFORMANCE.md)). Остальные 50 вариантов не нужны на этом этапе ([docs/GAME_TETRIS.md](docs/GAME_TETRIS.md)); **ПК-симулятор** (терминал и браузер, ядро как WebAssembly) — [docs/SIMULATOR.md](docs/SIMULATOR.md).
+- **Snake, варианты 01 и 02 («FRAME»)**, вторая игра на общей основе (жизни, сцены очистки поля): сверка с эталоном на каждом такте, **72 сценария, 84 588 тактов**; правила «FRAME», 13 плодов и +100 — реконструкция и адаптация самого эталона ([docs/GAME_SNAKE.md](docs/GAME_SNAKE.md)). Игры выбираются в меню клавишами влево/вправо.
 - **Экран:** 1-битный логический кадр, позитивная полярность, поле 10×20 + статус-колонка справа; эталонная сетка и **подгонка под нативный размер панели** (клетка 26 точек и колонка 76 точек для 336×536), ограничитель частоты показа `max_fps` — 60 Гц это частота симуляции, не панели ([docs/UI_MENU.md](docs/UI_MENU.md)).
 - **Меню:** номер/буква игры, номер режима, миниатюра, SPEED/LEVEL, настройки; четыре кнопки направлений, одна кнопка действия и кнопки MODE / SELECT / START (физический набор подтверждён PRD).
-- Размер ядра под Cortex-M4F: ≈ 23,5 КБ flash, `.data = .bss = 0` (**только компиляция**, на железе не измерялось).
+- Размер ядра с двумя играми под Cortex-M4F: ≈ 26,8 КБ flash (26 778 Б), `.data = .bss = 0` (**только компиляция**, на железе не измерялось).
 
 ```sh
 cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build --output-on-failure
@@ -53,7 +54,7 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 - [Game portability plan](docs/GAME_PORTING.md) — factual source mapping and safe migration.
 - [Decision log](docs/DECISIONS.md) — status and rationale.
 - [Архитектура прошивки](docs/FIRMWARE_ARCHITECTURE.md) — слои, HAL, память, порт на ARM MCU, как добавить игру.
-- [Tetris: что портировано](docs/GAME_TETRIS.md), [соответствие эталону](docs/CONFORMANCE.md), [меню и управление](docs/UI_MENU.md).
+- [Tetris: что портировано](docs/GAME_TETRIS.md), [Snake: что портировано](docs/GAME_SNAKE.md), [соответствие эталону](docs/CONFORMANCE.md), [меню и управление](docs/UI_MENU.md).
 - [Сторонние материалы](THIRD_PARTY.md) — происхождение и лицензии.
 - [Software ↔ hardware review, 2026-10-20](docs/ENGINEERING_REVIEW_2026-10-20.md) — confirmed matches, remaining compatibility and hardware validation risks.
 - [Parametric CAD workflow](docs/CAD_WORKFLOW.md) — suggested CadQuery + GitHub Actions + local FreeCAD inspection; private Onshape alternative.
@@ -87,10 +88,12 @@ brick/
 ├── firmware/                     # portable core (no board, no display, no MCU)
 │   ├── include/brick/            # public API: game, hal, console, render, audio, save, ...
 │   ├── core/                     # game base, input, rng, frame, font, render, audio, save, console
-│   └── games/tetris/             # base Tetris variant
+│   ├── games/tetris/             # base Tetris variant
+│   ├── games/snake/              # Snake, variants 01 and 02 (FRAME)
+│   └── catalog/                  # the games the product ships, in menu order
 ├── platform/sim/                 # PC simulator: window-less driver, terminal and WebAssembly front-ends
 ├── tests/                        # unit, conformance (recorded reference traces), golden screens, simulator sessions
-│   ├── fixtures/tetris/          # traces exported from the TypeScript reference
+│   ├── fixtures/{tetris,snake}/  # traces exported from the TypeScript reference
 │   └── golden/                   # ASCII pictures of every console screen
 ├── tools/
 │   ├── conformance/              # exporter of reference fixtures (Node, only for regeneration)

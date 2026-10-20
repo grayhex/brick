@@ -1,4 +1,6 @@
 # file ticks presents dropped last-picture-hash (native simulator)
 tetris_ref8.bkt 1932 214 0 21fd703f
 tetris_lcd316_10hz.bkt 1932 108 164 23607b02
-menu_cell10_30hz.bkt 502 32 0 f79cd9ef
+menu_cell10_30hz.bkt 502 34 0 f79cd9ef
+snake_ref8.bkt 1751 216 0 84859371
+snake_frame_lcd316_15hz.bkt 1580 120 149 c39dad63
