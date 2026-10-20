@@ -55,6 +55,8 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 - [Архитектура прошивки](docs/FIRMWARE_ARCHITECTURE.md) — слои, HAL, память, порт на ARM MCU, как добавить игру.
 - [Tetris: что портировано](docs/GAME_TETRIS.md), [соответствие эталону](docs/CONFORMANCE.md), [меню и управление](docs/UI_MENU.md).
 - [Сторонние материалы](THIRD_PARTY.md) — происхождение и лицензии.
+- [Software ↔ hardware review, 2026-10-20](docs/ENGINEERING_REVIEW_2026-10-20.md) — confirmed matches, remaining compatibility and hardware validation risks.
+- [Parametric CAD workflow](docs/CAD_WORKFLOW.md) — suggested CadQuery + GitHub Actions + local FreeCAD inspection; private Onshape alternative.
 - [Agent instructions](AGENTS.md) — constraints and first execution steps.
 
 ## Visual reference — Brick R0.2
