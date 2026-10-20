@@ -1,4 +1,18 @@
-# BRICK R0.2 — render gallery and UI mockups
+# BRICK — render gallery and UI mockups
+
+## Новая маркетинговая визуализация R0.3 (концепт, не CAD)
+
+![BRICK R0.3 — Racing, студия](r03/brick-r03-studio.svg)
+
+- [Студийный концепт — Racing](r03/brick-r03-studio.svg)
+- [Референс на каменной поверхности — меню Racing](r03/brick-r03-tabletop.svg)
+- [Что изменилось и что ещё требуется подтвердить](r03/README.md)
+
+**R0.3 — визуальное направление, а не новая аппаратная ревизия.** Функциональные кнопки предложено сделать меньше, BRICK — крупнее и в пиксельном начертании, стрелкам добавить литьевую фактуру, над экраном — один слабый белый LED. R0.2 остаётся инженерной базой до печати и испытаний.
+
+
+
+### R0.2 historical gallery
 
 **Status:** industrial-design visual studies, **not** physical photographs, validated hardware CAD, manufactured prototypes, PCB designs, display optical measurements or accurate firmware captures. Added 2026-10-20.
 
