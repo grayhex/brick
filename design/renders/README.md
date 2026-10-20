@@ -34,11 +34,13 @@ Color reference: an owner-provided photograph of a classic Brick Game E-23. Shel
 
 ## Interface explorations (individual screens)
 
-| Tetris | Snake / settings |
+| Tetris | Settings |
 | --- | --- |
-| [Menu](ui-tetris-menu.webp) | [Snake menu](ui-snake-menu.webp) |
-| [Gameplay](ui-tetris-play.webp) | [Snake FRAME](ui-snake-frame.webp) |
-| [Pause](ui-tetris-pause.webp) | [Settings](ui-settings.webp) |
+| [Menu](ui-tetris-menu.webp) | [Settings](ui-settings.webp) |
+| [Gameplay](ui-tetris-play.webp) | |
+| [Pause](ui-tetris-pause.webp) | |
+
+The two Snake mock-ups of the earlier gallery (menu with variant "B 02" and gameplay inside a frame) were removed on 2026-10-20: they showed the "FRAME" variant, and games have no variants (ADR-036). Current Snake screens are generated from the firmware: [docs/img/home_snake.png](../../docs/img/home_snake.png), [docs/img/game_snake.png](../../docs/img/game_snake.png).
 
 ![UI overview](brick-ui-overview.webp)
 

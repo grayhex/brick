@@ -8,20 +8,19 @@ static snake_lab_t lab;
 static bk_event_t log_[64];
 static unsigned log_n;
 
-static bk_game_options_t options(uint32_t seed, unsigned speed, unsigned level, unsigned mode)
+static bk_game_options_t options(uint32_t seed, unsigned speed, unsigned level)
 {
     bk_game_options_t o;
     memset(&o, 0, sizeof o);
     o.seed = seed;
     o.speed = (uint8_t)speed;
     o.level = (uint8_t)level;
-    o.mode = (uint16_t)mode;
     return o;
 }
 
-static bk_game_t *start(uint32_t seed, unsigned speed, unsigned level, unsigned mode)
+static bk_game_t *start(uint32_t seed, unsigned speed, unsigned level)
 {
-    bk_game_options_t o = options(seed, speed, level, mode);
+    bk_game_options_t o = options(seed, speed, level);
     snake_lab_init(&lab, &o);
     log_n = 0;
     return &lab.game.base;
@@ -72,7 +71,7 @@ static void cells_of(uint8_t cells[BK_CELLS])
 
 static void test_the_start_position_is_the_one_of_the_rom(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     CHECK_EQ(lab.game.len, 3);
     CHECK_EQ(lab.game.body[0], 19 * 10 + 5); /* head (5,0) counting y from the bottom */
     CHECK_EQ(lab.game.body[2], 19 * 10 + 3); /* tail (3,0) */
@@ -103,7 +102,7 @@ static void test_the_step_period_is_fractional_and_exact(void)
         }
     }
     /* speed 1: the first step is on the 20th tick (19.94 ticks), not on the 19th */
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     unsigned first = 0;
     for (unsigned t = 1; t <= 40 && first == 0; t++) {
         step(0, 0);
@@ -117,7 +116,7 @@ static void test_the_step_period_is_fractional_and_exact(void)
 
 static void test_a_direction_key_moves_at_once_and_restarts_the_timer(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     idle(10);
     step(BK_KEY_UP, BK_KEY_UP);
     CHECK_EQ(head_x(), 5);
@@ -138,7 +137,7 @@ static void test_a_direction_key_moves_at_once_and_restarts_the_timer(void)
 
 static void test_the_opposite_key_turns_the_worm_round_without_a_step(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     step(BK_KEY_LEFT, BK_KEY_LEFT);
     CHECK_EQ(count_events(BK_EV_MOVE), 0);
     CHECK_EQ(lab.game.body[0], 19 * 10 + 3); /* the old tail is the head now */
@@ -154,7 +153,7 @@ static void test_the_opposite_key_turns_the_worm_round_without_a_step(void)
 
 static void test_rotate_is_up_and_holding_it_is_not_a_turbo(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     idle(3);
     step(BK_KEY_ROTATE, BK_KEY_ROTATE);
     CHECK_EQ(head_y(), 18);
@@ -165,7 +164,7 @@ static void test_rotate_is_up_and_holding_it_is_not_a_turbo(void)
         moves += count_events(BK_EV_MOVE);
     }
     CHECK_EQ(moves, 1); /* one automatic step in 30 ticks at speed 1, no repeat */
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     step(BK_KEY_FIRE, BK_KEY_FIRE); /* the engine alias of the action key */
     CHECK_EQ(lab.game.dir, 0);
 }
@@ -173,7 +172,7 @@ static void test_rotate_is_up_and_holding_it_is_not_a_turbo(void)
 static void test_a_meal_scores_grows_and_a_new_one_appears_on_a_free_cell(void)
 {
     for (uint32_t seed = 1; seed <= 200; seed++) {
-        start(seed, 1, 1, 0);
+        start(seed, 1, 1);
         int worm[] = {10 * 10 + 4, 10 * 10 + 3, 10 * 10 + 2};
         snake_lab_set_worm(&lab, 1, worm, 3);
         lab.game.food = 10 * 10 + 5;
@@ -191,7 +190,7 @@ static void test_a_meal_scores_grows_and_a_new_one_appears_on_a_free_cell(void)
 
 static void test_leaving_the_field_or_hitting_the_body_costs_a_life(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     int worm[] = {5, 15, 25};
     snake_lab_set_worm(&lab, 0, worm, 3);
     step(BK_KEY_UP, BK_KEY_UP);
@@ -211,7 +210,7 @@ static void test_leaving_the_field_or_hitting_the_body_costs_a_life(void)
     CHECK_EQ(lab.game.base.lives, 2);
 
     /* the cell the tail leaves is free */
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     int square[] = {44, 45, 55, 54}; /* a 2 x 2 worm: the head (4,4) is right above its own tail (4,5) */
     snake_lab_set_worm(&lab, 3, square, 4);
     lab.game.food = 0;
@@ -222,7 +221,7 @@ static void test_leaving_the_field_or_hitting_the_body_costs_a_life(void)
 
 static void test_four_losses_end_the_game(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     for (int life = 4; life > 0; life--) {
         int worm[] = {5, 15, 25};
         snake_lab_set_worm(&lab, 0, worm, 3);
@@ -244,7 +243,7 @@ static void test_four_losses_end_the_game(void)
 
 static void test_the_thirteenth_meal_wins_the_level(void)
 {
-    start(5, 3, 4, 0);
+    start(5, 3, 4);
     int worm[] = {10 * 10 + 4, 10 * 10 + 3, 10 * 10 + 2};
     snake_lab_set_worm(&lab, 1, worm, 3);
     lab.game.eaten = 12;
@@ -262,32 +261,9 @@ static void test_the_thirteenth_meal_wins_the_level(void)
     CHECK_EQ(lab.game.eaten, 0);
 }
 
-static void test_the_frame_variant_lights_a_frame_and_starts_one_row_up(void)
-{
-    start(5, 1, 1, 1);
-    CHECK(lab.game.frame);
-    CHECK_EQ(lab.game.body[0], 18 * 10 + 5);
-    uint8_t cells[BK_CELLS];
-    cells_of(cells);
-    for (int x = 0; x < 10; x++) {
-        CHECK_EQ(cells[x], BK_CELL_ON);
-        CHECK_EQ(cells[19 * 10 + x], BK_CELL_ON);
-    }
-    for (int y = 0; y < 20; y++) {
-        CHECK_EQ(cells[y * 10], BK_CELL_ON);
-        CHECK_EQ(cells[y * 10 + 9], BK_CELL_ON);
-    }
-    CHECK(lab.game.food % 10 != 0 && lab.game.food % 10 != 9 && lab.game.food / 10 != 0 && lab.game.food / 10 != 19);
-    /* the frame is a wall */
-    int worm[] = {10 * 10 + 8, 10 * 10 + 7, 10 * 10 + 6};
-    snake_lab_set_worm(&lab, 1, worm, 3);
-    step(BK_KEY_RIGHT, BK_KEY_RIGHT);
-    CHECK_EQ(lab.game.base.lives, 3);
-}
-
 static void test_the_preview_shows_the_lives(void)
 {
-    start(5, 1, 1, 0);
+    start(5, 1, 1);
     uint8_t pv[BK_PREVIEW_CELLS];
     CHECK(bk_game_preview(&lab.game.base, pv));
     for (int r = 0; r < 4; r++) {
@@ -305,13 +281,11 @@ static void test_the_definition_and_menu_texts(void)
     CHECK_EQ(bk_snake_def.uid, BK_SNAKE_UID);
     CHECK_STR(bk_snake_def.id, "snake");
     CHECK_STR(bk_snake_def.title, "SNAKE");
-    CHECK_EQ(bk_snake_def.mode_count, 2);
+    CHECK_EQ(bk_snake_def.mode_count, 1); /* one variant per game (ADR-036) */
     CHECK(bk_snake_def.state_size <= 2048);
     char label[16];
     bk_snake_def.mode_label(0, label, sizeof label);
     CHECK_STR(label, "NORMAL");
-    bk_snake_def.mode_label(1, label, sizeof label);
-    CHECK_STR(label, "FRAME");
     uint8_t art[BK_COLS * 5];
     for (uint8_t f = 0; f < bk_snake_def.thumb_frames; f++) {
         bk_snake_def.thumbnail(f, art);
@@ -335,7 +309,6 @@ int main(void)
     TEST_RUN(test_leaving_the_field_or_hitting_the_body_costs_a_life);
     TEST_RUN(test_four_losses_end_the_game);
     TEST_RUN(test_the_thirteenth_meal_wins_the_level);
-    TEST_RUN(test_the_frame_variant_lights_a_frame_and_starts_one_row_up);
     TEST_RUN(test_the_preview_shows_the_lives);
     TEST_RUN(test_the_definition_and_menu_texts);
     return bk_test_finish("snake_rules");

@@ -1,7 +1,7 @@
 /*
  * Exports golden conformance fixtures for the C port of Snake from the TypeScript reference
  * (grayhex/ApolloBrickGames, library game `snake`, main profile = E88 no. 5 / E-23 no. 93 of the ROM review plus the
- * variant 02 "Frame" reconstructed from the wiki). The reference is executed, never re-implemented.
+ * the only variant ported, ADR-036: the reconstructed variant 02 "Frame" is not). The reference is executed, never re-implemented.
  *
  * Output: tests/fixtures/snake/snake.conformance.json (format "brick-conformance/1", see docs/CONFORMANCE.md).
  *
@@ -45,7 +45,7 @@ function applyOp(g: SnakeGame, op: Op): void {
   }
 }
 
-const makeLab = (o: Options & { mode?: number }): SnakeGame => new SnakeGame({ seed: o.seed, speed: o.speed, level: o.level, hiScore: o.hiScore, mode: o.mode ?? 0 });
+const makeLab = (o: Options): SnakeGame => new SnakeGame({ seed: o.seed, speed: o.speed, level: o.level, hiScore: o.hiScore, mode: 0 });
 type Recorder = BaseRecorder<SnakeGame>;
 const makeRecorder = (s: Scenario<SnakeGame>, options: Options): Recorder => new BaseRecorder<SnakeGame>(s.name, s.description, options, makeLab, applyOp);
 
@@ -61,9 +61,9 @@ const snakePath = (rows: number): number[] => Array.from({ length: rows * 10 }, 
 
 // ---------------------------------------------------------------- scenarios
 
-const base: Options & { mode?: number } = { seed: 5, speed: 1, level: 1, hiScore: 0 };
+const base: Options = { seed: 5, speed: 1, level: 1, hiScore: 0 };
 const scenarios: Scenario<SnakeGame>[] = [];
-const add = (name: string, description: string, body: (r: Recorder) => void, options: Partial<Options & { mode: number }> = {}): void => {
+const add = (name: string, description: string, body: (r: Recorder) => void, options: Partial<Options> = {}): void => {
   scenarios.push({ name, description, options, body });
 };
 
@@ -304,37 +304,6 @@ add('pause-during-clear-scene', 'pausing while the clear scene runs', (r) => {
   r.idle(70);
 });
 
-// -- variant 02 "Frame": a one-cell frame round the field, 8 x 18 playing area
-add('frame-start', 'variant 02: the worm starts on row 18, the frame is lit', (r) => {
-  r.idle(30);
-}, { mode: 1 });
-add('frame-hit-wall', 'the frame is a wall', (r) => {
-  r.idle(400);
-}, { mode: 1, speed: 6 });
-add('frame-eat-and-win', 'meals and a win inside the frame', (r) => {
-  r.op('snake', 1, ...rowWorm(3, 10, 3));
-  for (let x = 4; x <= 8; x++) {
-    r.op('food', cell(x, 10));
-    r.tap(RIGHT);
-  }
-  r.op('eaten', 12);
-  r.op('snake', 1, ...rowWorm(3, 5, 3));
-  r.op('food', cell(4, 5));
-  r.tap(RIGHT);
-  r.idle(130);
-}, { mode: 1 });
-add('frame-food-spawn', 'food never lands on the frame', (r) => {
-  r.op('snake', 1, ...rowWorm(3, 10, 3));
-  for (let i = 0; i < 20; i++) {
-    r.op('food', cell(4, 10));
-    r.tap(RIGHT);
-    r.op('snake', 1, ...rowWorm(3, 10, 3));
-  }
-}, { mode: 1, seed: 99 });
-add('frame-game-over', 'losing every life inside the frame', (r) => {
-  r.idle(2400);
-}, { mode: 1, speed: 10 });
-
 // -- options
 add('start-speed-and-level', 'options set the start speed and level', (r) => {
   r.idle(300);
@@ -356,7 +325,7 @@ function botRun(r: Recorder, seed: number, ticks: number): void {
     return state / 4294967296;
   };
   const dirs: [BrickAction, number, number][] = [[UP, 0, -1], [RIGHT, 1, 0], [DOWN, 0, 1], [LEFT, -1, 0]];
-  const s = internals(r.lab) as SnakeInternals & { walls: Set<number> };
+  const s = internals(r.lab);
   let wait = 0;
   for (let i = 0; i < ticks; i++) {
     const phase = r.lab.phase;
@@ -383,7 +352,7 @@ function botRun(r: Recorder, seed: number, ticks: number): void {
     const tail = s.body[s.body.length - 1]!;
     const options = dirs
       .map(([key, dx, dy], d) => ({ key, d, x: hx + dx, y: hy + dy }))
-      .filter((o) => o.x >= 0 && o.x < 10 && o.y >= 0 && o.y < 20 && !s.walls.has(o.y * 10 + o.x))
+      .filter((o) => o.x >= 0 && o.x < 10 && o.y >= 0 && o.y < 20)
       .filter((o) => o.d !== (s.directionNow + 2) % 4)
       .filter((o) => {
         const to = o.y * 10 + o.x;
@@ -399,7 +368,6 @@ function botRun(r: Recorder, seed: number, ticks: number): void {
   }
 }
 add('bot-normal', 'a greedy player eats and wins levels (variant 01)', (r) => botRun(r, 7, 7000), { seed: 11, speed: 5 });
-add('bot-frame', 'the same player inside the frame (variant 02)', (r) => botRun(r, 8, 7000), { seed: 12, speed: 8, mode: 1 });
 add('bot-fast-long', 'the greedy player at speed 10, many levels', (r) => botRun(r, 9, 9000), { seed: 13, speed: 10, level: 8 });
 
 // -- long random sessions (the reference "fuzzPlayer" idea): keys toggled at random, pauses, restarts after game over
@@ -446,11 +414,10 @@ function fuzzRun(r: Recorder, seed: number, ticks: number, bias: number): void {
 }
 for (let i = 0; i < 16; i++) {
   const seed = 1000 + i * 7919;
-  add(`fuzz-${i}`, `random keys, pauses and restarts (seed ${seed}, variant ${i % 4 >= 2 ? 2 : 1})`, (r) => fuzzRun(r, seed, 3000, 0.04 + 0.02 * (i % 4)), {
+  add(`fuzz-${i}`, `random keys, pauses and restarts (seed ${seed})`, (r) => fuzzRun(r, seed, 3000, 0.04 + 0.02 * (i % 4)), {
     seed,
     speed: 1 + ((i * 3) % 10),
     level: 1 + ((i * 5) % 10),
-    mode: i % 4 >= 2 ? 1 : 0,
   });
 }
 
