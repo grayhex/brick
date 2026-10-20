@@ -1,3 +1,5 @@
 # Контролируемые релизы изделия
 
 Нет выпущенных HW комплектов. [manifest.template.yml](manifest.template.yml) — **только шаблон**. Для реального зафиксированного пакета (например, `H0.1-M0.2-fw0.1.0/`) требуются native KiCad, Gerber/drill/BOM/PnP, assembly drawings, параметрический CAD и STEP/STL, проверенные firmware+bootloader/recovery, сборочные и EOL инструкции, known issues, источник `git SHA`, контрольные суммы, результаты EVT/DVT/PVT и подпись ответственого. Крупные пакеты могут быть private GitHub Release assets со SHA-256. Не помечать `RELEASED` без документов и тестирования. [Master checklist](../docs/RELEASE_COMPLETENESS_CHECKLIST.md).
+
+Хронология выпусков — [CHANGELOG.md](CHANGELOG.md) (пока пуст).

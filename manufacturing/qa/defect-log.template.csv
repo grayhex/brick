@@ -1,0 +1,1 @@
+defect_id,unit_id,hw_rev,mechanical_rev,firmware_version,detected_at_stage,detected_timestamp_utc,category,description,photo_path,root_cause,rework_action,disposition,closed_timestamp_utc

@@ -1,0 +1,15 @@
+# TEMPLATE ONLY. An export is a derived artifact: write one manifest next to every set of STEP/STL files put under git or a release.
+schema_version: 1
+m_rev: null                 # e.g. M0.2
+source_commit: null         # git SHA of mechanical/src and params.json the files were generated from
+params_sha256: null
+generator: { tool: null, version: null, command: null }   # e.g. CadQuery 2.8.0, python3 mechanical/src/build.py
+units: mm
+thickness_mm: null          # 20 or 22
+bounding_box_mm: { x: null, y: null, z: null }
+parts: []                   # file, sha256, volume_mm3
+validation: { report: null, collisions_found: null, physical_fit_checked: false }
+physical_sample: { id: null, fit_check_csv: null, photos: [] }
+known_issues: []
+approved_by: null
+approval_date: null

@@ -6,3 +6,5 @@ tools/conformance/dist/
 *.a
 .cache/
 compile_commands.json
+/mechanical/build/
+.venv/
