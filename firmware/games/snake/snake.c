@@ -9,8 +9,9 @@
  * win the level (+100). Four lives. The step period is one of ten values measured on the ROM (332.358 ... 37.038 ms),
  * not rounded to whole ticks: the timer keeps the fractional remainder.
  *
- * Adaptations the reference itself marks (docs/GAME_SNAKE.md): the 13 meals per level and the +100 bonus, the Frame
- * variant, the generator of the food position (seeded RNG instead of the free-running timer of the firmware).
+ * Adaptations the reference itself marks (docs/GAME_SNAKE.md): the 13 meals per level and the +100 bonus, the generator
+ * of the food position (seeded RNG instead of the free-running timer of the firmware). One variant only (ADR-036): the
+ * reconstructed "Frame" variant of the reference is not ported.
  */
 #include "brick/games/snake.h"
 
@@ -42,16 +43,6 @@ double bks_step_ticks(int speed)
     return E88_SNAKE_MS[i] * 60.0 / 1000.0; /* same operations, same order as the reference */
 }
 
-static bool is_wall(const bks_game_t *s, int p)
-{
-    if (!s->frame) {
-        return false;
-    }
-    int x = p % BK_COLS;
-    int y = p / BK_COLS;
-    return x == 0 || x == BK_COLS - 1 || y == 0 || y == BK_ROWS - 1;
-}
-
 static bool on_body(const bks_game_t *s, int p, unsigned count)
 {
     for (unsigned i = 0; i < count; i++) {
@@ -67,13 +58,13 @@ static void spawn_food(bks_game_t *s)
 {
     unsigned free_cells = 0;
     for (int p = 0; p < BK_CELLS; p++) {
-        if (!is_wall(s, p) && !on_body(s, p, s->len)) {
+        if (!on_body(s, p, s->len)) {
             free_cells++;
         }
     }
     unsigned index = bk_rng_int(&s->base.rng, free_cells);
     for (int p = 0; p < BK_CELLS; p++) {
-        if (!is_wall(s, p) && !on_body(s, p, s->len)) {
+        if (!on_body(s, p, s->len)) {
             if (index == 0) {
                 s->food = (uint8_t)p;
                 return;
@@ -85,7 +76,7 @@ static void spawn_food(bks_game_t *s)
 
 static void setup(bks_game_t *s)
 {
-    int row = s->frame ? 18 : 19; /* y counted from the top: the bottom row, or just above the frame */
+    int row = 19; /* y counted from the top: the worm lies in the bottom row */
     s->body[0] = (uint8_t)(row * BK_COLS + 5);
     s->body[1] = (uint8_t)(row * BK_COLS + 4);
     s->body[2] = (uint8_t)(row * BK_COLS + 3);
@@ -161,7 +152,7 @@ static void snake_update(bk_game_t *g, const bk_input_t *in)
     int to = y * BK_COLS + x;
     bool eat = x >= 0 && x < BK_COLS && y >= 0 && y < BK_ROWS && to == s->food;
     /* the cell the tail leaves is free unless the worm is growing */
-    if (x < 0 || x >= BK_COLS || y < 0 || y >= BK_ROWS || is_wall(s, to) || on_body(s, to, eat ? s->len : s->len - 1u)) {
+    if (x < 0 || x >= BK_COLS || y < 0 || y >= BK_ROWS || on_body(s, to, eat ? s->len : s->len - 1u)) {
         bk_game_lose_life(g, BKS_SCENE_LOSE);
         return;
     }
@@ -185,11 +176,6 @@ static void snake_draw(const bk_game_t *g, uint8_t cells[BK_CELLS])
 {
     const bks_game_t *s = cself(g);
     memset(cells, BK_CELL_OFF, BK_CELLS);
-    for (int p = 0; p < BK_CELLS; p++) {
-        if (is_wall(s, p)) {
-            cells[p] = BK_CELL_ON;
-        }
-    }
     for (unsigned i = 0; i < s->len; i++) {
         cells[s->body[i]] = BK_CELL_ON;
     }
@@ -221,17 +207,16 @@ bk_game_t *bk_snake_create(void *storage, const bk_game_options_t *opt)
 {
     bks_game_t *s = (bks_game_t *)storage;
     memset(s, 0, sizeof *s);
-    bk_game_base_init(&s->base, &SNAKE_VTABLE, opt, 2);
-    s->frame = s->base.mode == 1u;
+    bk_game_base_init(&s->base, &SNAKE_VTABLE, opt, 1);
     bk_game_restart(&s->base);
     return &s->base;
 }
 
 static void snake_mode_label(uint16_t mode, char *buf, size_t cap)
 {
-    const char *label = mode == 1u ? "FRAME" : "NORMAL";
+    (void)mode; /* one variant per game (ADR-036) */
     if (cap > 0) {
-        strncpy(buf, label, cap - 1);
+        strncpy(buf, "NORMAL", cap - 1);
         buf[cap - 1] = '\0';
     }
 }
@@ -252,6 +237,6 @@ static void snake_thumbnail(uint8_t frame, uint8_t cells[BK_COLS * 5])
 }
 
 const bk_game_def_t bk_snake_def = {
-    BK_SNAKE_UID,         "snake",         "SNAKE",          2, 0,  sizeof(bks_game_t),
+    BK_SNAKE_UID,         "snake",         "SNAKE",          1, 0,  sizeof(bks_game_t),
     _Alignof(bks_game_t), bk_snake_create, snake_mode_label, 2, 30, snake_thumbnail,
 };

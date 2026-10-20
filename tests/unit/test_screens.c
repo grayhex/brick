@@ -207,15 +207,12 @@ static void test_game_screens(void)
 static void test_snake_screens(void)
 {
     fake_hal_init(&hal);
-    seed_profile(BK_SNAKE_UID, 1, 230, 4, 1);
+    seed_profile(BK_SNAKE_UID, 0, 230, 4, 1);
     boot(CAT_TWO, 2);
     run(BK_SPLASH_TICKS, 0);
-    tap(BK_BTN_RIGHT);  /* game 2 */
-    tap(BK_BTN_SELECT); /* focus: SPEED -> LEVEL */
-    tap(BK_BTN_SELECT); /* LEVEL -> variant */
-    tap(BK_BTN_UP);     /* variant 02, "FRAME" */
+    tap(BK_BTN_RIGHT); /* game 2 */
     run(30, 0);
-    check_golden("home_snake_frame");
+    check_golden("home_snake");
     tap(BK_BTN_START);
     CHECK_EQ(con.screen, BK_SCREEN_GAME);
     run(20, 0);
@@ -230,8 +227,8 @@ static void test_snake_screens(void)
         run(1, 0);
     }
     CHECK_EQ(con.game->lives, 4);
-    check_golden("game_snake_frame");
-    /* the clear scene after a lost life: the worm runs into the frame */
+    check_golden("game_snake");
+    /* the clear scene after a lost life: the worm runs into the wall */
     unsigned guard = 0;
     while (con.game->lives == 4 && guard++ < 2000) {
         bk_console_step(&con, 0);

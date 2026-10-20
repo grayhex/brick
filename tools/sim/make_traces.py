@@ -62,8 +62,8 @@ SNAKE = " ".join([
     "700:-", tap("MODE"), "30:-", tap("MODE"), "40:-",               # more losses, then out to the menu
 ])
 
-SNAKE_FRAME = " ".join([
-    "70:-", tap("RIGHT"), "20:-", tap("SELECT"), tap("SELECT"), tap("UP"), "20:-", tap("START"), "70:-",   # variant 02 "FRAME"
+SNAKE_LCD = " ".join([
+    "70:-", tap("RIGHT"), "20:-", tap("START"), "70:-",             # game 2 in the menu, then play on the 336 x 536 panel at 15 Hz
     tap("UP"), "30:-", tap("RIGHT"), "30:-", tap("DOWN"), "30:-", tap("LEFT"), "30:-",
     "800:-", tap("SELECT"), "20:-", "400:-",
 ])
@@ -74,7 +74,7 @@ TRACES = [
     ("tetris_lcd316_10hz", 0, 336, 536, 10, 777, TETRIS),
     ("menu_cell10_30hz", 10, 0, 0, 30, 4242, MENU),
     ("snake_ref8", 8, 0, 0, 0, 31, SNAKE),
-    ("snake_frame_lcd316_15hz", 0, 336, 536, 15, 5150, SNAKE_FRAME),
+    ("snake_lcd316_15hz", 0, 336, 536, 15, 5150, SNAKE_LCD),
 ]
 
 
