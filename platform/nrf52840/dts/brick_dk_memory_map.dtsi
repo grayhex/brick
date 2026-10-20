@@ -1,0 +1,65 @@
+/*
+ * Brick V1 bring-up memory map for the nRF52840 DK (nrf52840dk/nrf52840).
+ *
+ * ONE file, included by the application overlay AND by the MCUboot overlay:
+ * every sysbuild image must see exactly the same partitions
+ * (NCS doc "Partitioning device memory"). Do not edit one side only.
+ *
+ * STATUS: DK BRING-UP LAYOUT, NOT FROZEN. The sizes follow the estimate in
+ * docs/FIRMWARE_UPDATE_NRF52840.md (128 KiB / 768 KiB / 128 KiB). Real MCUboot
+ * and application sizes are measured in docs/NRF52840_BRINGUP.md. A production
+ * layout is decided only after hardware tests (power loss, swap, revert) and
+ * must never change between shipped builds.
+ *
+ * Internal flash (nRF52840, 1 MiB, erase page 4 KiB, write block 4 B):
+ *   0x00000 .. 0x1ffff  boot_partition     128 KiB  MCUboot + USB CDC serial recovery
+ *   0x20000 .. 0xdffff  slot0_partition    768 KiB  running image (header + app + trailer)
+ *   0xe0000 .. 0xfffff  storage_partition  128 KiB  settings / BKSV profile (not touched by DFU)
+ *
+ * External QSPI NOR (DK: MX25R6435F, 8 MiB, erase sector 4 KiB):
+ *   0x000000 .. 0x0bffff  slot1_partition  768 KiB  secondary slot, same size as slot0
+ *   0x0c0000 .. 0x7fffff  unallocated      reserved for assets, NOT XIP code
+ *
+ * Swap mode is "swap using move" (no scratch partition); it needs both slots
+ * to have the same sector size, which holds here (4 KiB on both devices).
+ */
+
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+/delete-node/ &storage_partition;
+
+&flash0 {
+	partitions {
+		boot_partition: partition@0 {
+			compatible = "zephyr,mapped-partition";
+			label = "mcuboot";
+			reg = <0x00000 DT_SIZE_K(128)>;
+		};
+
+		slot0_partition: partition@20000 {
+			compatible = "zephyr,mapped-partition";
+			label = "image-0";
+			reg = <0x20000 DT_SIZE_K(768)>;
+		};
+
+		storage_partition: partition@e0000 {
+			compatible = "zephyr,mapped-partition";
+			label = "storage";
+			reg = <0xe0000 DT_SIZE_K(128)>;
+		};
+	};
+};
+
+&mx25r64 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		slot1_partition: partition@0 {
+			label = "image-1";
+			reg = <0x00000 DT_SIZE_K(768)>;
+		};
+	};
+};

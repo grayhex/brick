@@ -1,0 +1,23 @@
+/*
+ * MCUboot devicetree for the nRF52840 DK.
+ * - same partitions as the application (shared dtsi);
+ * - QSPI NOR (mx25r64) is already enabled by the board file; the driver is
+ *   enabled in mcuboot.conf;
+ * - serial recovery is exposed as a USB CDC ACM device on the nRF USB port.
+ * Boot button: board alias mcuboot-button0 = button0 (SW1, P0.11), already
+ * defined in nrf52840dk_nrf52840.dts.
+ */
+
+#include "../dts/brick_dk_memory_map.dtsi"
+
+/ {
+	chosen {
+		zephyr,code-partition = &boot_partition;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};

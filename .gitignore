@@ -8,3 +8,7 @@ tools/conformance/dist/
 compile_commands.json
 /mechanical/build/
 .venv/
+/platform/nrf52840/build/
+# Signing keys never live in the repository (docs/FIRMWARE_UPDATE_NRF52840.md, platform/nrf52840/scripts/gen_dev_key.sh)
+*.pem
+*.key
