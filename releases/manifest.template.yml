@@ -1,0 +1,33 @@
+# TEMPLATE ONLY. NOT A VALID MANUFACTURING PACKAGE.
+schema_version: 1
+release_status: DRAFT # DRAFT | EVT | DVT | PVT | RELEASED
+release_id: null
+git_commit: null
+hardware_revision: null
+mechanical_revision: null
+firmware_version: null
+supported_finishes: []
+toolchain: { kicad_version: null, cad_tool_version: null, compiler_version: null }
+artifacts:
+  schematic_source: null
+  pcb_source: null
+  gerbers_and_drill: null
+  pick_and_place: null
+  bom_and_avl: null
+  assembly_drawings: null
+  parametric_cad: null
+  mechanical_step_stl: null
+  firmware_and_bootloader: null
+  recovery_procedure: null
+  end_of_line_tests: null
+evidence:
+  display: null
+  power_and_battery: null
+  mechanical_fit: null
+  regulatory_rf_emc: null
+  evt_dvt_pvt: null
+  qa_signoff: null
+known_issues: []
+files_sha256: {}
+approved_by: null
+approval_date: null

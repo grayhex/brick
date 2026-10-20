@@ -36,7 +36,8 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 | GAMES-01 | Approx. 10 classic games at launch | CONFIRMED | Exact selection OPEN |
 | GAMES-02 | Additional games via firmware updates | CONFIRMED | Safe/recoverable update needed |
 | GAMES-03 | Reuse logic/rules and tests from ApolloBrickGames | CONFIRMED | Port/reimplement for target platform |
-| GAMES-04 | **First firmware version = four games: Tetris, Racing, Snake, Tank** (owner, 2026-10-20); Dice is not to be ported; other candidates only as later firmware updates (GAMES-02) | CONFIRMED | Racing and Tank rules are reconstructions, not ROM-verified (docs/GAME_CANDIDATES.md); the ~10-game target of GAMES-01 stays |
+| GAMES-04 | **First firmware version = four games: Tetris, Racing, Snake, Tank** (owner, 2026-10-20, ADR-035); Dice is not to be ported; other candidates only as later firmware updates (GAMES-02) | CONFIRMED | Racing and Tank rules are reconstructions, not ROM-verified (docs/GAME_CANDIDATES.md); the ~10-game target of GAMES-01 stays |
+| GAMES-05 | **No game variants: every game ships in ONE variant for now** (owner, 2026-10-20, ADR-036) | CONFIRMED | The 51 Tetris variants, Snake FRAME and the extra Racing road layouts are not ported |
 | PROD-01 | Initial production target **100–500 units** | CONFIRMED | Pilot run first |
 | REPO-01 | Hardware project in new **private** repository `grayhex/brick` | CONFIRMED | Source repository stays distinct |
 
@@ -46,7 +47,7 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 - Side: physical power switch and volume wheel/slider (exact locations OPEN). Optional accessible microSD on side is **not confirmed**.
 - Bottom: **only centered USB-C**; **no** mini-jack, no speaker slots/holes or decorative ports. Consider clearances for cable while handheld.
 - Rear and bottom must NOT have speaker outlet; front-center lower perforations link to designed acoustic cavity. Avoid hand blockage.
-- Finish: **три согласованных исполнения на одной механической платформе** — Monolith (матовый графит), Clear Smoke (дымчатый прозрачный с черной PCB), Ceramic (тёплый ivory-пластик, не керамика). Конкретные материалы и технология производства OPEN.
+- Finish: **три согласованных исполнения на одной механической платформе** — Monolith (матовый графит), Clear Smoke (дымчатый прозрачный с черной PCB), Ceramic (тёплый светло-серый / бежево-серый пластик в духе классического Brick Game, не керамика; ADR-034). Конкретные материалы и технология производства OPEN.
 - Product inspiration includes Analogue Pocket build quality while preserving Brick Game outer shape.
 
 **Current owner's preliminary choice:** approx. **175×80 mm**, see [MECHANICAL_CONCEPT.md](MECHANICAL_CONCEPT.md) and [актуальные R0.2 ортографические виды](../design/concepts/brick-orthographic-r02.svg). Thickness **~20–22 mm** is an engineering proposal, not an owner-approved manufacturing dimension.

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1030" viewBox="0 0 1600 1030"><title>Brick — unified industrial design family R0.2</title><defs>
 <linearGradient id="bodyBlack" x2="1" y2="0"><stop stop-color="#10161b"/><stop offset=".24" stop-color="#272f34"/><stop offset=".81" stop-color="#1f292c"/><stop offset="1" stop-color="#11181c"/></linearGradient>
-<linearGradient id="bodyIvory" x2="1" y2="0"><stop stop-color="#c9bfae"/><stop offset=".22" stop-color="#eee8dd"/><stop offset=".75" stop-color="#e9e3d7"/><stop offset="1" stop-color="#d1c9bb"/></linearGradient>
+<linearGradient id="bodyIvory" x2="1" y2="0"><stop stop-color="#aaa79d"/><stop offset=".22" stop-color="#d0cdc4"/><stop offset=".75" stop-color="#c4c1b7"/><stop offset="1" stop-color="#aaa79d"/></linearGradient>
 <linearGradient id="bodySmoke" x2="0" y2="0" x1="1" y1="1"><stop stop-color="#303b42" stop-opacity=".89"/><stop offset=".50" stop-color="#5f6970" stop-opacity=".45"/><stop offset="1" stop-color="#2b3339" stop-opacity=".85"/></linearGradient>
 <radialGradient id="gold"><stop stop-color="#ffe744"/><stop offset=".65" stop-color="#ffda19"/><stop offset="1" stop-color="#e9ac02"/></radialGradient>
 <linearGradient id="display" y2="1" x2="0"><stop stop-color="#dde0d7"/><stop offset="1" stop-color="#cbd2c7"/></linearGradient>
@@ -363,8 +363,8 @@
 <circle cx="837.41" cy="839.08" r="3.94" fill="#0d171d" stroke="#708186" stroke-width="0.5" />
 <text x="800.80" y="900.68" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="600" fill="#566b77" text-anchor="middle" letter-spacing=".7">175 × 80 mm  /  T≈20–22 mm</text>
 <text x="1255.00" y="209.00" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="700" fill="#14232d" text-anchor="middle" letter-spacing="2.4">CERAMIC</text>
-<text x="1255.00" y="233.00" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600" fill="#617079" text-anchor="middle" letter-spacing="1.25">WARM IVORY / OFF-WHITE PLASTIC</text>
-<rect x="1115.00" y="253.00" width="281.60" height="616.00" rx="32" fill="url(#bodyIvory)" stroke="#b6aa99" stroke-width="2.8" filter="url(#shadow)"/>
+<text x="1255.00" y="233.00" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600" fill="#617079" text-anchor="middle" letter-spacing="1.25">CLASSIC WARM GRAY PLASTIC</text>
+<rect x="1115.00" y="253.00" width="281.60" height="616.00" rx="32" fill="url(#bodyIvory)" stroke="#98978f" stroke-width="2.8" filter="url(#shadow)"/>
 <rect x="1122.00" y="260.00" width="267.60" height="602.00" rx="29" fill="none" stroke="#80898a" stroke-width="0.9" opacity=".52"/>
 <rect x="1160.76" y="284.68" width="190.08" height="288.64" rx="10" fill="#121920" stroke="#7f8c94" stroke-width="1.5" />
 <rect x="1173.04" y="295.24" width="165.51" height="267.52" rx="2" fill="#a8b2ac" stroke="#394945" stroke-width="0.8" />
