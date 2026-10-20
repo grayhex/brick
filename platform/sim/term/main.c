@@ -133,11 +133,12 @@ static void draw(const bk_sim_t *s, double fps_shown)
             n += (size_t)snprintf(out + n, sizeof out - n, "\x1b[0m\x1b[K\r\n");
         }
     }
-    n += (size_t)snprintf(out + n, sizeof out - n,
-                          "\x1b[0m\x1b[Ktick %u  shown %u  waiting %u  panel %s%u  light %u  tone %u Hz  %.0f pic/s%s\r\n",
-                          (unsigned)s->console.ticks, (unsigned)s->console.presents, (unsigned)s->console.dropped_frames,
-                          s->cfg.max_fps != 0 ? "max " : "any ", (unsigned)s->cfg.max_fps, (unsigned)s->light,
-                          (unsigned)s->tone_hz, fps_shown, s->recording ? "  [REC]" : (s->replaying ? "  [REPLAY]" : ""));
+    n += (size_t)snprintf(
+        out + n, sizeof out - n,
+        "\x1b[0m\x1b[Ktick %u  shown %u  waiting %u  panel %s%u  light %u  ble %s  tone %u Hz  %.0f pic/s%s\r\n",
+        (unsigned)s->console.ticks, (unsigned)s->console.presents, (unsigned)s->console.dropped_frames,
+        s->cfg.max_fps != 0 ? "max " : "any ", (unsigned)s->cfg.max_fps, (unsigned)s->light, s->ble ? "on" : "off",
+        (unsigned)s->tone_hz, fps_shown, s->recording ? "  [REC]" : (s->replaying ? "  [REPLAY]" : ""));
     n += (size_t)snprintf(out + n, sizeof out - n,
                           "\x1b[Karrows: D-pad   space/z: ACTION   a: MODE   s: SELECT   d/Enter: START   q: quit\r\n");
     (void)!write(STDOUT_FILENO, out, n);

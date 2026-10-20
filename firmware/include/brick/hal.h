@@ -62,6 +62,10 @@ typedef struct {
     void (*set_frontlight)(void *ctx, uint8_t level);
     /* Any 32 bits of entropy for game seeds (timer jitter, ADC noise, RTC...). May be NULL: a fixed seed is used. */
     uint32_t (*entropy)(void *ctx);
+    /* The phone link, true = the radio may advertise and accept a connection, false = it is off. BLE is only for settings
+     * and synchronisation with a phone, never for sound (CONFIRMED, PRD). Called at start and whenever the setting BLE
+     * changes. May be NULL: there is no radio (the prototype has none yet; the setting is then only remembered). */
+    void (*set_ble)(void *ctx, bool enabled);
 } bk_system_port_t;
 
 #define BK_LIGHT_MAX 2

@@ -9,6 +9,7 @@ set(BRICK_CORE_SOURCES
   core/frame.c
   core/font.c
   core/render.c
+  core/clip.c
   core/audio.c
   core/save.c
   core/console.c

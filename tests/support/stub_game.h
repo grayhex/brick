@@ -8,10 +8,12 @@
 
 #include "brick/game.h"
 
-#define STUB_GOAL 30
+#define STUB_GOAL       30
+#define STUB_CLIP_TICKS 20 /* ticks per frame of the stub's menu clip */
 
-extern const bk_game_def_t stub_def_multi;  /* uid 100, 3 modes */
-extern const bk_game_def_t stub_def_single; /* uid 101, 1 mode */
+extern const bk_game_def_t stub_def_multi;  /* uid 100, 3 modes, has a menu clip */
+extern const bk_game_def_t stub_def_single; /* uid 101, 1 mode, no menu clip */
+extern const bk_clip_t stub_clip;           /* the clip of stub_def_multi: four frames, the poster is the second */
 
 /* What the stub has seen, for assertions. Reset by creating a new game. */
 typedef struct {

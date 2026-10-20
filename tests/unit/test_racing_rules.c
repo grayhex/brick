@@ -307,19 +307,7 @@ static void test_the_definition_and_menu_texts(void)
     CHECK_STR(bk_racing_def.title, "RACING");
     CHECK_EQ(bk_racing_def.mode_count, 1); /* one variant per game (ADR-036) */
     CHECK(bk_racing_def.state_size <= 2048);
-    char label[24];
-    bk_racing_def.mode_label(0, label, sizeof label);
-    CHECK_STR(label, "2 LANES");
-    uint8_t art[BK_COLS * 5];
-    for (uint8_t f = 0; f < bk_racing_def.thumb_frames; f++) {
-        bk_racing_def.thumbnail(f, art);
-        int lit = 0;
-        for (int i = 0; i < BK_COLS * 5; i++) {
-            CHECK(art[i] == BK_CELL_OFF || art[i] == BK_CELL_ON);
-            lit += art[i];
-        }
-        CHECK(lit > 8);
-    }
+    CHECK(bk_racing_def.preview != NULL); /* the menu clip itself is checked for every game in test_clips */
 }
 
 int main(void)

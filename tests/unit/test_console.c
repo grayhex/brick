@@ -47,6 +47,15 @@ static void to_home(void)
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
 }
 
+/* Move the settings cursor down to `item` (the list wraps, so this always arrives). */
+static void goto_setting(bk_setting_item_t item)
+{
+    for (int guard = 0; con.cursor != item && guard < BK_SET_COUNT; guard++) {
+        tap(BK_BTN_DOWN);
+    }
+    CHECK_EQ(con.cursor, item);
+}
+
 static bool has_event(bk_event_type_t t)
 {
     for (unsigned i = 0; i < con.events.count; i++) {
@@ -70,6 +79,12 @@ static void test_init_validation(void)
     huge.state_size = BK_GAME_STATE_MAX + 1; /* a game whose state does not fit the static reservation is refused up front */
     const bk_catalog_entry_t big[] = {{&huge, "1"}};
     CHECK(!bk_console_init(&con, big, 1, &hal.hal, 8));
+    bk_clip_t bad_clip = stub_clip;
+    bad_clip.poster = bad_clip.frame_count; /* a poster past the end of the clip */
+    bk_game_def_t broken = stub_def_multi;
+    broken.preview = &bad_clip;
+    const bk_catalog_entry_t bad[] = {{&broken, "1"}};
+    CHECK(!bk_console_init(&con, bad, 1, &hal.hal, 8)); /* a broken clip would put garbage in the menu */
     CHECK(bk_console_init(&con, CAT_STUBS, 2, &hal.hal, 8));
     CHECK(bk_console_init(&con, CAT_TETRIS, 1, &hal.hal, 8)); /* the real catalog fits */
     CHECK(sizeof(bkt_game_t) <= BK_GAME_STATE_MAX);
@@ -388,9 +403,7 @@ static void test_settings_clear_records_needs_confirmation(void)
     boot(CAT_STUBS, 2);
     to_home();
     tap(BK_BTN_MODE);
-    tap(BK_BTN_DOWN);
-    tap(BK_BTN_DOWN);
-    CHECK_EQ(con.cursor, BK_SET_RECORDS);
+    goto_setting(BK_SET_RECORDS);
     tap(BK_BTN_ACTION);
     CHECK(con.confirm_clear);
     CHECK_EQ(bk_profile_get_record(&con.profile, 100, 0), 77); /* one press changes nothing */
@@ -410,10 +423,7 @@ static void test_button_test_and_about(void)
     fresh(CAT_STUBS, 2);
     to_home();
     tap(BK_BTN_MODE);
-    for (int i = 0; i < 3; i++) {
-        tap(BK_BTN_DOWN);
-    }
-    CHECK_EQ(con.cursor, BK_SET_BUTTONS);
+    goto_setting(BK_SET_BUTTONS);
     tap(BK_BTN_ACTION);
     CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
     bk_console_step(&con, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_MODE); /* pressing keys only lights them up */
@@ -439,9 +449,7 @@ static void test_button_test_lights_each_button_on_its_own_row(void)
         fresh(CAT_STUBS, 2);
         to_home();
         tap(BK_BTN_MODE);
-        for (int i = 0; i < 3; i++) {
-            tap(BK_BTN_DOWN);
-        }
+        goto_setting(BK_SET_BUTTONS);
         tap(BK_BTN_ACTION);
         CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
         bk_console_step(&con, bits[pressed]);
@@ -452,7 +460,21 @@ static void test_button_test_lights_each_button_on_its_own_row(void)
             rows[i].label = names[i];
             rows[i].value = i == pressed ? "ON" : "--";
         }
-        bk_render_text_page(&con.layout, "BUTTONS", rows, 8, -1, "EXIT MODE+SELECT+START", &expected);
+        bk_page_t page;
+        memset(&page, 0, sizeof page);
+        page.title = "BUTTONS";
+        page.style = BK_PAGE_LINES;
+        page.rows = rows;
+        page.count = 8;
+        page.cursor = -1;
+        page.sound_on = true;
+        page.footer[0] = "EXIT";
+        page.footer[1] = "MODE+SELECT+START";
+        page.status[0].label = "LIGHT";
+        page.status[0].value = "OFF";
+        page.status[1].label = "BLE";
+        page.status[1].value = "OFF";
+        bk_render_page(&con.layout, &page, &expected);
         CHECK(bk_frame_equal(shown, &expected)); /* exactly this button's row is lit, in the order printed on the housing */
     }
 }
@@ -505,6 +527,11 @@ static void test_present_only_on_change(void)
     hal.buttons = 0;
     bk_console_tick(&con);
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
+    hal.buttons = BK_BTN_RIGHT; /* the second stub has no menu clip: only the blink of the focused value is left */
+    bk_console_tick(&con);
+    hal.buttons = 0;
+    bk_console_tick(&con);
+    CHECK_EQ(con.game_index, 1);
     before = hal.presents;
     for (unsigned i = 0; i < 4 * BK_BLINK_HALF_TICKS; i++) {
         bk_console_tick(&con);
@@ -606,6 +633,368 @@ static void test_tetris_in_the_console(void)
     bk_console_render(&con);
 }
 
+/* ---------------------------------------------------------------- menu clip, DEMO, new settings, AUTO OFF (ADR-041) */
+
+static bool region_equal(const bk_frame_t *a, const bk_frame_t *b, int x0, int y0, int x1, int y1)
+{
+    for (int y = y0; y < y1; y++) {
+        for (int x = x0; x < x1; x++) {
+            if (bk_frame_get(a, x, y) != bk_frame_get(b, x, y)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+static unsigned ink_in(const bk_frame_t *f, int x0, int y0, int x1, int y1)
+{
+    unsigned n = 0;
+    for (int y = y0; y < y1; y++) {
+        for (int x = x0; x < x1; x++) {
+            n += bk_frame_get(f, x, y) ? 1u : 0u;
+        }
+    }
+    return n;
+}
+
+static void test_home_plays_the_clip_of_the_selected_game(void)
+{
+    fresh(CAT_STUBS, 2);
+    to_home();
+    const int cell = con.layout.cell;
+    const int clip_y = BK_CLIP_FIRST_ROW * cell;
+    /* the stub's dot walks along the bottom row: frame k lights the cell of column k and no other */
+    for (int round = 0; round < 2; round++) { /* twice: the loop wraps */
+        for (int k = 0; k < 4; k++) {
+            con.preview_ticks = (uint32_t)(round * 4 + k) * STUB_CLIP_TICKS + 3;
+            const bk_frame_t *f = bk_console_render(&con);
+            for (int col = 0; col < BK_COLS; col++) {
+                CHECK_EQ(bk_frame_get(f, col * cell, (BK_ROWS - 1) * cell), col == k);
+            }
+            CHECK_EQ(ink_in(f, 0, clip_y, con.layout.field_w, (BK_ROWS - 1) * cell), 0); /* only the bottom row is lit */
+        }
+    }
+
+    /* switching games restarts the clip of the new one; a game without a clip leaves the area empty */
+    con.preview_ticks = 3 * STUB_CLIP_TICKS;
+    tap(BK_BTN_RIGHT);
+    CHECK_EQ(con.game_index, 1);
+    CHECK(con.preview_ticks < 3);
+    CHECK_EQ(ink_in(bk_console_render(&con), 0, clip_y, con.layout.field_w, con.layout.height), 0);
+    tap(BK_BTN_LEFT);
+    CHECK_EQ(con.game_index, 0);
+    CHECK(con.preview_ticks < 3);
+    idle(STUB_CLIP_TICKS + 5);
+    CHECK(bk_frame_get(bk_console_render(&con), 1 * cell, (BK_ROWS - 1) * cell)); /* frame 1 after one frame time */
+
+    /* the number and the sign keep their rows (mock-up): sign rows 1..7, mode number rows 9..13 */
+    const bk_frame_t *f = bk_console_render(&con);
+    CHECK_EQ(ink_in(f, 0, 0, con.layout.field_w, cell), 0);
+    CHECK(ink_in(f, 0, cell, con.layout.field_w, 8 * cell) > 0);
+    CHECK_EQ(ink_in(f, 0, 8 * cell, con.layout.field_w, 9 * cell), 0);
+    CHECK(ink_in(f, 0, 9 * cell, con.layout.field_w, 14 * cell) > 0);
+    CHECK_EQ(ink_in(f, 0, 14 * cell, con.layout.field_w, 15 * cell), 0);
+}
+
+static void test_demo_off_shows_the_poster_and_stops_refreshing(void)
+{
+    fresh(CAT_STUBS, 2);
+    to_home();
+    tap(BK_BTN_MODE);
+    goto_setting(BK_SET_DEMO);
+    tap(BK_BTN_ACTION); /* DEMO off */
+    CHECK_EQ(con.profile.settings.demo_on, 0);
+    tap(BK_BTN_MODE);
+    CHECK_EQ(con.screen, BK_SCREEN_HOME);
+    const int cell = con.layout.cell;
+    for (int k = 0; k < 6; k++) {
+        con.preview_ticks = (uint32_t)k * STUB_CLIP_TICKS;
+        const bk_frame_t *f = bk_console_render(&con);
+        for (int col = 0; col < BK_COLS; col++) {
+            CHECK_EQ(bk_frame_get(f, col * cell, (BK_ROWS - 1) * cell), col == stub_clip.poster); /* always the poster */
+        }
+    }
+
+    /* the panel is refreshed only for what still changes (the blinking value), with the animation on it is more often */
+    unsigned off_presents;
+    unsigned on_presents;
+    for (int demo = 0; demo < 2; demo++) {
+        fake_hal_init(&hal);
+        bk_profile_t p;
+        bk_profile_defaults(&p);
+        p.settings.demo_on = (uint8_t)demo;
+        bk_save_store(&hal.hal.storage, &p);
+        boot(CAT_STUBS, 2);
+        hal.buttons = 0;
+        for (unsigned i = 0; i < BK_SPLASH_TICKS + 4 * STUB_CLIP_TICKS * 3; i++) {
+            bk_console_tick(&con);
+        }
+        CHECK_EQ(con.screen, BK_SCREEN_HOME);
+        if (demo) {
+            on_presents = hal.presents;
+        } else {
+            off_presents = hal.presents;
+        }
+    }
+    CHECK(on_presents >= off_presents + 6);
+}
+
+static void test_settings_ble_demo_and_auto_off_values(void)
+{
+    fresh(CAT_STUBS, 2);
+    CHECK_EQ(hal.ble_calls, 1); /* the radio is told its state at start: off */
+    CHECK(!hal.ble);
+    to_home();
+    tap(BK_BTN_MODE);
+
+    goto_setting(BK_SET_BLE);
+    tap(BK_BTN_ACTION);
+    CHECK_EQ(con.profile.settings.ble_on, 1);
+    CHECK(hal.ble);
+    CHECK_EQ(hal.ble_calls, 2);
+    tap(BK_BTN_LEFT); /* either direction toggles */
+    CHECK_EQ(con.profile.settings.ble_on, 0);
+    CHECK(!hal.ble);
+    tap(BK_BTN_RIGHT);
+    CHECK(hal.ble);
+
+    goto_setting(BK_SET_DEMO);
+    CHECK_EQ(con.profile.settings.demo_on, 1);
+    tap(BK_BTN_RIGHT);
+    CHECK_EQ(con.profile.settings.demo_on, 0);
+    tap(BK_BTN_RIGHT);
+    CHECK_EQ(con.profile.settings.demo_on, 1);
+
+    goto_setting(BK_SET_SLEEP);
+    CHECK_EQ(con.profile.settings.sleep_idx, BK_SLEEP_DEFAULT);
+    CHECK_EQ(bk_sleep_timeout_ticks(con.profile.settings.sleep_idx), 5u * 60u * BK_TICK_HZ);
+    tap(BK_BTN_RIGHT);
+    CHECK_EQ(con.profile.settings.sleep_idx, 4); /* 10 minutes */
+    tap(BK_BTN_RIGHT);
+    CHECK_EQ(con.profile.settings.sleep_idx, 0); /* wraps to OFF */
+    CHECK_EQ(bk_sleep_timeout_ticks(0), 0);
+    tap(BK_BTN_LEFT);
+    CHECK_EQ(con.profile.settings.sleep_idx, 4);
+    CHECK_EQ(bk_sleep_timeout_ticks(1), 1u * 60u * BK_TICK_HZ);
+    CHECK_EQ(bk_sleep_timeout_ticks(2), 3u * 60u * BK_TICK_HZ);
+    CHECK_EQ(bk_sleep_timeout_ticks(BK_SLEEP_OPTIONS), 0); /* out of range: never */
+
+    /* all of it survives a reboot, and BLE is applied at start */
+    fake_hal_t keep = hal;
+    keep.hal.input.ctx = keep.hal.display.ctx = keep.hal.audio.ctx = keep.hal.storage.ctx = keep.hal.system.ctx = &keep;
+    keep.ble = false;
+    bk_console_t again;
+    CHECK(bk_console_init(&again, CAT_STUBS, 2, &keep.hal, 8));
+    CHECK_EQ(again.profile.settings.ble_on, 1);
+    CHECK_EQ(again.profile.settings.demo_on, 1);
+    CHECK_EQ(again.profile.settings.sleep_idx, 4);
+    CHECK(keep.ble);
+}
+
+static void test_the_settings_list_scrolls_to_keep_the_cursor_in_view(void)
+{
+    fresh(CAT_STUBS, 2);
+    to_home();
+    tap(BK_BTN_MODE);
+    CHECK_EQ(con.cursor, 0);
+    CHECK_EQ(con.top, 0);
+    const size_t visible = bk_page_rows_visible(&con.layout);
+    CHECK_EQ(visible, 5);
+    for (int i = 1; i < BK_SET_COUNT; i++) {
+        tap(BK_BTN_DOWN);
+        CHECK_EQ(con.cursor, i);
+        CHECK(con.cursor >= con.top && con.cursor < con.top + visible); /* never out of view */
+        CHECK_EQ(con.top, i < (int)visible ? 0 : i + 1 - (int)visible); /* scrolls only when it has to */
+    }
+    CHECK_EQ(con.top, BK_SET_COUNT - visible);
+    tap(BK_BTN_DOWN); /* wraps to the first row: the list goes back to the top */
+    CHECK_EQ(con.cursor, 0);
+    CHECK_EQ(con.top, 0);
+    tap(BK_BTN_UP); /* and to the last one the other way */
+    CHECK_EQ(con.cursor, BK_SET_COUNT - 1);
+    CHECK_EQ(con.top, BK_SET_COUNT - visible);
+    tap(BK_BTN_UP);
+    tap(BK_BTN_UP);
+    CHECK_EQ(con.top, BK_SET_COUNT - visible); /* the cursor moves inside the window, the window stays */
+    for (int i = 0; i < 3; i++) {
+        tap(BK_BTN_UP);
+    }
+    CHECK(con.top <= con.cursor);
+    tap(BK_BTN_MODE);
+    tap(BK_BTN_MODE); /* the list opens at the top every time */
+    CHECK_EQ(con.cursor, 0);
+    CHECK_EQ(con.top, 0);
+}
+
+static void test_auto_off_blanks_the_display_and_any_key_wakes_it(void)
+{
+    fresh(CAT_STUBS, 2);
+    to_home();
+    tap(BK_BTN_MODE);
+    goto_setting(BK_SET_LIGHT);
+    tap(BK_BTN_RIGHT);
+    tap(BK_BTN_RIGHT); /* light HIGH */
+    CHECK_EQ(hal.light, 2);
+    goto_setting(BK_SET_SLEEP);
+    tap(BK_BTN_LEFT);
+    tap(BK_BTN_LEFT);
+    CHECK_EQ(con.profile.settings.sleep_idx, 1); /* one minute */
+    tap(BK_BTN_MODE);
+    CHECK_EQ(con.screen, BK_SCREEN_HOME);
+
+    const uint32_t timeout = bk_sleep_timeout_ticks(1);
+    idle(timeout - con.idle_ticks - 1);
+    CHECK_EQ(con.screen, BK_SCREEN_HOME);
+    CHECK_EQ(con.idle_ticks, timeout - 1);
+    idle(1);
+    CHECK_EQ(con.screen, BK_SCREEN_SLEEP);
+    CHECK_EQ(hal.light, 0);                        /* the front light goes out ... */
+    CHECK_EQ(con.profile.settings.light_level, 2); /* ... the setting stays */
+    const bk_frame_t *blank = bk_console_render(&con);
+    CHECK_EQ(ink_in(blank, 0, 0, blank->width, blank->height), 0); /* nothing is lit */
+
+    /* any key wakes it and does nothing else: no game starts, the menu does not move */
+    uint32_t parties = con.parties;
+    const uint8_t index = con.game_index;
+    idle(10);
+    CHECK_EQ(con.screen, BK_SCREEN_SLEEP);
+    bk_console_step(&con, BK_BTN_RIGHT);
+    CHECK_EQ(con.screen, BK_SCREEN_HOME);
+    CHECK_EQ(con.game_index, index);
+    bk_console_step(&con, 0);
+    CHECK_EQ(hal.light, 2);
+    CHECK_EQ(con.idle_ticks, 1);
+    CHECK_EQ(con.parties, parties);
+
+    /* a key held down is activity for as long as it is held, not only at the moment it was pressed */
+    con.idle_ticks = 100;
+    for (int i = 0; i < 10; i++) {
+        bk_console_step(&con, BK_BTN_SELECT);
+    }
+    CHECK_EQ(con.idle_ticks, 0);
+    bk_console_step(&con, 0);
+
+    bk_console_step(&con, BK_BTN_START);
+    bk_console_step(&con, 0);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME); /* and the next key works as usual */
+}
+
+static void test_auto_off_never_in_a_running_game_but_in_a_paused_one(void)
+{
+    fresh(CAT_STUBS, 2);
+    con.profile.settings.sleep_idx = 1;
+    to_home();
+    tap(BK_BTN_ACTION);
+    CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+    con.idle_ticks = 1u << 20; /* as if the player had done nothing for a very long time */
+    idle(1);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME); /* a game in play is never idle */
+    CHECK_EQ(con.idle_ticks, 0);
+
+    tap(BK_BTN_START); /* paused */
+    CHECK_EQ(con.game->phase, BK_PHASE_PAUSED);
+    stub_game_t *s = (stub_game_t *)con.game;
+    uint32_t steps = s->steps;
+    idle(bk_sleep_timeout_ticks(1) + 5);
+    CHECK_EQ(con.screen, BK_SCREEN_SLEEP);
+    CHECK(con.game != NULL);
+    bk_console_step(&con, BK_BTN_ACTION); /* the waking key does not resume the game either */
+    bk_console_step(&con, 0);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    CHECK_EQ(con.game->phase, BK_PHASE_PAUSED);
+    CHECK_EQ(s->steps, steps);
+    CHECK_EQ(s->rotate_presses, 0);
+    tap(BK_BTN_ACTION);
+    CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+
+    /* OFF never sleeps */
+    con.profile.settings.sleep_idx = 0;
+    tap(BK_BTN_START);
+    con.idle_ticks = 1u << 20;
+    idle(3);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+
+    /* a finished game is idle again */
+    con.profile.settings.sleep_idx = 1;
+    con.idle_ticks = 0;
+    unsigned guard = 0;
+    tap(BK_BTN_START);
+    for (int i = 0; i < 3; i++) {
+        tap(BK_BTN_ACTION);
+    }
+    while (con.game->phase != BK_PHASE_OVER && guard++ < 1000) {
+        idle(1);
+    }
+    CHECK_EQ(con.game->phase, BK_PHASE_OVER);
+    idle(bk_sleep_timeout_ticks(1) + 5);
+    CHECK_EQ(con.screen, BK_SCREEN_SLEEP);
+}
+
+static void test_a_sleeping_panel_is_left_alone(void)
+{
+    fresh(CAT_STUBS, 2);
+    con.profile.settings.sleep_idx = 1;
+    hal.buttons = 0;
+    unsigned guard = 0;
+    while (con.screen != BK_SCREEN_SLEEP && guard++ < 2u * bk_sleep_timeout_ticks(1)) {
+        bk_console_tick(&con);
+    }
+    CHECK_EQ(con.screen, BK_SCREEN_SLEEP);
+    bk_console_tick(&con);
+    unsigned before = hal.presents;
+    for (int i = 0; i < 600; i++) {
+        bk_console_tick(&con);
+    }
+    CHECK_EQ(hal.presents, before); /* one blank picture was sent, then nothing: the driver may stop the panel */
+    CHECK_EQ(ink_in(&hal.last_frame, 0, 0, hal.last_frame.width, hal.last_frame.height), 0);
+}
+
+static void test_the_status_shows_the_values_the_game_will_get(void)
+{
+    fresh(CAT_STUBS, 2);
+    to_home();
+    bk_console_render(&con);
+    CHECK_EQ(con.scene.speed, 1); /* the first speed and level of the toy: 01 and 01 */
+    CHECK_EQ(con.scene.level, 1);
+    tap(BK_BTN_UP);
+    tap(BK_BTN_UP);
+    tap(BK_BTN_SELECT);
+    for (int i = 0; i < 9; i++) {
+        tap(BK_BTN_UP);
+    }
+    bk_console_render(&con);
+    CHECK_EQ(con.scene.speed, 3); /* shown from 1: the same number the game starts with */
+    CHECK_EQ(con.scene.level, 10);
+    tap(BK_BTN_START);
+    CHECK_EQ(con.game->speed, 3);
+    CHECK_EQ(con.game->level, 10);
+    bk_console_render(&con);
+    CHECK_EQ(con.scene.speed, 3);
+    CHECK_EQ(con.scene.level, 10);
+}
+
+static void test_the_pause_sign_and_lives_label_in_the_game_panel(void)
+{
+    fresh(CAT_TETRIS, 1);
+    to_home();
+    tap(BK_BTN_ACTION);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    idle(3);
+    const int cell = con.layout.cell;
+    static bk_frame_t playing;
+    const bk_frame_t *f = bk_console_render(&con);
+    playing = *f;
+    CHECK_EQ(ink_in(&playing, 2 * cell + 3, 8 * cell + 3, 8 * cell - 3, 9 * cell), 0); /* nothing of a pause yet */
+    tap(BK_BTN_START);
+    CHECK_EQ(con.game->phase, BK_PHASE_PAUSED);
+    f = bk_console_render(&con);
+    CHECK(!bk_frame_equal(f, &playing));
+    CHECK(ink_in(f, 2 * cell, 8 * cell, 8 * cell, 12 * cell) > 0); /* the sign in its box over the field */
+    CHECK(
+        region_equal(f, &playing, con.layout.field_w, 0, con.layout.width, con.layout.height)); /* the panel is as before */
+}
+
 int main(void)
 {
     TEST_RUN(test_init_validation);
@@ -629,5 +1018,14 @@ int main(void)
     TEST_RUN(test_display_rate_limit);
     TEST_RUN(test_storage_failure_does_not_stop_the_console);
     TEST_RUN(test_tetris_in_the_console);
+    TEST_RUN(test_home_plays_the_clip_of_the_selected_game);
+    TEST_RUN(test_demo_off_shows_the_poster_and_stops_refreshing);
+    TEST_RUN(test_settings_ble_demo_and_auto_off_values);
+    TEST_RUN(test_the_settings_list_scrolls_to_keep_the_cursor_in_view);
+    TEST_RUN(test_auto_off_blanks_the_display_and_any_key_wakes_it);
+    TEST_RUN(test_auto_off_never_in_a_running_game_but_in_a_paused_one);
+    TEST_RUN(test_a_sleeping_panel_is_left_alone);
+    TEST_RUN(test_the_status_shows_the_values_the_game_will_get);
+    TEST_RUN(test_the_pause_sign_and_lives_label_in_the_game_panel);
     return bk_test_finish("console");
 }

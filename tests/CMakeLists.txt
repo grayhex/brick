@@ -34,6 +34,7 @@ add_test(NAME test_racing_conformance
          COMMAND test_racing_conformance ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/racing/racing.conformance.json)
 
 brick_test(test_render unit/test_render.c)
+brick_test(test_clips unit/test_clips.c)
 brick_test(test_save unit/test_save.c)
 brick_test(test_audio unit/test_audio.c)
 brick_test(test_game_base unit/test_game_base.c)
@@ -59,6 +60,12 @@ add_test(NAME test_cpp_headers COMMAND test_cpp_headers)
 add_executable(panel_fit ${CMAKE_SOURCE_DIR}/tools/experiments/panel_fit.c)
 target_link_libraries(panel_fit PRIVATE brickcore)
 add_test(NAME panel_fit_runs COMMAND panel_fit)
+
+# The menu of every game as pictures (docs/UI_MENU.md section 4; tools/frames/menu_gif.py makes GIFs of them).
+add_executable(menu_frames ${CMAKE_SOURCE_DIR}/tools/experiments/menu_frames.c)
+target_link_libraries(menu_frames PRIVATE brickcore brickcatalog)
+add_test(NAME menu_frames_runs
+         COMMAND sh -c "mkdir -p '${CMAKE_BINARY_DIR}/menu_frames_out' && '$<TARGET_FILE:menu_frames>' '${CMAKE_BINARY_DIR}/menu_frames_out'")
 
 # The simulator core as WebAssembly must give the same results as the native build (tests/fixtures/sim). Needs clang with
 # the wasm32 target, wasm-ld and node; skipped (with a note) when one is missing.

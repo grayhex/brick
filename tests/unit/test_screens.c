@@ -125,6 +125,24 @@ static void tap(bk_buttons_t b)
     bk_console_step(&con, 0);
 }
 
+/* Show the menu picture at frame `frame` of the clip of the selected game, in the lit phase of the blinking value. */
+static void show_clip_frame(unsigned frame)
+{
+    while ((con.ticks / BK_BLINK_HALF_TICKS) % 2u != 0u) {
+        run(1, 0);
+    }
+    con.preview_ticks = frame * con.catalog[con.game_index].def->preview->frame_ticks;
+}
+
+/* Move the settings cursor down to `item` (the list wraps). */
+static void goto_setting(bk_setting_item_t item)
+{
+    for (int guard = 0; con.cursor != item && guard < BK_SET_COUNT; guard++) {
+        tap(BK_BTN_DOWN);
+    }
+    CHECK_EQ(con.cursor, item);
+}
+
 static const bk_catalog_entry_t CAT_TETRIS[] = {{&bk_tetris_def, "1"}};
 static const bk_catalog_entry_t CAT_TWO[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}};
 static const bk_catalog_entry_t CAT_THREE[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}, {&bk_racing_def, "3"}};
@@ -149,6 +167,7 @@ static void test_splash_and_home(void)
     check_golden("splash");
     run(BK_SPLASH_TICKS, 0);
     CHECK_EQ(con.screen, BK_SCREEN_HOME);
+    show_clip_frame(22); /* the poster of the Tetris clip: the S above the well */
     check_golden("home_tetris");
 }
 
@@ -212,8 +231,8 @@ static void test_snake_screens(void)
     seed_profile(BK_SNAKE_UID, 0, 230, 4, 1);
     boot(CAT_TWO, 2);
     run(BK_SPLASH_TICKS, 0);
-    tap(BK_BTN_RIGHT); /* game 2 */
-    run(30, 0);
+    tap(BK_BTN_RIGHT);   /* game 2 */
+    show_clip_frame(22); /* the poster of the Snake clip */
     check_golden("home_snake");
     tap(BK_BTN_START);
     CHECK_EQ(con.screen, BK_SCREEN_GAME);
@@ -246,9 +265,9 @@ static void test_racing_screens(void)
     seed_profile(BK_RACING_UID, 0, 1234, 3, 1);
     boot(CAT_THREE, 3);
     run(BK_SPLASH_TICKS, 0);
-    tap(BK_BTN_RIGHT); /* game 2 */
-    tap(BK_BTN_RIGHT); /* game 3 */
-    run(30, 0);
+    tap(BK_BTN_RIGHT);  /* game 2 */
+    tap(BK_BTN_RIGHT);  /* game 3 */
+    show_clip_frame(9); /* the poster of the Racing clip: the cars side by side */
     check_golden("home_racing");
     tap(BK_BTN_START);
     CHECK_EQ(con.screen, BK_SCREEN_GAME);
@@ -271,15 +290,20 @@ static void test_racing_screens(void)
 static void test_text_screens(void)
 {
     fake_hal_init(&hal);
+    bk_profile_t p;
+    bk_profile_defaults(&p);
+    p.settings.light_level = 1; /* LOW, as in the mock-up */
+    bk_save_store(&hal.hal.storage, &p);
     boot(CAT_TETRIS, 1);
     run(BK_SPLASH_TICKS, 0);
     tap(BK_BTN_MODE);
     tap(BK_BTN_DOWN);
     CHECK_EQ(con.screen, BK_SCREEN_SETTINGS);
-    check_golden("settings");
-    for (int i = 0; i < 2; i++) {
-        tap(BK_BTN_DOWN);
-    }
+    check_golden("settings"); /* the cursor on LIGHT: the picture of design/renders/ui-settings */
+    goto_setting(BK_SET_ABOUT);
+    CHECK_EQ(con.top, 3);
+    check_golden("settings_end"); /* the list has scrolled: an arrow shows that it goes on above */
+    goto_setting(BK_SET_BUTTONS);
     tap(BK_BTN_ACTION);
     run(1, BK_BTN_LEFT | BK_BTN_ACTION | BK_BTN_SELECT);
     CHECK_EQ(con.screen, BK_SCREEN_BUTTON_TEST);
@@ -290,6 +314,23 @@ static void test_text_screens(void)
     tap(BK_BTN_ACTION);
     CHECK_EQ(con.screen, BK_SCREEN_ABOUT);
     check_golden("about");
+}
+
+/* A muted console shows the crossed speaker in the status column, and the pause box shows on the Racing field. */
+static void test_muted_and_paused_pictures(void)
+{
+    fake_hal_init(&hal);
+    bk_profile_t p;
+    bk_profile_defaults(&p);
+    p.settings.sound_on = 0;
+    bk_save_store(&hal.hal.storage, &p);
+    boot(CAT_THREE, 3);
+    run(BK_SPLASH_TICKS, 0);
+    show_clip_frame(9);
+    tap(BK_BTN_RIGHT);
+    tap(BK_BTN_RIGHT);
+    show_clip_frame(9);
+    check_golden("home_racing_muted");
 }
 
 /* The same console, fitted to the native panels of docs/DISPLAY_CANDIDATES.md (candidates only, none approved). */
@@ -306,6 +347,7 @@ static void test_native_panels(void)
         CHECK(bk_layout_fit(&l, panels[i].w, panels[i].h));
         CHECK(bk_console_init_layout(&con, CAT_TETRIS, 1, &hal.hal, &l));
         run(BK_SPLASH_TICKS, 0);
+        show_clip_frame(con.catalog[0].def->preview->poster);
         char name[64];
         snprintf(name, sizeof name, "%s_home", panels[i].name);
         check_hash(name, bk_console_render(&con));
@@ -330,6 +372,7 @@ int main(int argc, char **argv)
     TEST_RUN(test_snake_screens);
     TEST_RUN(test_racing_screens);
     TEST_RUN(test_text_screens);
+    TEST_RUN(test_muted_and_paused_pictures);
     TEST_RUN(test_native_panels);
     return bk_test_finish("screens");
 }

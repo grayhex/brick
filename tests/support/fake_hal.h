@@ -21,6 +21,9 @@ typedef struct {
     uint8_t light;
     unsigned light_calls;
 
+    bool ble;
+    unsigned ble_calls;
+
     uint8_t slot[BK_STORAGE_SLOTS][BK_STORAGE_SLOT_MAX];
     size_t slot_len[BK_STORAGE_SLOTS];
     unsigned writes;

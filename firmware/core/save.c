@@ -5,12 +5,15 @@
 /* Record layout (all little-endian):
  *   "BKSV" | version u16 | payload_len u16 | seq u32 | payload | crc32 u32 (over everything before it)
  * payload: sound u8, light u8, last_game u8, last_speed u8, last_level u8, last_mode u16,
+ *          [version 2: ble u8, demo u8, sleep u8,]
  *          record_count u16, record_count x (game_uid u16, mode u16, score u32)
+ * Version 1 has no bracketed bytes; it is read, never written.
  */
-#define HEADER_LEN   12u
-#define SETTINGS_LEN 7u
-#define RECORD_LEN   8u
-#define MAX_ENCODED  (HEADER_LEN + SETTINGS_LEN + 2u + BK_MAX_RECORDS * RECORD_LEN + 4u)
+#define HEADER_LEN      12u
+#define SETTINGS_LEN_V1 7u
+#define SETTINGS_LEN    10u
+#define RECORD_LEN      8u
+#define MAX_ENCODED     (HEADER_LEN + SETTINGS_LEN + 2u + BK_MAX_RECORDS * RECORD_LEN + 4u)
 
 _Static_assert(MAX_ENCODED <= BK_STORAGE_SLOT_MAX, "profile does not fit a storage slot");
 
@@ -53,6 +56,9 @@ void bk_profile_defaults(bk_profile_t *p)
     memset(p, 0, sizeof *p);
     p->settings.sound_on = 1;
     p->settings.light_level = 0;
+    p->settings.ble_on = 0;
+    p->settings.demo_on = 1;
+    p->settings.sleep_idx = BK_SLEEP_DEFAULT;
     p->next_slot = 0;
 }
 
@@ -112,6 +118,9 @@ size_t bk_save_encode(const bk_profile_t *p, uint8_t *buf, size_t cap)
     *q++ = p->settings.last_level;
     put16(q, p->settings.last_mode);
     q += 2;
+    *q++ = p->settings.ble_on;
+    *q++ = p->settings.demo_on;
+    *q++ = p->settings.sleep_idx;
     put16(q, p->record_count);
     q += 2;
     for (unsigned i = 0; i < p->record_count; i++, q += RECORD_LEN) {
@@ -125,22 +134,24 @@ size_t bk_save_encode(const bk_profile_t *p, uint8_t *buf, size_t cap)
 
 bool bk_save_decode(const uint8_t *buf, size_t len, bk_profile_t *p)
 {
-    if (len < HEADER_LEN + SETTINGS_LEN + 2u + 4u || memcmp(buf, "BKSV", 4) != 0) {
+    if (len < HEADER_LEN + SETTINGS_LEN_V1 + 2u + 4u || memcmp(buf, "BKSV", 4) != 0) {
         return false;
     }
-    if (get16(buf + 4) != BK_SAVE_VERSION) {
+    const uint32_t version = get16(buf + 4);
+    if (version != BK_SAVE_VERSION && version != 1u) {
         return false; /* unknown version: use defaults rather than guess */
     }
+    const size_t settings_len = version == 1u ? SETTINGS_LEN_V1 : SETTINGS_LEN;
     size_t payload = get16(buf + 6);
-    if (HEADER_LEN + payload + 4u != len || payload < SETTINGS_LEN + 2u) {
+    if (HEADER_LEN + payload + 4u != len || payload < settings_len + 2u) {
         return false;
     }
     if (get32(buf + HEADER_LEN + payload) != bk_crc32(buf, HEADER_LEN + payload)) {
         return false;
     }
     const uint8_t *q = buf + HEADER_LEN;
-    uint32_t count = get16(q + SETTINGS_LEN);
-    if (count > BK_MAX_RECORDS || payload != SETTINGS_LEN + 2u + count * RECORD_LEN) {
+    uint32_t count = get16(q + settings_len);
+    if (count > BK_MAX_RECORDS || payload != settings_len + 2u + count * RECORD_LEN) {
         return false;
     }
     bk_profile_defaults(p);
@@ -151,8 +162,13 @@ bool bk_save_decode(const uint8_t *buf, size_t len, bk_profile_t *p)
     p->settings.last_speed = q[3] > 9 ? 9 : q[3];
     p->settings.last_level = q[4] > 9 ? 9 : q[4];
     p->settings.last_mode = (uint16_t)get16(q + 5);
+    if (version != 1u) { /* a version 1 profile keeps the defaults of the settings it did not have */
+        p->settings.ble_on = q[7] ? 1 : 0;
+        p->settings.demo_on = q[8] ? 1 : 0;
+        p->settings.sleep_idx = q[9] >= BK_SLEEP_OPTIONS ? BK_SLEEP_DEFAULT : q[9];
+    }
     p->record_count = (uint16_t)count;
-    q += SETTINGS_LEN + 2u;
+    q += settings_len + 2u;
     for (uint32_t i = 0; i < count; i++, q += RECORD_LEN) {
         p->records[i].game_uid = (uint16_t)get16(q);
         p->records[i].mode = (uint16_t)get16(q + 2);

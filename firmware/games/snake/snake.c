@@ -212,31 +212,54 @@ bk_game_t *bk_snake_create(void *storage, const bk_game_options_t *opt)
     return &s->base;
 }
 
-static void snake_mode_label(uint16_t mode, char *buf, size_t cap)
-{
-    (void)mode; /* one variant per game (ADR-036) */
-    if (cap > 0) {
-        strncpy(buf, "NORMAL", cap - 1);
-        buf[cap - 1] = '\0';
-    }
-}
+/*
+ * The menu clip (ADR-041, own artwork): a three-cell worm crosses a five-row strip of the field, one step per frame, and
+ * eats three blinking meals, one after the other (top right, bottom left, bottom right), growing to six cells. The meal is
+ * lit on every second frame, like the blinking head and meal of the game; the loop starts over with a fresh worm.
+ */
+// clang-format off
+static const char SNAKE_CLIP_FRAMES[][BK_CLIP_CELLS + 1] = {
+    /* 0: the first meal at the top right */
+    ".........." "........#." ".........." "###......." "..........",
+    ".........." ".........." ".........." ".###......" "..........",
+    ".........." "........#." ".........." "..###....." "..........",
+    ".........." ".........." ".........." "...###...." "..........",
+    ".........." "........#." ".........." "....###..." "..........",
+    ".........." ".........." ".........." ".....###.." "..........",
+    ".........." "........#." ".........." "......###." "..........",
+    /* 7: turns up */
+    ".........." ".........." "........#." ".......##." "..........",
+    ".........." "........#." "........#." ".......##." "..........",
+    /* 9: the worm is four cells; the second meal appears at the bottom left */
+    "........#." "........#." "........#." "........#." "..........",
+    ".......##." "........#." "........#." "..#......." "..........",
+    "......###." "........#." ".........." ".........." "..........",
+    ".....####." ".........." ".........." "..#......." "..........",
+    "....####.." ".........." ".........." ".........." "..........",
+    "...####..." ".........." ".........." "..#......." "..........",
+    "..####...." ".........." ".........." ".........." "..........",
+    "..###....." "..#......." ".........." "..#......." "..........",
+    "..##......" "..#......." "..#......." ".........." "..........",
+    /* 18: eaten, five cells; the third meal appears at the bottom right */
+    "..##......" "..#......." "..#......." "..#......." "..........",
+    "..#......." "..#......." "..#......." "..#......." "..#.......",
+    ".........." "..#......." "..#......." "..#......." "..##...#..",
+    ".........." ".........." "..#......." "..#......." "..###.....",
+    ".........." ".........." ".........." "..#......." "..####.#..",
+    ".........." ".........." ".........." ".........." "..#####...",
+    /* 24: eaten, six cells */
+    ".........." ".........." ".........." ".........." "..######..",
+    ".........." ".........." ".........." ".........." "...######.",
+};
+// clang-format on
 
-/* Menu illustration (own artwork, no reference sprite): a worm crawling towards a meal, two frames. */
-static void snake_thumbnail(uint8_t frame, uint8_t cells[BK_COLS * 5])
-{
-    static const char *const art[2][5] = {
-        {"..........", ".#####..#.", ".....#....", ".....#####", ".........."},
-        {"..........", "..####..#.", ".....#....", ".....#####", ".........."},
-    };
-    const char *const *rows = art[frame % 2u];
-    for (int y = 0; y < 5; y++) {
-        for (int x = 0; x < BK_COLS; x++) {
-            cells[y * BK_COLS + x] = rows[y][x] == '#' ? BK_CELL_ON : BK_CELL_OFF;
-        }
-    }
-}
+static const bk_clip_t SNAKE_CLIP = {
+    (uint16_t)BK_ARRAY_LEN(SNAKE_CLIP_FRAMES),
+    15,
+    22,
+    SNAKE_CLIP_FRAMES,
+};
 
 const bk_game_def_t bk_snake_def = {
-    BK_SNAKE_UID,         "snake",         "SNAKE",          1, 0,  sizeof(bks_game_t),
-    _Alignof(bks_game_t), bk_snake_create, snake_mode_label, 2, 30, snake_thumbnail,
+    BK_SNAKE_UID, "snake", "SNAKE", 1, 0, sizeof(bks_game_t), _Alignof(bks_game_t), bk_snake_create, &SNAKE_CLIP,
 };

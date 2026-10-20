@@ -14,6 +14,7 @@
 #ifndef BRICK_GAME_H
 #define BRICK_GAME_H
 
+#include "brick/clip.h"
 #include "brick/defs.h"
 #include "brick/event.h"
 #include "brick/input.h"
@@ -91,6 +92,10 @@ void bk_game_step(bk_game_t *g, const bk_input_t *in, bk_event_queue_t *q); /* o
 void bk_game_cells(const bk_game_t *g, uint8_t cells[BK_CELLS]);            /* overlay if any, else draw() */
 bool bk_game_preview(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS]);  /* false: no preview */
 
+/* What the 4 x 4 box of the status panel shows: the game's own NEXT preview, else the lives indicator (label LIFE). */
+typedef enum { BK_PREVIEW_NONE = 0, BK_PREVIEW_NEXT = 1, BK_PREVIEW_LIVES = 2 } bk_preview_kind_t;
+bk_preview_kind_t bk_game_preview_kind(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS]);
+
 /* ---- helpers for game implementations ---- */
 void bk_game_emit(bk_game_t *g, bk_event_type_t type, uint8_t a, uint16_t b, uint32_t c);
 void bk_game_add_score(bk_game_t *g, uint32_t points);
@@ -147,12 +152,8 @@ typedef struct {
     size_t state_align;
     /* Construct a game in caller-provided storage (size >= state_size, aligned to state_align). */
     bk_game_t *(*create)(void *storage, const bk_game_options_t *opt);
-    /* Short ASCII caption of a variant, for the menu. May be NULL. */
-    void (*mode_label)(uint16_t mode, char *buf, size_t cap);
-    /* Menu thumbnail: frame `frame` (0 .. thumb_frames-1) as 10x5 cells, '#'-rows already expanded to 0/1. */
-    uint8_t thumb_frames;
-    uint8_t thumb_frame_ticks;
-    void (*thumbnail)(uint8_t frame, uint8_t cells[BK_COLS * 5]);
+    /* The looped gameplay animation of the menu (brick/clip.h). May be NULL: the menu then leaves the area empty. */
+    const bk_clip_t *preview;
 } bk_game_def_t;
 
 BK_EXTERN_C_END
