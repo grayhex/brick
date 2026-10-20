@@ -45,10 +45,10 @@ Build a standalone premium handheld that preserves the recognisable visual/inter
 - Side: physical power switch and volume wheel/slider (exact locations OPEN). Optional accessible microSD on side is **not confirmed**.
 - Bottom: **only centered USB-C**; **no** mini-jack, no speaker slots/holes or decorative ports. Consider clearances for cable while handheld.
 - Rear and bottom must NOT have speaker outlet; front-center lower perforations link to designed acoustic cavity. Avoid hand blockage.
-- Finish: premium, smooth mechanical fit; material, transparent shell/black PCB aesthetic, coating and window details OPEN.
+- Finish: **три согласованных исполнения на одной механической платформе** — Monolith (матовый графит), Clear Smoke (дымчатый прозрачный с черной PCB), Ceramic (тёплый ivory-пластик, не керамика). Конкретные материалы и технология производства OPEN.
 - Product inspiration includes Analogue Pocket build quality while preserving Brick Game outer shape.
 
-**Current owner's preliminary choice:** approx. **175×80 mm**, see [MECHANICAL_CONCEPT.md](MECHANICAL_CONCEPT.md) and [front/rear/side dimensional SVG](../design/brick-envelope-r01.svg). Thickness **~20–22 mm** is an engineering proposal, not an owner-approved manufacturing dimension.
+**Current owner's preliminary choice:** approx. **175×80 mm**, see [MECHANICAL_CONCEPT.md](MECHANICAL_CONCEPT.md) and [актуальные R0.2 ортографические виды](../design/concepts/brick-orthographic-r02.svg). Thickness **~20–22 mm** is an engineering proposal, not an owner-approved manufacturing dimension.
 
 ## 4. Screen and UI requirements
 
