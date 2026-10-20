@@ -93,6 +93,10 @@ EXPORT(bk_w_light) unsigned bk_w_light(void)
 {
     return g_sim.light;
 }
+EXPORT(bk_w_ble) unsigned bk_w_ble(void)
+{
+    return g_sim.ble ? 1u : 0u;
+}
 
 /* ---- diagnostics ---- */
 EXPORT(bk_w_ticks) unsigned bk_w_ticks(void)

@@ -59,6 +59,13 @@ static uint32_t f_entropy(void *ctx)
     return ((fake_hal_t *)ctx)->entropy_value;
 }
 
+static void f_ble(void *ctx, bool enabled)
+{
+    fake_hal_t *f = (fake_hal_t *)ctx;
+    f->ble = enabled;
+    f->ble_calls++;
+}
+
 void fake_hal_init(fake_hal_t *f)
 {
     memset(f, 0, sizeof *f);
@@ -75,6 +82,7 @@ void fake_hal_init(fake_hal_t *f)
     f->hal.system.ctx = f;
     f->hal.system.set_frontlight = f_light;
     f->hal.system.entropy = f_entropy;
+    f->hal.system.set_ble = f_ble;
 }
 
 void fake_hal_clear_tones(fake_hal_t *f)

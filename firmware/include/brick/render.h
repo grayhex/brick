@@ -4,13 +4,17 @@
  * grid (bk_layout_init) or a fit to a native panel size (bk_layout_fit).
  *
  *   +----------------------+-------------+
- *   |                      | HI-SCORE    |
+ *   |                      | HI          |
  *   |   10 x 20 cells      | SCORE       |
  *   |   of the game        | NEXT 4x4    |   panel width = 6.5 cells, to the RIGHT of the playfield (ADR-016)
- *   |                      | SPEED LEVEL |
- *   |                      | icons       |
+ *   |                      | SPD         |   (the menu shows only HI, SPD and LVL, text pages their own three items)
+ *   |                      | LVL         |
  *   +----------------------+-------------+
  *   (the status column is 6.5 cells wide on the reference grid, as narrow as ~3 cells when fitted to a portrait panel)
+ *
+ * The layout follows the owner's interface mock-ups (design/renders, ADR-041): the pause is a boxed pause sign over the
+ * playfield, text pages (settings) show label over value with a box round the selected item and the same status column on
+ * the right.
  *
  * Cells are always square; the aspect ratio is never distorted. Positive polarity: ink on a light background (ADR-015).
  * Unlit cells are drawn as nothing at all (no "ghost" grey): the logical frame has no third level.
@@ -34,7 +38,6 @@ typedef struct {
     uint8_t gap;          /* dots between neighbouring cells */
     uint8_t ring;         /* thickness of the cell outline and of the divider */
     uint8_t label_scale;  /* text scale of the panel labels */
-    uint8_t text_scale;   /* text scale of full-screen text pages */
     uint8_t preview_cell; /* pitch of the NEXT 4 x 4 preview (<= cell: it shrinks to fit a narrow panel) */
     uint8_t digit_w;      /* seven-segment digits: width, height, segment thickness, gap */
     uint8_t digit_h;
@@ -64,20 +67,19 @@ typedef enum { BK_FOCUS_NONE = 0, BK_FOCUS_SPEED = 1, BK_FOCUS_LEVEL = 2 } bk_fo
 
 typedef struct {
     uint8_t cells[BK_CELLS]; /* BK_CELL_OFF / ON / BLINK, row 0 = top */
-    bool has_preview;
+    bool has_preview;        /* the 4 x 4 box under the label NEXT (or LIFE) */
+    bool preview_is_lives;   /* the box shows the lives of the game, not the next piece: label LIFE */
     uint8_t preview[BK_PREVIEW_CELLS];
     uint32_t score;
     uint32_t hi_score;
-    bool show_score;   /* false in the menu: only the record is shown */
-    uint8_t speed;     /* displayed value, 0..9 */
-    uint8_t level;     /* displayed value, 0..9 */
+    bool show_score;   /* false in the menu: only HI, SPD and LVL, one under the other */
+    uint8_t speed;     /* SPD, 0..99, always two digits (01..10 in the menu and the games) */
+    uint8_t level;     /* LVL, the same */
     uint8_t over_fill; /* flooded rows from the bottom (game over animation) */
-    bool paused;
-    bool sound_on;
-    uint8_t focus;        /* bk_focus_t: the focused value blinks (menu) */
-    uint32_t tick;        /* source of the blink phase */
-    const char *caption1; /* optional text lines centred under the menu art (rows 13-14); NULL = none */
-    const char *caption2;
+    bool paused;       /* the pause sign in a box over the playfield */
+    bool sound_on;     /* the speaker icon is shown only while the sound is switched off */
+    uint8_t focus;     /* bk_focus_t: the focused value blinks (menu) */
+    uint32_t tick;     /* source of the blink phase */
 } bk_scene_t;
 
 void bk_render_scene(const bk_layout_t *l, const bk_scene_t *scene, bk_frame_t *out);
@@ -90,9 +92,32 @@ typedef struct {
     const char *value; /* may be NULL */
 } bk_text_row_t;
 
-/* Full-screen list page (settings, about, button test). `cursor` < 0: no cursor. */
-void bk_render_text_page(const bk_layout_t *l, const char *title, const bk_text_row_t *rows, size_t count, int cursor,
-                         const char *footer, bk_frame_t *out);
+typedef enum {
+    BK_PAGE_LIST = 0,  /* settings: the label over its value, a box round the selected row, scrolls */
+    BK_PAGE_LINES = 1, /* button test, about: one line per row, the value right-aligned, no cursor */
+} bk_page_style_t;
+
+#define BK_PAGE_STATUS_ITEMS 3
+#define BK_PAGE_FOOTER_LINES 2
+
+/* A full-screen text page: the same 10 x 20 matrix area and status column as the game screens (design/renders). */
+typedef struct {
+    const char *title;
+    bk_page_style_t style;
+    const bk_text_row_t *rows;
+    size_t count;
+    int cursor; /* LIST: the boxed row, < 0 none */
+    size_t top; /* LIST: the first row shown (the console keeps the cursor in view, see bk_page_rows_visible) */
+    const char *footer[BK_PAGE_FOOTER_LINES]; /* LINES: short lines at the bottom of the matrix area; NULL = none */
+    bk_text_row_t
+        status[BK_PAGE_STATUS_ITEMS]; /* the right column, label over value (text); a NULL label leaves the slot empty */
+    bool sound_on;                    /* the speaker icon is shown only while the sound is switched off */
+} bk_page_t;
+
+/* Rows of a LIST page that fit under the title (the same for every grid: 5). */
+size_t bk_page_rows_visible(const bk_layout_t *l);
+
+void bk_render_page(const bk_layout_t *l, const bk_page_t *page, bk_frame_t *out);
 
 /* Draw `value` right-aligned in a row of 7-segment digits ending at x_right; digits < 0 are blank. Exposed for tests. */
 void bk_draw_number7(bk_frame_t *f, int x_right, int y, int digit_w, int digit_h, int thick, int gap, uint32_t value,

@@ -37,6 +37,12 @@ static void sim_set_frontlight(void *ctx, uint8_t level)
     s->light = level;
 }
 
+static void sim_set_ble(void *ctx, bool enabled)
+{
+    bk_sim_t *s = ctx;
+    s->ble = enabled;
+}
+
 static uint32_t sim_entropy(void *ctx)
 {
     const bk_sim_t *s = ctx;
@@ -91,6 +97,7 @@ static void sim_wire(bk_sim_t *s)
     s->hal.system.ctx = s;
     s->hal.system.set_frontlight = sim_set_frontlight;
     s->hal.system.entropy = sim_entropy;
+    s->hal.system.set_ble = sim_set_ble;
 }
 
 bool bk_sim_reset(bk_sim_t *s, bool wipe_storage)
@@ -109,6 +116,7 @@ bool bk_sim_reset(bk_sim_t *s, bool wipe_storage)
     s->tone_hz = 0;
     s->tone_seq = 0;
     s->light = 0;
+    s->ble = false;
     s->trace_len = 0;
     s->recording = false;
     s->trace_overflow = false;

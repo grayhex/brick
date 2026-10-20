@@ -496,31 +496,58 @@ bk_game_t *bk_tetris_create(void *storage, const bk_game_options_t *opt)
     return &t->base;
 }
 
-static void tetris_mode_label(uint16_t mode, char *buf, size_t cap)
-{
-    (void)mode; /* only the base variant is ported */
-    if (cap > 0) {
-        strncpy(buf, "NORMAL", cap - 1);
-        buf[cap - 1] = '\0';
-    }
-}
+/*
+ * The menu clip (ADR-041, own artwork): the bottom five rows of the field. Four pieces (O, O, J, L) build a heap around a
+ * two-cell well, a vertical S drops into it, the two completed rows blink twice and burn out, and the loop starts again from
+ * the one cell that is left. Every frame differs from the previous one by a single step of the action.
+ */
+// clang-format off
+static const char TETRIS_CLIP_FRAMES[][BK_CLIP_CELLS + 1] = {
+    /* 0: O enters */
+    "##........" ".........." ".........." ".........." "....#.....",
+    "##........" "##........" ".........." ".........." "....#.....",
+    ".........." "##........" "##........" ".........." "....#.....",
+    ".........." ".........." "##........" "##........" "....#.....",
+    ".........." ".........." ".........." "##........" "##..#.....",
+    /* 5: second O */
+    "..##......" ".........." ".........." "##........" "##..#.....",
+    "..##......" "..##......" ".........." "##........" "##..#.....",
+    ".........." "..##......" "..##......" "##........" "##..#.....",
+    ".........." ".........." "..##......" "####......" "##..#.....",
+    ".........." ".........." ".........." "####......" "#####.....",
+    /* 10: J */
+    ".......###" ".........." ".........." "####......" "#####.....",
+    ".........#" ".......###" ".........." "####......" "#####.....",
+    ".........." ".........#" ".......###" "####......" "#####.....",
+    ".........." ".........." ".........#" "####...###" "#####.....",
+    ".........." ".........." ".........." "####.....#" "#####..###",
+    /* 15: L */
+    "......#..." ".........." ".........." "####.....#" "#####..###",
+    "......###." "......#..." ".........." "####.....#" "#####..###",
+    ".........." "......###." "......#..." "####.....#" "#####..###",
+    ".........." ".........." "......###." "####..#..#" "#####..###",
+    ".........." ".........." ".........." "####..####" "#####.####",
+    /* 20: the S drops into the well (poster: frame 22) */
+    ".....#...." ".........." ".........." "####..####" "#####.####",
+    "....##...." ".....#...." ".........." "####..####" "#####.####",
+    "....#....." "....##...." ".....#...." "####..####" "#####.####",
+    ".........." "....#....." "....##...." "####.#####" "#####.####",
+    ".........." ".........." "....#....." "##########" "##########",
+    /* 25: the two rows blink and burn out, the last frame is the first one without the O */
+    ".........." ".........." "....#....." ".........." "..........",
+    ".........." ".........." "....#....." "##########" "##########",
+    ".........." ".........." "....#....." ".........." "..........",
+    ".........." ".........." ".........." ".........." "....#.....",
+};
+// clang-format on
 
-/* Menu illustration from the reference (ILLUSTRATIONS.tetris): a falling Z over a heap, two frames. */
-static void tetris_thumbnail(uint8_t frame, uint8_t cells[BK_COLS * 5])
-{
-    static const char *const art[2][5] = {
-        {"...##.....", "....##....", "..........", "##.#.####.", "#####.####"},
-        {"..........", "...##.....", "....##....", "##.#.####.", "#####.####"},
-    };
-    const char *const *rows = art[frame % 2u];
-    for (int y = 0; y < 5; y++) {
-        for (int x = 0; x < BK_COLS; x++) {
-            cells[y * BK_COLS + x] = rows[y][x] == '#' ? BK_CELL_ON : BK_CELL_OFF;
-        }
-    }
-}
+static const bk_clip_t TETRIS_CLIP = {
+    (uint16_t)BK_ARRAY_LEN(TETRIS_CLIP_FRAMES),
+    10,
+    22,
+    TETRIS_CLIP_FRAMES,
+};
 
 const bk_game_def_t bk_tetris_def = {
-    BK_TETRIS_UID,        "tetris",         "TETRIS",          1, 0,  sizeof(bkt_game_t),
-    _Alignof(bkt_game_t), bk_tetris_create, tetris_mode_label, 2, 30, tetris_thumbnail,
+    BK_TETRIS_UID, "tetris", "TETRIS", 1, 0, sizeof(bkt_game_t), _Alignof(bkt_game_t), bk_tetris_create, &TETRIS_CLIP,
 };

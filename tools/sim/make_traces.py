@@ -48,9 +48,14 @@ TETRIS = " ".join([
 MENU = " ".join([
     "80:-", tap("RIGHT"), tap("LEFT"), tap("SELECT"), tap("UP"), tap("UP"), tap("DOWN"), tap("SELECT"), tap("UP"),
     tap("UP"), tap("UP"), "20:-",
-    tap("MODE"), "10:-", tap("DOWN"), tap("ACTION"), tap("DOWN"), tap("DOWN"), "30:-",   # settings: sound, light, ...
-    tap("DOWN"), tap("ACTION"), "20:MODE+SELECT+START", "10:-", tap("MODE"), "30:-",     # buttons test, back
-    tap("MODE"), "20:-", tap("START"), "60:-", tap("MODE"), "30:-", tap("MODE"), "60:-",  # into a game and out again
+    tap("MODE"), "10:-",                                                  # settings, the cursor on SOUND
+    tap("DOWN"), tap("ACTION"), tap("DOWN"), tap("ACTION"),               # LIGHT one step up, BLE on
+    tap("DOWN"), tap("ACTION"), "100:-", tap("ACTION"), "100:-",          # DEMO off for a while, then on again
+    tap("DOWN"), tap("RIGHT"), "20:-",                                    # AUTO OFF one step up
+    tap("DOWN"), tap("DOWN"), tap("ACTION"), "30:-",                      # past RECORDS to BUTTONS: the test page
+    "20:MODE+SELECT+START", "10:-",                                       # the three function keys leave it
+    tap("DOWN"), tap("ACTION"), "30:-", tap("MODE"), "30:-",              # ABOUT and back to the list
+    tap("MODE"), "50:-", tap("START"), "60:-", tap("MODE"), "30:-", tap("MODE"), "60:-",  # menu, into a game and out again
 ])
 
 SNAKE = " ".join([

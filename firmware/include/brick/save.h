@@ -15,8 +15,12 @@
 
 BK_EXTERN_C_BEGIN
 
-#define BK_SAVE_VERSION 1
+#define BK_SAVE_VERSION 2 /* 1 (seven settings bytes) is still read: the three newer settings take their defaults */
 #define BK_MAX_RECORDS  96
+
+/* Auto-off after this long without a key press (setting SLEEP): index into the table of the console. */
+#define BK_SLEEP_OPTIONS 5 /* OFF, 1, 3, 5, 10 minutes */
+#define BK_SLEEP_DEFAULT 3 /* 5 minutes */
 
 typedef struct {
     uint8_t sound_on;    /* 0/1 */
@@ -25,6 +29,9 @@ typedef struct {
     uint8_t last_speed;  /* 0..9 */
     uint8_t last_level;  /* 0..9 */
     uint16_t last_mode;
+    uint8_t ble_on;    /* 0/1: the phone link (settings, synchronisation) is requested; off by default to save power */
+    uint8_t demo_on;   /* 0/1: the menu preview is animated; off = a still poster frame and no refreshes of the panel */
+    uint8_t sleep_idx; /* 0..BK_SLEEP_OPTIONS-1: auto-off timeout */
 } bk_settings_t;
 
 typedef struct {

@@ -146,6 +146,7 @@
         <dt>Картинок в секунду</dt><dd id="sRate">0</dd>
         <dt>Ждали и были заменены</dt><dd id="sDropped">0</dd>
         <dt>Подсветка</dt><dd id="sLight">выкл</dd>
+        <dt>BLE (запрос)</dt><dd id="sBle">выкл</dd>
         <dt>Тон</dt><dd id="sTone">—</dd>
       </dl>
     </section>
@@ -166,7 +167,7 @@ const WASM_B64 = "__WASM_B64__";
 // ---------------------------------------------------------------- constants
 const BTN = { UP: 1, DOWN: 2, LEFT: 4, RIGHT: 8, ACTION: 16, MODE: 32, SELECT: 64, START: 128 };
 const TICK_MS = 1000 / 60;
-const SCREENS = ["заставка", "меню", "настройки", "тест кнопок", "о приборе", "игра"];
+const SCREENS = ["заставка", "меню", "настройки", "тест кнопок", "о приборе", "игра", "экран погашен (AUTO OFF)"];
 const PANELS = [
   { id: "lcd316", name: "Sharp LS032B7DD02 3.16″ — 336 × 536", w: 336, h: 536, mm: [42.672, 68.072] },
   { id: "lcd44", name: "Sharp LS044Q7DH01 4.4″ (повёрнута) — 240 × 320", w: 240, h: 320, mm: [67.2, 89.6] },
@@ -485,6 +486,7 @@ function updateStats(now) {
     $("sRate").textContent = rateWindow.v.toFixed(1).replace(".", ",");
     $("sDropped").textContent = w.bk_w_dropped();
     const l = w.bk_w_light(); $("sLight").textContent = l === 0 ? "выкл" : String(l);
+    $("sBle").textContent = w.bk_w_ble() ? "вкл" : "выкл";
     const hz = w.bk_w_tone_hz(); $("sTone").textContent = hz ? hz + " Гц" : "—";
     if (w.bk_w_recording()) $("traceInfo").textContent = `Идёт запись: ${(w.bk_w_trace_len() / 60).toFixed(1).replace(".", ",")} с.${w.bk_w_trace_overflow() ? " Предел записи достигнут." : ""}`;
     else if (w.bk_w_replaying()) $("traceInfo").textContent = "Воспроизведение записи: ввод с кнопок отключён.";

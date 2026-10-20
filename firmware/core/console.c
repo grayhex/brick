@@ -54,6 +54,7 @@ static void enter_screen(bk_console_t *c, bk_screen_t screen)
 {
     c->screen = screen;
     c->screen_ticks = 0;
+    c->preview_ticks = 0;
     memset(c->repeat, 0, sizeof c->repeat);
 }
 
@@ -62,6 +63,19 @@ static void apply_light(bk_console_t *c)
     if (c->hal->system.set_frontlight != NULL) {
         c->hal->system.set_frontlight(c->hal->system.ctx, c->profile.settings.light_level);
     }
+}
+
+static void apply_ble(bk_console_t *c)
+{
+    if (c->hal->system.set_ble != NULL) {
+        c->hal->system.set_ble(c->hal->system.ctx, c->profile.settings.ble_on != 0);
+    }
+}
+
+uint32_t bk_sleep_timeout_ticks(unsigned index)
+{
+    static const uint8_t minutes[BK_SLEEP_OPTIONS] = {0, 1, 3, 5, 10};
+    return index < BK_SLEEP_OPTIONS ? (uint32_t)minutes[index] * 60u * BK_TICK_HZ : 0u;
 }
 
 static void cycle_light(bk_console_t *c, int delta)
@@ -96,6 +110,9 @@ bool bk_console_init_layout(bk_console_t *c, const bk_catalog_entry_t *catalog, 
             d->state_align > sizeof(uint64_t) || catalog[i].glyph == NULL) {
             return false;
         }
+        if (d->preview != NULL && !bk_clip_valid(d->preview)) {
+            return false; /* a broken clip would show garbage in the menu: refuse it up front like an oversized state */
+        }
     }
     memset(c, 0, sizeof *c);
     c->layout = *layout;
@@ -106,6 +123,7 @@ bool bk_console_init_layout(bk_console_t *c, const bk_catalog_entry_t *catalog, 
     bk_save_load(&hal->storage, &c->profile);
     bk_audio_init(&c->audio, &hal->audio, c->profile.settings.sound_on != 0);
     apply_light(c);
+    apply_ble(c);
 
     /* restore the menu position */
     c->game_index = c->profile.settings.last_game < count ? c->profile.settings.last_game : 0;
@@ -178,12 +196,14 @@ static void home_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
     bool left = bk_repeat_fire(&c->repeat[2], BK_KEY_LEFT, &in, BK_MENU_REPEAT_DELAY, BK_MENU_REPEAT_INTERVAL);
     bool right = bk_repeat_fire(&c->repeat[3], BK_KEY_RIGHT, &in, BK_MENU_REPEAT_DELAY, BK_MENU_REPEAT_INTERVAL);
 
+    c->preview_ticks++;
     if (pressed & (BK_BTN_ACTION | BK_BTN_START)) {
         start_game(c);
         return;
     }
     if (pressed & BK_BTN_MODE) {
         c->cursor = 0;
+        c->top = 0;
         c->confirm_clear = false;
         emit(c, BK_EV_UI_CONFIRM);
         enter_screen(c, BK_SCREEN_SETTINGS);
@@ -191,7 +211,8 @@ static void home_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
     }
     if ((left || right) && c->catalog_count > 1) {
         c->game_index = (uint8_t)wrap((int)c->game_index + (right ? 1 : -1), (unsigned)c->catalog_count);
-        c->mode = 0; /* the variant starts from the first one when the game changes */
+        c->mode = 0;          /* the variant starts from the first one when the game changes */
+        c->preview_ticks = 0; /* the clip of the new game starts from its first frame */
         if (c->focus == BK_MENU_MODE && current_def(c)->mode_count <= 1) {
             c->focus = BK_MENU_SPEED;
         }
@@ -225,6 +246,22 @@ static void settings_activate(bk_console_t *c, int delta)
         break;
     case BK_SET_LIGHT:
         cycle_light(c, delta);
+        emit(c, BK_EV_UI_CONFIRM);
+        break;
+    case BK_SET_BLE:
+        s->ble_on = s->ble_on ? 0 : 1;
+        apply_ble(c);
+        store_profile(c);
+        emit(c, BK_EV_UI_CONFIRM);
+        break;
+    case BK_SET_DEMO:
+        s->demo_on = s->demo_on ? 0 : 1;
+        store_profile(c);
+        emit(c, BK_EV_UI_CONFIRM);
+        break;
+    case BK_SET_SLEEP:
+        s->sleep_idx = (uint8_t)wrap((int)s->sleep_idx + delta, BK_SLEEP_OPTIONS);
+        store_profile(c);
         emit(c, BK_EV_UI_CONFIRM);
         break;
     case BK_SET_RECORDS:
@@ -263,6 +300,14 @@ static void settings_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t he
     if (up || down) {
         c->cursor = (uint8_t)wrap((int)c->cursor + (down ? 1 : -1), BK_SET_COUNT);
         c->confirm_clear = false;
+        /* the list scrolls just far enough to keep the cursor in view */
+        size_t visible = bk_page_rows_visible(&c->layout);
+        visible = visible > 0u ? visible : 1u;
+        if (c->cursor < c->top) {
+            c->top = c->cursor;
+        } else if ((size_t)c->cursor >= (size_t)c->top + visible) {
+            c->top = (uint8_t)(c->cursor + 1u - visible);
+        }
         emit(c, BK_EV_MOVE);
     }
     if (pressed & BK_BTN_LEFT) {
@@ -343,6 +388,31 @@ static void game_step(bk_console_t *c, bk_buttons_t pressed, bk_buttons_t held)
     c->last_phase = g->phase;
 }
 
+/* ---------------------------------------------------------------- AUTO OFF */
+
+/* A game that is running is never idle, even when the player does nothing (a road keeps scrolling); a paused or finished
+ * one, the menu and the settings pages are. */
+static bool game_in_play(const bk_console_t *c)
+{
+    return c->screen == BK_SCREEN_GAME && c->game != NULL && c->game->phase == BK_PHASE_PLAYING;
+}
+
+static void go_to_sleep(bk_console_t *c)
+{
+    c->wake_screen = c->screen;
+    enter_screen(c, BK_SCREEN_SLEEP);
+    if (c->hal->system.set_frontlight != NULL) {
+        c->hal->system.set_frontlight(c->hal->system.ctx, 0); /* the setting itself is kept: apply_light() on waking */
+    }
+}
+
+static void wake_up(bk_console_t *c)
+{
+    enter_screen(c, c->wake_screen);
+    apply_light(c);
+    c->idle_ticks = 0;
+}
+
 /* ---------------------------------------------------------------- step */
 
 void bk_console_step(bk_console_t *c, bk_buttons_t held)
@@ -353,7 +423,18 @@ void bk_console_step(bk_console_t *c, bk_buttons_t held)
     c->screen_ticks++;
     bk_events_clear(&c->events);
 
+    if (held != 0u || game_in_play(c)) {
+        c->idle_ticks = 0;
+    } else {
+        c->idle_ticks++;
+    }
+
     switch (c->screen) {
+    case BK_SCREEN_SLEEP:
+        if (pressed != 0u) { /* the key that wakes the display does nothing else */
+            wake_up(c);
+        }
+        break;
     case BK_SCREEN_SPLASH:
         if (c->screen_ticks >= BK_SPLASH_TICKS || pressed != 0u) {
             enter_screen(c, BK_SCREEN_HOME);
@@ -374,6 +455,11 @@ void bk_console_step(bk_console_t *c, bk_buttons_t held)
     case BK_SCREEN_GAME:
         game_step(c, pressed, held);
         break;
+    }
+
+    const uint32_t timeout = bk_sleep_timeout_ticks(c->profile.settings.sleep_idx);
+    if (timeout != 0u && c->idle_ticks >= timeout && c->screen != BK_SCREEN_SLEEP && c->screen != BK_SCREEN_SPLASH) {
+        go_to_sleep(c);
     }
 
     const bool in_menu = c->screen != BK_SCREEN_GAME;
@@ -398,7 +484,12 @@ static void put_cells(uint8_t *field, const char *const *rows, int nrows, int x0
     }
 }
 
-/* Classic Brick Game menu art on the 10 x 20 matrix: big game number / letter, two-digit mode number, illustration. */
+/* Rows of the menu art on the matrix (design/renders/ui-tetris-menu): a blank row, the 7-row game sign, a blank row, the
+ * 5-row mode number, a blank row and the 5-row clip. */
+#define HOME_SIGN_ROW 1
+#define HOME_MODE_ROW 9
+
+/* Classic Brick Game menu art on the 10 x 20 matrix: big game number / letter, two-digit mode number, looped clip. */
 static void draw_home_field(const bk_console_t *c, uint8_t *field)
 {
     const bk_catalog_entry_t *e = &c->catalog[c->game_index];
@@ -408,16 +499,16 @@ static void draw_home_field(const bk_console_t *c, uint8_t *field)
     if (g[0] != '\0' && g[1] == '\0') {
         const char *const *big = bk_big_glyph(g[0]);
         if (big != NULL) {
-            put_cells(field, big, BK_BIG_H, 4, 0, BK_CELL_ON); /* columns 4-7, as on the photographed original */
+            put_cells(field, big, BK_BIG_H, 4, HOME_SIGN_ROW, BK_CELL_ON); /* columns 4-7, as on the photographed original */
         }
     } else if (g[0] != '\0') {
         const char *const *a = bk_big_glyph(g[0]);
         const char *const *b = bk_big_glyph(g[1]);
         if (a != NULL) {
-            put_cells(field, a, BK_BIG_H, 1, 0, BK_CELL_ON);
+            put_cells(field, a, BK_BIG_H, 1, HOME_SIGN_ROW, BK_CELL_ON);
         }
         if (b != NULL) {
-            put_cells(field, b, BK_BIG_H, 6, 0, BK_CELL_ON);
+            put_cells(field, b, BK_BIG_H, 6, HOME_SIGN_ROW, BK_CELL_ON);
         }
     }
 
@@ -426,20 +517,17 @@ static void draw_home_field(const bk_console_t *c, uint8_t *field)
     const char *const *tens = bk_small_digit((int)((number / 10u) % 10u));
     const char *const *units = bk_small_digit((int)(number % 10u));
     if (tens != NULL) {
-        put_cells(field, tens, BK_GLYPH_H, 2, 8, value);
+        put_cells(field, tens, BK_GLYPH_H, 2, HOME_MODE_ROW, value);
     }
     if (units != NULL) {
-        put_cells(field, units, BK_GLYPH_H, 7, 8, value);
+        put_cells(field, units, BK_GLYPH_H, 7, HOME_MODE_ROW, value);
     }
 
-    if (e->def->thumbnail != NULL && e->def->thumb_frames > 0) {
-        uint8_t frame = 0;
-        if (e->def->thumb_frame_ticks > 0) {
-            frame = (uint8_t)((c->screen_ticks / e->def->thumb_frame_ticks) % e->def->thumb_frames);
-        }
-        uint8_t art[BK_COLS * 5];
-        e->def->thumbnail(frame, art);
-        memcpy(&field[15 * BK_COLS], art, sizeof art);
+    /* the gameplay clip of the game; with DEMO off the poster frame stays and the panel is not refreshed for it */
+    const bk_clip_t *clip = e->def->preview;
+    if (clip != NULL) {
+        uint16_t frame = c->profile.settings.demo_on ? bk_clip_frame_at(clip, c->preview_ticks) : clip->poster;
+        bk_clip_paint(clip, frame, &field[BK_CLIP_FIRST_ROW * BK_COLS]);
     }
 }
 
@@ -458,56 +546,89 @@ static char *fmt_uint(char *dst, unsigned v)
     return dst;
 }
 
+static const char *const SLEEP_NAMES[BK_SLEEP_OPTIONS] = {"OFF", "1 MIN", "3 MIN", "5 MIN", "10 MIN"};
+
 static void render_text_screen(bk_console_t *c)
 {
     static const char *const light_names[BK_LIGHT_MAX + 1] = {"OFF", "LOW", "HIGH"};
     static const char *const button_names[8] = {"UP", "DOWN", "LEFT", "RIGHT", "ACTION", "MODE", "SELECT", "START"};
     static const bk_button_t button_bits[8] = {BK_BTN_UP,     BK_BTN_DOWN, BK_BTN_LEFT,   BK_BTN_RIGHT,
                                                BK_BTN_ACTION, BK_BTN_MODE, BK_BTN_SELECT, BK_BTN_START};
-    bk_text_row_t rows[BK_SET_COUNT + 4];
-    char line[6][20];
+    const bk_settings_t *s = &c->profile.settings;
+    bk_text_row_t rows[BK_SET_COUNT]; /* the button test has eight rows, as many as there are settings */
+    char cell_line[20];
+
+    bk_page_t page;
+    memset(&page, 0, sizeof page);
+    page.cursor = -1;
+    page.sound_on = s->sound_on != 0;
+    /* the right column: what is worth a glance on every page, the front light and the phone link */
+    page.status[0].label = "LIGHT";
+    page.status[0].value = light_names[s->light_level];
+    page.status[1].label = "BLE";
+    page.status[1].value = s->ble_on ? "ON" : "OFF";
+    page.rows = rows;
 
     if (c->screen == BK_SCREEN_SETTINGS) {
         rows[BK_SET_SOUND].label = "SOUND";
-        rows[BK_SET_SOUND].value = c->profile.settings.sound_on ? "ON" : "OFF";
+        rows[BK_SET_SOUND].value = s->sound_on ? "ON" : "OFF";
         rows[BK_SET_LIGHT].label = "LIGHT";
-        rows[BK_SET_LIGHT].value = light_names[c->profile.settings.light_level];
+        rows[BK_SET_LIGHT].value = light_names[s->light_level];
+        rows[BK_SET_BLE].label = "BLE";
+        rows[BK_SET_BLE].value = s->ble_on ? "ON" : "OFF";
+        rows[BK_SET_DEMO].label = "DEMO";
+        rows[BK_SET_DEMO].value = s->demo_on ? "ON" : "OFF";
+        rows[BK_SET_SLEEP].label = "AUTO OFF";
+        rows[BK_SET_SLEEP].value = SLEEP_NAMES[s->sleep_idx < BK_SLEEP_OPTIONS ? s->sleep_idx : 0];
         rows[BK_SET_RECORDS].label = "RECORDS";
-        rows[BK_SET_RECORDS].value = c->confirm_clear ? "SURE?" : "CLEAR";
+        rows[BK_SET_RECORDS].value = c->confirm_clear ? "SURE?" : "CLR";
         rows[BK_SET_BUTTONS].label = "BUTTONS";
         rows[BK_SET_BUTTONS].value = "TEST";
         rows[BK_SET_ABOUT].label = "ABOUT";
-        rows[BK_SET_ABOUT].value = NULL;
-        bk_render_text_page(&c->layout, "SETTINGS", rows, BK_SET_COUNT, c->cursor, "UP DOWN  OK START  BACK MODE",
-                            &c->frame);
+        rows[BK_SET_ABOUT].value = "INFO";
+        page.title = "SETTINGS";
+        page.style = BK_PAGE_LIST;
+        page.count = BK_SET_COUNT;
+        page.cursor = c->cursor;
+        page.top = c->top;
     } else if (c->screen == BK_SCREEN_BUTTON_TEST) {
         for (int i = 0; i < 8; i++) {
             rows[i].label = button_names[i];
-            rows[i].value = (c->held & button_bits[i]) ? "ON" : "--";
+            rows[i].value = (c->held & button_bits[i]) != 0u ? "ON" : "--";
         }
-        bk_render_text_page(&c->layout, "BUTTONS", rows, 8, -1, "EXIT MODE+SELECT+START", &c->frame);
+        page.title = "BUTTONS";
+        page.style = BK_PAGE_LINES;
+        page.count = 8;
+        page.footer[0] = "EXIT";
+        page.footer[1] = "MODE+SELECT+START";
     } else {
-        char *p = line[0];
-        strcpy(p, "BRICK");
-        rows[0].label = line[0];
-        rows[0].value = BK_VERSION_STRING;
-        strcpy(line[1], "CELL ");
-        char *end = fmt_uint(line[1] + 5, c->layout.cell);
+        strcpy(cell_line, "CELL ");
+        char *end = fmt_uint(cell_line + 5, c->layout.cell);
         strcpy(end, " DOTS");
-        rows[1].label = line[1];
-        rows[1].value = NULL;
-        rows[2].label = "PROTOTYPE";
-        rows[2].value = NULL;
-        rows[3].label = "NO HW APPROVED";
-        rows[3].value = NULL;
-        bk_render_text_page(&c->layout, "ABOUT", rows, 4, -1, "BACK MODE", &c->frame);
+        rows[0].label = "BRICK";
+        rows[1].label = BK_VERSION_STRING;
+        rows[2].label = cell_line;
+        rows[3].label = "PROTOTYPE";
+        rows[4].label = "NO HW APPROVED";
+        for (int i = 0; i < 5; i++) {
+            rows[i].value = NULL;
+        }
+        page.title = "ABOUT";
+        page.style = BK_PAGE_LINES;
+        page.count = 5;
+        page.footer[0] = "BACK MODE";
     }
+    bk_render_page(&c->layout, &page, &c->frame);
 }
 
 const bk_frame_t *bk_console_render(bk_console_t *c)
 {
     if (c->screen == BK_SCREEN_SETTINGS || c->screen == BK_SCREEN_BUTTON_TEST || c->screen == BK_SCREEN_ABOUT) {
         render_text_screen(c);
+        return &c->frame;
+    }
+    if (c->screen == BK_SCREEN_SLEEP) {
+        bk_frame_init(&c->frame, c->layout.width, c->layout.height); /* nothing lit: the panel can rest */
         return &c->frame;
     }
 
@@ -521,33 +642,29 @@ const bk_frame_t *bk_console_render(bk_console_t *c)
         scene->over_fill = BK_ROWS;
         scene->hi_score = scene->score = 8888888u;
         scene->show_score = true;
-        scene->speed = scene->level = 8;
-        scene->paused = true;
+        scene->speed = scene->level = 88; /* both digits lit */
+        scene->sound_on = false;          /* the speaker icon is part of the pattern */
         scene->has_preview = true;
         memset(scene->preview, BK_CELL_ON, sizeof scene->preview);
     } else if (c->screen == BK_SCREEN_HOME) {
         const bk_game_def_t *def = current_def(c);
         draw_home_field(c, scene->cells);
         scene->hi_score = bk_profile_get_record(&c->profile, def->uid, c->mode);
-        scene->speed = c->speed;
-        scene->level = c->level;
+        scene->speed = (uint8_t)(c->speed + 1u); /* what the game will get: 01..10 */
+        scene->level = (uint8_t)(c->level + 1u);
         scene->focus =
             c->focus == BK_MENU_SPEED ? BK_FOCUS_SPEED : (c->focus == BK_MENU_LEVEL ? BK_FOCUS_LEVEL : BK_FOCUS_NONE);
-        scene->caption1 = def->title;
-        c->label[0] = '\0';
-        if (def->mode_label != NULL) {
-            def->mode_label(c->mode, c->label, sizeof c->label);
-        }
-        scene->caption2 = c->label[0] != '\0' ? c->label : NULL;
     } else {
         const bk_game_t *g = c->game;
         bk_game_cells(g, scene->cells);
-        scene->has_preview = bk_game_preview(g, scene->preview);
+        bk_preview_kind_t kind = bk_game_preview_kind(g, scene->preview);
+        scene->has_preview = kind != BK_PREVIEW_NONE;
+        scene->preview_is_lives = kind == BK_PREVIEW_LIVES;
         scene->score = g->score;
         scene->hi_score = g->hi_score;
         scene->show_score = true;
-        scene->speed = (uint8_t)(g->speed > 0 ? g->speed - 1 : 0);
-        scene->level = (uint8_t)(g->level > 0 ? g->level - 1 : 0);
+        scene->speed = g->speed;
+        scene->level = g->level;
         scene->over_fill = g->over_fill;
         scene->paused = g->phase == BK_PHASE_PAUSED;
         if (g->phase == BK_PHASE_OVER) {

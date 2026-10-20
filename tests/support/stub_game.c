@@ -56,26 +56,18 @@ static bk_game_t *stub_create_single(void *storage, const bk_game_options_t *opt
     return &s->base;
 }
 
-static void stub_label(uint16_t mode, char *buf, size_t cap)
-{
-    if (cap >= 8) {
-        memcpy(buf, "MODE ", 5);
-        buf[5] = (char)('1' + mode);
-        buf[6] = '\0';
-    }
-}
-
-static void stub_thumb(uint8_t frame, uint8_t cells[BK_COLS * 5])
-{
-    (void)frame;
-    memset(cells, 0, BK_COLS * 5);
-    for (int i = 0; i < BK_COLS; i++) {
-        cells[(i % 5) * BK_COLS + i] = BK_CELL_ON; /* diagonal */
-    }
-}
+/* A dot walks along the bottom row of the preview: four frames, 20 ticks each, the poster is the second one. */
+// clang-format off
+static const char STUB_CLIP_FRAMES[][BK_CLIP_CELLS + 1] = {
+    ".........." ".........." ".........." ".........." "#.........",
+    ".........." ".........." ".........." ".........." ".#........",
+    ".........." ".........." ".........." ".........." "..#.......",
+    ".........." ".........." ".........." ".........." "...#......",
+};
+// clang-format on
+const bk_clip_t stub_clip = {(uint16_t)BK_ARRAY_LEN(STUB_CLIP_FRAMES), STUB_CLIP_TICKS, 1, STUB_CLIP_FRAMES};
 
 const bk_game_def_t stub_def_multi = {
-    100, "stub-multi", "MULTI", 3, 0, sizeof(stub_game_t), _Alignof(stub_game_t), stub_create_multi, stub_label, 1,
-    0,   stub_thumb};
+    100, "stub-multi", "MULTI", 3, 0, sizeof(stub_game_t), _Alignof(stub_game_t), stub_create_multi, &stub_clip};
 const bk_game_def_t stub_def_single = {
-    101, "stub-single", "SINGLE", 1, 0, sizeof(stub_game_t), _Alignof(stub_game_t), stub_create_single, NULL, 0, 0, NULL};
+    101, "stub-single", "SINGLE", 1, 0, sizeof(stub_game_t), _Alignof(stub_game_t), stub_create_single, NULL};

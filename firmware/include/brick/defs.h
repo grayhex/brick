@@ -48,7 +48,7 @@ BK_EXTERN_C_BEGIN
 /* Half period of the blink phase in ticks (reference: BLINK_HALF_TICKS = 15, i.e. 2 Hz toggling). */
 #define BK_BLINK_HALF_TICKS 15
 
-/* Game speed and level as in the classic toy: 1..10 (the menu shows value - 1). */
+/* Game speed and level as in the classic toy: 1..10, shown as two digits (01..10) in the menu and on the game screen. */
 #define BK_MIN_SPEED 1
 #define BK_MAX_SPEED 10
 #define BK_MIN_LEVEL 1

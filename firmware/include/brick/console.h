@@ -24,6 +24,13 @@
  * The console is the only place that knows about MODE / SELECT / START: games see just the direction keys and the big
  * ACTION button (as ROTATE). Leaving a running game takes two MODE presses (the first pauses, the second leaves), so a
  * stray press cannot lose a game. There is no mapping for the engine's FIRE key (hard drop): one action button.
+ *
+ * ---- Screens (ADR-041, design/renders mock-ups) ----
+ * HOME shows the game number, the mode number and, in the bottom five rows of the matrix, the looped gameplay clip of the
+ * selected game (brick/clip.h; a still poster frame when the setting DEMO is off); the status column shows HI, SPD, LVL.
+ * SETTINGS is a scrolling list (label over value, a box round the selected row): SOUND, LIGHT, BLE, DEMO, AUTO OFF,
+ * RECORDS, BUTTONS, ABOUT. After the set time without any key (AUTO OFF) the console blanks the display and the front
+ * light and waits for a key; a running game never counts as idle (only a paused or finished one does).
  */
 #ifndef BRICK_CONSOLE_H
 #define BRICK_CONSOLE_H
@@ -59,7 +66,8 @@ typedef enum {
     BK_SCREEN_SETTINGS,
     BK_SCREEN_BUTTON_TEST,
     BK_SCREEN_ABOUT,
-    BK_SCREEN_GAME
+    BK_SCREEN_GAME,
+    BK_SCREEN_SLEEP /* blank display after AUTO OFF; the screen it interrupted comes back on the next key */
 } bk_screen_t;
 
 typedef enum { BK_MENU_MODE = 0, BK_MENU_SPEED = 1, BK_MENU_LEVEL = 2 } bk_menu_focus_t;
@@ -67,11 +75,18 @@ typedef enum { BK_MENU_MODE = 0, BK_MENU_SPEED = 1, BK_MENU_LEVEL = 2 } bk_menu_
 typedef enum {
     BK_SET_SOUND = 0,
     BK_SET_LIGHT,
+    BK_SET_BLE,
+    BK_SET_DEMO,
+    BK_SET_SLEEP,
     BK_SET_RECORDS,
     BK_SET_BUTTONS,
     BK_SET_ABOUT,
     BK_SET_COUNT
 } bk_setting_item_t;
+
+/* Ticks without a key press after which the display is blanked: setting index (BK_SLEEP_OPTIONS of them) -> 0 (never),
+ * 1, 3, 5 or 10 minutes. */
+uint32_t bk_sleep_timeout_ticks(unsigned index);
 
 typedef struct {
     const bk_catalog_entry_t *catalog;
@@ -87,17 +102,21 @@ typedef struct {
     uint32_t screen_ticks; /* since the current screen was entered */
     bk_buttons_t held;     /* buttons seen by the last step */
     bk_edge_t edge;
-    uint32_t repeat[4]; /* menu auto-repeat: UP, DOWN, LEFT, RIGHT */
+    uint32_t repeat[4];      /* menu auto-repeat: UP, DOWN, LEFT, RIGHT */
+    uint32_t idle_ticks;     /* ticks without a key (a game in play is never idle); AUTO OFF compares it */
+    bk_screen_t wake_screen; /* the screen to return to when the display is woken */
 
     /* HOME */
     uint8_t game_index;
     uint16_t mode;
-    uint8_t speed; /* 0..9 */
-    uint8_t level; /* 0..9 */
-    uint8_t focus; /* bk_menu_focus_t */
+    uint8_t speed;          /* 0..9 */
+    uint8_t level;          /* 0..9 */
+    uint8_t focus;          /* bk_menu_focus_t */
+    uint32_t preview_ticks; /* the clip of the selected game starts at 0 when HOME is entered or the game changes */
 
     /* SETTINGS */
     uint8_t cursor;
+    uint8_t top; /* first row shown: the list scrolls to keep the cursor in view */
     bool confirm_clear;
 
     /* GAME */
@@ -122,7 +141,6 @@ typedef struct {
     uint32_t dropped_frames; /* changed pictures that had to wait because of max_fps (diagnostics) */
 
     bk_scene_t scene; /* scratch for rendering, kept here so the core has no global state */
-    char label[24];
 } bk_console_t;
 
 /* Returns false on bad arguments (empty catalog, odd cell size, a game whose state does not fit). */

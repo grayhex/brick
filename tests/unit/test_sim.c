@@ -276,6 +276,25 @@ static void test_storage_survives_a_reboot_but_not_a_wipe(void)
     free(s);
 }
 
+static void test_ble_request_reaches_the_front_end_and_survives_a_reboot(void)
+{
+    bk_sim_t *s = new_sim(8, 0, 0, 0, 3);
+    run(s, 0, 70);
+    CHECK(!s->ble); /* off until the owner asks */
+    tap(s, BK_BTN_MODE);
+    tap(s, BK_BTN_DOWN);
+    tap(s, BK_BTN_DOWN);
+    CHECK_EQ(s->console.cursor, BK_SET_BLE);
+    tap(s, BK_BTN_ACTION);
+    CHECK(s->ble);
+    CHECK_EQ(s->console.profile.settings.ble_on, 1);
+    CHECK(bk_sim_reset(s, false)); /* a reboot with the same flash applies the saved request at start */
+    CHECK(s->ble);
+    CHECK(bk_sim_reset(s, true)); /* factory defaults */
+    CHECK(!s->ble);
+    free(s);
+}
+
 static void test_speaker_and_front_light_reach_the_front_end(void)
 {
     bk_sim_t *s = new_sim(8, 0, 0, 0, 3);
@@ -349,6 +368,7 @@ int main(int argc, char **argv)
     TEST_RUN(test_panel_rate_limit_can_change_at_run_time);
     TEST_RUN(test_storage_survives_a_reboot_but_not_a_wipe);
     TEST_RUN(test_speaker_and_front_light_reach_the_front_end);
+    TEST_RUN(test_ble_request_reaches_the_front_end_and_survives_a_reboot);
     if (argc > 1) {
         bk_test_current = "test_recorded_sessions_reproduce";
         test_recorded_sessions_reproduce(argv[1]);

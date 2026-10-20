@@ -46,6 +46,7 @@ typedef struct {
     uint16_t tone_hz;   /* current square-wave frequency, 0 = silent */
     uint32_t tone_seq;  /* number of tone changes since the last reset */
     uint8_t light;      /* front light level 0..BK_LIGHT_MAX */
+    bool ble;           /* the radio the console asked for (setting BLE); there is no radio in the simulator */
 
     uint8_t slot[BK_STORAGE_SLOTS][BK_STORAGE_SLOT_MAX];
     size_t slot_len[BK_STORAGE_SLOTS];

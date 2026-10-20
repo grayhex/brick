@@ -162,14 +162,14 @@ void bk_game_cells(const bk_game_t *g, uint8_t cells[BK_CELLS])
     }
 }
 
-bool bk_game_preview(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS])
+bk_preview_kind_t bk_game_preview_kind(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS])
 {
     memset(cells, 0, BK_PREVIEW_CELLS);
     if (g->vt->draw_preview != NULL && g->vt->draw_preview(g, cells)) {
-        return true;
+        return BK_PREVIEW_NEXT;
     }
     if (g->lives < 0) {
-        return false;
+        return BK_PREVIEW_NONE;
     }
     /* Lives indicator, as the donor: each life is a pair of cells in columns 1 and 2, top to bottom. */
     int lives = g->lives > 4 ? 4 : g->lives;
@@ -177,7 +177,12 @@ bool bk_game_preview(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS])
         cells[i * BK_PREVIEW_COLS + 1] = BK_CELL_ON;
         cells[i * BK_PREVIEW_COLS + 2] = BK_CELL_ON;
     }
-    return true;
+    return BK_PREVIEW_LIVES;
+}
+
+bool bk_game_preview(const bk_game_t *g, uint8_t cells[BK_PREVIEW_CELLS])
+{
+    return bk_game_preview_kind(g, cells) != BK_PREVIEW_NONE;
 }
 
 /* ---------------------------------------------------------------- helpers for games */

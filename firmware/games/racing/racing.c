@@ -354,31 +354,60 @@ bk_game_t *bk_racing_create(void *storage, const bk_game_options_t *opt)
     return &s->base;
 }
 
-static void racing_mode_label(uint16_t mode, char *buf, size_t cap)
-{
-    (void)mode; /* one variant per game (ADR-036) */
-    if (cap > 0) {
-        strncpy(buf, "2 LANES", cap - 1);
-        buf[cap - 1] = '\0';
-    }
-}
+/*
+ * The menu clip (ADR-041, own artwork): the bottom five rows of the road, the border scrolling one row per frame (period
+ * five, so thirty frames loop without a seam) and the cars one row every second frame, as in the game. A car passes in
+ * the left lane, a second one comes down the right lane and the player swerves into the free left lane at the last moment
+ * (frame 17), then slips back to the right after it has passed (the loop point). The cars are the 3 x 4 car of the game.
+ */
+// clang-format off
+static const char RACING_CLIP_FRAMES[][BK_CLIP_CELLS + 1] = {
+    /* 0: the car in the left lane enters from the top */
+    "..#.#....." "......#..." "#....###.#" "#.....#..#" "#....#.#.#",
+    "#.#.#....#" "......#..." ".....###.." "#.....#..#" "#....#.#.#",
+    "#..#.....#" "#.#.#.#..#" ".....###.." "......#..." "#....#.#.#",
+    "#..#.....#" "#.#.#.#..#" "#....###.#" "......#..." ".....#.#..",
+    "..###....." "#..#..#..#" "#.#.####.#" "#.....#..#" ".....#.#..",
+    /* 5 */
+    "..###....." "...#..#..." "#.#.####.#" "#.....#..#" "#....#.#.#",
+    "#..#.....#" "..###.#..." "...#.###.." "#.#.#.#..#" "#....#.#.#",
+    "#..#.....#" "#.###.#..#" "...#.###.." "..#.#.#..." "#....#.#.#",
+    "#........#" "#..#..#..#" "#.######.#" "...#..#..." "..#.##.#..",
+    "..........""#..#..#..#""#.######.#""#..#..#..#""..#.##.#..", /* 9 (poster): the cars side by side */
+    /* 10 */
+    "..........""......#...""#..#.###.#""#.###.#..#""#..#.#.#.#",
+    "#........#""......#...""...#.###..""#.###.#..#""#..#.#.#.#",
+    "#........#""#.....#..#"".....###..""...#..#...""#.####.#.#",
+    "#........#""#.....#..#""#....###.#""...#..#...""..####.#..",
+    ".....#.#..""#.....#..#""#....###.#""#.....#..#""...#.#.#..",
+    /* 15: the car in the right lane enters from the top */
+    ".....#.#..""......#...""#....###.#""#.....#..#""#..#.#.#.#",
+    "#.....#..#"".....###.."".....###..""#.....#..#""#....#.#.#",
+    "#.....#..#""#..#.#.#.#""..###.....""...#......""#.#.#....#", /* 17: the player swerves */
+    "#....###.#""#..#..#..#""#.####.#.#""...#......""..#.#.....",
+    ".....###..""#..#..#..#""#.####.#.#""#..#.....#""..#.#.....",
+    /* 20 */
+    "......#...""...#.###..""#.###.#..#""#..#.#.#.#""#.#.#....#",
+    "#.....#..#""...#.###..""..###.#...""#..#.#.#.#""#.#.#....#",
+    "#........#""#..#..#..#""..######..""...#..#...""#.#.##.#.#",
+    "#........#""#..#..#..#""#.######.#""...#..#...""..#.##.#..",
+    "..........""#..#.....#""#.###.#..#""#..#.###.#""..#.#.#...",
+    /* 25 */
+    "..........""...#......""#.###.#..#""#..#.###.#""#.#.#.#..#",
+    "#........#""...#......""..###.....""#..#..#..#""#.#.####.#",
+    "#........#""#..#.....#""..###.....""...#..#...""#.#.####.#",
+    "#........#""#..#.....#""#.###....#""...#......""..#.#.#...",
+    "..........""#..#.....#""#.###....#""#..#.....#""..#.#.#...", /* 29: the player returns at the loop point */
+};
+// clang-format on
 
-/* Menu illustration (own artwork, no reference sprite): a car overtaking an oncoming one, two frames. */
-static void racing_thumbnail(uint8_t frame, uint8_t cells[BK_COLS * 5])
-{
-    static const char *const art[2][5] = {
-        {"#..#.....#", "#.###....#", "...#...#..", "#.....###.", "#.....#.#."},
-        {"..........", "#..#.....#", "#.###..#.#", "#..#..###.", "......#.#."},
-    };
-    const char *const *rows = art[frame % 2u];
-    for (int y = 0; y < 5; y++) {
-        for (int x = 0; x < BK_COLS; x++) {
-            cells[y * BK_COLS + x] = rows[y][x] == '#' ? BK_CELL_ON : BK_CELL_OFF;
-        }
-    }
-}
+static const bk_clip_t RACING_CLIP = {
+    (uint16_t)BK_ARRAY_LEN(RACING_CLIP_FRAMES),
+    10,
+    9,
+    RACING_CLIP_FRAMES,
+};
 
 const bk_game_def_t bk_racing_def = {
-    BK_RACING_UID,        "racing",         "RACING",          1, 0,  sizeof(bkr_game_t),
-    _Alignof(bkr_game_t), bk_racing_create, racing_mode_label, 2, 30, racing_thumbnail,
+    BK_RACING_UID, "racing", "RACING", 1, 0, sizeof(bkr_game_t), _Alignof(bkr_game_t), bk_racing_create, &RACING_CLIP,
 };
