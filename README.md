@@ -41,6 +41,7 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 ## Documentation
 
 - [Product requirements](docs/PRODUCT_REQUIREMENTS.md) — authoritative confirmed requirements vs open choices.
+- [Repository structure and source-of-truth rules](docs/REPOSITORY_STRUCTURE.md) — ownership, paths and release discipline.
 - [Reference open hardware console repositories](docs/REFERENCE_PROJECTS.md) — verified Pi Tin, Arduboy, ENGAGE, STM-boy, TeleBall and more; what to reuse as structure vs what not to copy.
 - [Manufacturing and release completeness checklist](docs/RELEASE_COMPLETENESS_CHECKLIST.md) — gate-by-gate checklist from prototype through PCB, CAD, firmware, EVT/DVT/PVT and shipping 100–500 units.
 - [Hardware research and decision gates](docs/HARDWARE_RESEARCH.md) — LCD, SoC, battery, BLE, sound, production, provisional BOM.
@@ -80,35 +81,19 @@ The following pictures are **vector concept drawings**, not photorealistic rende
 
 ## Repository layout
 
-```text
-brick/
-├── README.md, AGENTS.md, THIRD_PARTY.md
-├── CMakeLists.txt, cmake/        # host build and the Cortex-M4F cross-compile smoke test
-├── docs/                         # requirements, research, decisions, display, mechanics, firmware architecture, UI, conformance
-│   └── img/                      # illustrations of the logical frame (generated from tests/golden)
-├── design/                       # concept SVG images, original-photo thumbnail and source-reference notes (mechanical R0.2)
-├── firmware/                     # portable core (no board, no display, no MCU)
-│   ├── include/brick/            # public API: game, hal, console, render, audio, save, ...
-│   ├── core/                     # game base, input, rng, frame, font, render, audio, save, console
-│   ├── games/tetris/             # base Tetris variant
-│   ├── games/snake/              # Snake, variants 01 and 02 (FRAME)
-│   └── catalog/                  # the games the product ships, in menu order
-├── platform/sim/                 # PC simulator: window-less driver, terminal and WebAssembly front-ends
-├── tests/                        # unit, conformance (recorded reference traces), golden screens, simulator sessions
-│   ├── fixtures/{tetris,snake}/  # traces exported from the TypeScript reference
-│   └── golden/                   # ASCII pictures of every console screen
-├── tools/
-│   ├── conformance/              # exporter of reference fixtures (Node, only for regeneration)
-│   ├── frames/                   # golden frame -> PNG
-│   ├── cad_review/               # measure the STL mockup against R0.2 (Python, numpy, Pillow)
-│   ├── sim/                      # writes the simulator session fixtures
-│   └── experiments/              # reproducible experiments behind ADRs
-├── hardware/        # (planned) KiCad schematic, PCB, BOM and fabrication outputs
-├── mechanical/      # inbox/ — archived first mockup (STL); (planned) CAD, enclosure, buttons, STEP
-└── manufacturing/   # (planned) assembly/test instructions, DFM, QA
-```
+В [REPOSITORY_STRUCTURE.md](docs/REPOSITORY_STRUCTURE.md) — подробная схема репозитория и правила разделения исходников, экспортов и ревизий. По образцам Arduboy Kit, Pi Tin, ENGAGE и STM-boy добавлены каталоги **hardware/** (`pcb`, `components`, `fabrication`), **mechanical/** (`inbox`, `src`, `drawings`, `exports`), **manufacturing/** (`assembly`, `test-jig`, `qa`), **companion/** и **releases/**.
 
-Directories marked *(planned)* do not exist until implementation begins. PCB work has not started.
+| Подсистема | С чего начинать |
+| --- | --- |
+| Игры и симулятор | [Firmware](docs/FIRMWARE_ARCHITECTURE.md), [Simulator](docs/SIMULATOR.md); исходники `firmware/`, `platform/sim/` |
+| Промышленный дизайн | [Mechanical](mechanical/README.md), [CAD agent task](docs/CAD_HANDOFF_PROMPT.md), `mechanical/src/` |
+| Электроника | [Hardware](hardware/README.md), [LCD research](docs/DISPLAY_CANDIDATES.md), `hardware/pcb/` |
+| Покупка компонентов | [Components](hardware/components/README.md), шаблоны BOM/AVL |
+| Производство и испытания | [Manufacturing](manufacturing/README.md), [QA](manufacturing/qa/README.md) |
+| BLE приложение | [Companion](companion/README.md) |
+| Версии изделия | [Releases](releases/README.md), [checklist](docs/RELEASE_COMPLETENESS_CHECKLIST.md) |
+
+Работающие `firmware/`, `platform/`, `tests/`, `tools/` и первоначальный `mechanical/inbox/` **сохранены по прежним путям**. Новые подпапки содержат инструкции и шаблоны, а **не** утверждённые схемы, готовый CAD, Gerber или производственные испытания.
 
 ## Immediate priorities
 

@@ -1,6 +1,6 @@
 # Instructions for coding and engineering agents
 
-Read `README.md`, `docs/REFERENCE_PROJECTS.md`, `docs/RELEASE_COMPLETENESS_CHECKLIST.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/CAD_HANDOFF_PROMPT.md`, `docs/CAD_WORKFLOW.md`, `docs/ENGINEERING_REVIEW_2026-10-20.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
+Read `README.md`, `docs/REPOSITORY_STRUCTURE.md`, `docs/REFERENCE_PROJECTS.md`, `docs/RELEASE_COMPLETENESS_CHECKLIST.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/HARDWARE_RESEARCH.md`, `docs/DISPLAY_CANDIDATES.md`, `docs/MECHANICAL_CONCEPT.md`, `docs/CAD_HANDOFF_PROMPT.md`, `docs/CAD_WORKFLOW.md`, `docs/ENGINEERING_REVIEW_2026-10-20.md`, `docs/GAME_PORTING.md` and `docs/DECISIONS.md` before proposing PCB/firmware work.
 
 ## Source of truth
 - User-confirmed choices have status **CONFIRMED** in the PRD. Preserve them unless explicitly changed.
@@ -36,6 +36,14 @@ Read `README.md`, `docs/REFERENCE_PROJECTS.md`, `docs/RELEASE_COMPLETENESS_CHECK
 
 - Three finishes share ONE mechanical master: MONOLITH (matte black), CLEAR SMOKE (translucent black, black PCB), CERAMIC (warm ivory plastic). **Original photorealistic triptych** is silhouette reference, but its old buttons and speaker outlets are obsolete. **Current SVG**: `design/concepts/*r02.svg`; `design/brick-envelope-r01.svg` is archived and outdated.
 - CAD is a **separate task** from firmware/game agent; do not edit `firmware/` or game logic just for mechanical model.
+
+## Repository ownership
+
+- Read [`docs/REPOSITORY_STRUCTURE.md`](docs/REPOSITORY_STRUCTURE.md) for paths and artifact lifecycle. Preserve working `firmware/`, `platform/sim/`, `tests/`, `tools/` and `mechanical/inbox/`; do not move code for aesthetics.
+- PCB native KiCad: `hardware/pcb/`; components/BOM/AVL: `hardware/components/`; exports only: `hardware/fabrication/`. Test LCD/interface and perform ERC/DRC/DFM before calling files manufacturing-ready.
+- CAD master: `mechanical/src/`; STEP/STL: `mechanical/exports/`. Imported STL in `mechanical/inbox/` is NOT verified master CAD.
+- `manufacturing/`, `companion/`, and `releases/` are currently docs/templates, NOT finished factory equipment, companion app or released hardware.
+- For meaningful PRs follow [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) with tests/measurements/known risks. Update [master checklist](docs/RELEASE_COMPLETENESS_CHECKLIST.md) only with evidence.
 
 ## Workflow
 1. Investigate and summarize alternatives plus measurable acceptance criteria.

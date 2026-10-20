@@ -2,6 +2,8 @@
 
 **Created:** 2026-10-20. **Scope:** premium positive-monochrome Brick Game, 175×80 mm preliminary enclosure, BLE settings/phone, USB-C DFU + charge, speaker only, 20–30 h **target**, 100–500 pilot units.
 
+The canonical folder structure and editable-vs-derived sources are documented in [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md). A newly created folder or `*.template.*` is **not evidence of readiness**.
+
 This checklist is a **product engineering gate**, not a set of claimed achievements. `[x]` means an existing, reviewable artifact in the repository, **not** a tested manufactured product. A checkbox can be checked only with a link to evidence (measurement, report, source file, photo, quote or released revision).
 
 References: [REFERENCE_PROJECTS.md](REFERENCE_PROJECTS.md). Current prototype audit: [ENGINEERING_REVIEW_2026-10-20.md](ENGINEERING_REVIEW_2026-10-20.md). Approved user decisions: [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) and [DECISIONS.md](DECISIONS.md).
