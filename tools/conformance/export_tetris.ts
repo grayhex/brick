@@ -9,117 +9,17 @@
  *   APOLLO_BRICK_GAMES=/path/to/ApolloBrickGames npm run export:tetris -- [--out FILE] [--dump NAME [--tick N]]
  * --dump prints the reference state per tick of one scenario (debug aid for mismatches).
  */
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-
 import { figureName, makePiece, rotatePiece, TETRIS_POOL } from '@apollo/brick/games/tetris/shapes';
 import { Rng } from '@apollo/brick/rng';
 import { makeBrickInput, type BrickAction, type BrickEvent, type BrickInput } from '@apollo/brick/types';
 import { Lab, bestPlacement } from '@apollo-tests/brick/games/tetrisLab';
 
-const APOLLO = process.env.APOLLO_BRICK_GAMES as string;
-
-// ---------------------------------------------------------------- encoding shared with the C runner
-
-/** Key bits; identical to bk_key_t in firmware/include/brick/input.h. */
-const KEY_BITS: Record<BrickAction, number> = { left: 1, right: 2, up: 4, down: 8, rotate: 16, fire: 32 };
-const ACTIONS = Object.keys(KEY_BITS) as BrickAction[];
-/** A tick code is: held keys (bits 0-5) | pressed keys << 6 | command << 12. */
-const CMD = { none: 0, start: 1, pause: 2, resume: 3, restart: 4 } as const;
-const heldBits = (code: number): number => code & 63;
-const pressedBits = (code: number): number => (code >> 6) & 63;
-
-const actionsOf = (bits: number): BrickAction[] => ACTIONS.filter((a) => (bits & KEY_BITS[a]) !== 0);
-const bitsOf = (actions: Iterable<BrickAction>): number => {
-  let bits = 0;
-  for (const a of actions) bits |= KEY_BITS[a];
-  return bits;
-};
-const codeOf = (input: BrickInput, cmd = 0): number => bitsOf(input.held) | (bitsOf(input.pressed) << 6) | (cmd << 12);
-const inputOf = (code: number): BrickInput => makeBrickInput(actionsOf(pressedBits(code)), actionsOf(heldBits(code)));
-
-/** Event ids; identical to bk_event_type_t in firmware/include/brick/event.h. */
-function encodeEvent(e: BrickEvent): [number, number, number, number] {
-  switch (e.type) {
-    case 'started': return [1, 0, 0, 0];
-    case 'move': return [2, 0, 0, 0];
-    case 'rotate': return [3, 0, 0, 0];
-    case 'lock': return [4, 0, 0, 0];
-    case 'drop': return [5, 0, 0, 0];
-    case 'shot': return [6, 0, 0, 0];
-    case 'hit': return [7, 0, 0, 0];
-    case 'explode': return [8, 0, 0, 0];
-    case 'crash': return [9, 0, 0, 0];
-    case 'lifeLost': return [10, 0, 0, 0];
-    case 'bonus': return [11, 0, 0, 0];
-    case 'win': return [12, 0, 0, 0];
-    case 'blocked': return [13, 0, 0, 0];
-    case 'tone': return [14, e.pad, e.ticks, 0];
-    case 'lines': {
-      let mask = 0;
-      for (const row of e.rows ?? []) mask |= 1 << row;
-      return [15, e.count, 0, mask >>> 0];
-    }
-    case 'levelUp': return [16, e.speed, 0, 0];
-    case 'gameOver': return [17, 0, 0, 0];
-    case 'paused': return [18, 0, 0, 0];
-    case 'resumed': return [19, 0, 0, 0];
-  }
-}
-
-const PHASE_ID = { ready: 0, playing: 1, paused: 2, over: 3 } as const;
-
-/** FNV-1a 32 over bytes; the digest layout is specified in docs/CONFORMANCE.md. */
-class Fnv {
-  h = 0x811c9dc5;
-  u8(v: number): void {
-    this.h = Math.imul(this.h ^ (v & 255), 0x01000193) >>> 0;
-  }
-  u16(v: number): void {
-    this.u8(v);
-    this.u8(v >>> 8);
-  }
-  u32(v: number): void {
-    this.u16(v);
-    this.u16(v >>> 16);
-  }
-}
-
-function digest(lab: Lab, events: readonly BrickEvent[]): number {
-  const f = new Fnv();
-  f.u32(lab.tick);
-  f.u8(PHASE_ID[lab.phase]);
-  f.u32(lab.score);
-  f.u32(lab.hiScore);
-  f.u8(lab.speed);
-  f.u8(lab.level);
-  f.u8(lab.lives === null ? 255 : lab.lives);
-  f.u8(lab.overFill);
-  for (const v of lab.cells()) f.u8(v);
-  const preview = lab.preview();
-  f.u8(preview ? 1 : 0);
-  if (preview) for (const v of preview) f.u8(v);
-  f.u8(events.length);
-  for (const e of events) {
-    const [type, a, b, c] = encodeEvent(e);
-    f.u8(type);
-    f.u8(a);
-    f.u16(b);
-    f.u32(c);
-  }
-  return f.h;
-}
-
-const hex = (v: number, width: number): string => (v >>> 0).toString(16).padStart(width, '0');
-const fold16 = (h: number): number => (h ^ (h >>> 16)) & 0xffff;
-
+import { ACTIONS, CMD, Recorder as BaseRecorder, runExporter, type Op, type Options, type Scenario } from './lib';
 // ---------------------------------------------------------------- recorder
 
 const SHAPE_INDEX: Record<string, number> = {};
 for (const shape of TETRIS_POOL) SHAPE_INDEX[figureName(shape)] = shape;
 
-type Op = (string | number)[];
 
 function applyOp(lab: Lab, op: Op): void {
   const shape = (name: string | number): number => {
@@ -139,144 +39,9 @@ function applyOp(lab: Lab, op: Op): void {
   }
 }
 
-interface Options {
-  seed: number;
-  speed: number;
-  level: number;
-  hiScore: number;
-}
-
-const CHECKPOINT_EVERY = 250;
-const rowsOf = (cells: Uint8Array, width: number): string[] => {
-  const out: string[] = [];
-  for (let r = 0; r < cells.length / width; r++) out.push([...cells.slice(r * width, (r + 1) * width)].map((v) => '.#*'[v]).join(''));
-  return out;
-};
-
-/** Executes a scenario against the reference while recording inputs, ops and per-tick digests. */
-class Recorder {
-  readonly lab: Lab;
-  readonly trace: (number[] | Op)[] = [];
-  readonly digests: number[] = [];
-  readonly checkpoints: Record<string, number>[] = [];
-  readonly counts: Record<string, number> = {};
-  private run: [number, number] | null = null;
-  readonly dump: string[] = [];
-
-  constructor(
-    readonly name: string,
-    readonly description: string,
-    readonly options: Options,
-  ) {
-    this.lab = new Lab('tetris', { ...options, mode: 0 });
-    this.lab.start(); // events of the very first start are not part of the contract (as plainLab in the reference)
-  }
-
-  private flushRun(): void {
-    if (this.run) this.trace.push([this.run[0], this.run[1]]);
-    this.run = null;
-  }
-
-  /** Test-setup operation (reference Lab method). */
-  op(...op: Op): void {
-    this.flushRun();
-    applyOp(this.lab, op);
-    this.trace.push(op);
-  }
-
-  /** One harness tick: optional command, then one game step. */
-  tick(code: number): BrickEvent[] {
-    const lab = this.lab;
-    const cmd = code >> 12;
-    const pending = ((lab as unknown as { queue: unknown[] }).queue ?? []).length;
-    if (pending > 0 && (cmd !== 0 || lab.phase !== 'playing')) {
-      throw new Error(`${this.name}: pending setup events need a plain step in the PLAYING phase`);
-    }
-    const events: BrickEvent[] = [];
-    if (cmd === CMD.start) events.push(...lab.start());
-    else if (cmd === CMD.pause) events.push(...lab.pause());
-    else if (cmd === CMD.resume) events.push(...lab.resume());
-    else if (cmd === CMD.restart) events.push(...lab.restart());
-    events.push(...lab.step(inputOf(code)));
-
-    const h = digest(lab, events);
-    const index = this.digests.length;
-    this.digests.push(fold16(h));
-    if ((index + 1) % CHECKPOINT_EVERY === 0) {
-      this.checkpoints.push({ i: index, h: h >>> 0, tick: lab.tick, phase: PHASE_ID[lab.phase], score: lab.score, speed: lab.speed });
-    }
-    for (const e of events) this.counts[e.type] = (this.counts[e.type] ?? 0) + 1;
-    this.dump.push(`#${index} code=${code} tick=${lab.tick} ${lab.phase} score=${lab.score} speed=${lab.speed} fill=${lab.overFill} ev=[${events.map((e) => JSON.stringify(e)).join(',')}] h=${hex(fold16(h), 4)}`);
-
-    if (this.run && this.run[0] === code) this.run[1]++;
-    else {
-      this.flushRun();
-      this.run = [code, 1];
-    }
-    return events;
-  }
-
-  // ---- helpers mirroring the reference test helpers ----
-  idle(n: number): void {
-    for (let i = 0; i < n; i++) this.tick(0);
-  }
-  /** Pressed on one tick, released on the next. */
-  tap(...keys: BrickAction[]): void {
-    const bits = bitsOf(keys);
-    this.tick(bits | (bits << 6));
-    this.tick(0);
-  }
-  /** Pressed on one tick, not released. */
-  press(...keys: BrickAction[]): void {
-    const bits = bitsOf(keys);
-    this.tick(bits | (bits << 6));
-  }
-  /** Held for `n` ticks: pressed on the first one. */
-  hold(key: BrickAction, n: number): void {
-    const bit = KEY_BITS[key];
-    for (let i = 0; i < n; i++) this.tick(bit | (i === 0 ? bit << 6 : 0));
-  }
-  input(input: BrickInput): void {
-    this.tick(codeOf(input));
-  }
-  cmd(c: number): void {
-    this.tick(c << 12);
-  }
-  until(test: () => boolean, limit = 4000): number {
-    let n = 0;
-    while (!test() && n < limit) {
-      this.tick(0);
-      n++;
-    }
-    return n;
-  }
-
-  finish(): Record<string, unknown> {
-    this.flushRun();
-    const lab = this.lab;
-    return {
-      name: this.name,
-      description: this.description,
-      options: this.options,
-      ticks: this.digests.length,
-      trace: this.trace,
-      digests: this.digests.map((d) => hex(d, 4)).join(''),
-      checkpoints: this.checkpoints,
-      final: {
-        phase: PHASE_ID[lab.phase],
-        tick: lab.tick,
-        score: lab.score,
-        hiScore: lab.hiScore,
-        speed: lab.speed,
-        level: lab.level,
-        overFill: lab.overFill,
-        rows: rowsOf(lab.cells(), 10),
-        preview: lab.preview() ? rowsOf(lab.preview()!, 4) : null,
-        events: this.counts,
-      },
-    };
-  }
-}
+type Recorder = BaseRecorder<Lab>;
+const makeRecorder = (s: Scenario<Lab>, options: Options): Recorder =>
+  new BaseRecorder<Lab>(s.name, s.description, options, (o) => new Lab('tetris', { ...o, mode: 0 }), applyOp);
 
 // ---------------------------------------------------------------- players
 
@@ -388,15 +153,8 @@ function fuzzRun(r: Recorder, seed: number, ticks: number, bias: number): void {
 
 // ---------------------------------------------------------------- scenarios
 
-interface Scenario {
-  name: string;
-  description: string;
-  options?: Partial<Options>;
-  body: (r: Recorder) => void;
-}
-
 const base: Options = { seed: 5, speed: 1, level: 1, hiScore: 0 };
-const scenarios: Scenario[] = [];
+const scenarios: Scenario<Lab>[] = [];
 const add = (name: string, description: string, body: (r: Recorder) => void, options: Partial<Options> = {}): void => {
   scenarios.push({ name, description, options, body });
 };
@@ -729,53 +487,18 @@ function fallTicksSection(): number[] {
 
 // ---------------------------------------------------------------- main
 
-function main(): void {
-  const args = process.argv.slice(2);
-  const arg = (flag: string): string | undefined => {
-    const i = args.indexOf(flag);
-    return i >= 0 ? args[i + 1] : undefined;
-  };
-  const out = resolve(arg('--out') ?? '../../tests/fixtures/tetris/tetris.conformance.json');
-  const dumpName = arg('--dump');
-
-  let commit = 'unknown';
-  try {
-    commit = execFileSync('git', ['-C', APOLLO, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  } catch {
-    console.warn('warning: reference checkout is not a git repository, commit id is unknown');
-  }
-
-  const records: Record<string, unknown>[] = [];
-  let totalTicks = 0;
-  for (const s of scenarios) {
-    const recorder = new Recorder(s.name, s.description, { ...base, ...s.options });
-    s.body(recorder);
-    if (dumpName === s.name) {
-      const from = Number(arg('--tick') ?? 0);
-      console.log(recorder.dump.slice(from, from + 40).join('\n'));
-    }
-    const record = recorder.finish();
-    totalTicks += record.ticks as number;
-    records.push(record);
-  }
-  if (dumpName) return;
-
-  const lines: string[] = [];
-  lines.push('{');
-  lines.push(` "format": "brick-conformance/1",`);
-  lines.push(` "game": "tetris",`);
-  lines.push(` "reference": ${JSON.stringify({ repo: 'grayhex/ApolloBrickGames', commit, files: ['src/brick/base.ts', 'src/brick/games/tetris.ts', 'src/brick/games/tetris/core.ts', 'src/brick/games/tetris/shapes.ts', 'src/core/rng.ts'] })},`);
-  lines.push(` "note": "Generated by tools/conformance/export_tetris.ts. Do not edit by hand. Tick codes, event ids and the digest layout are specified in docs/CONFORMANCE.md.",`);
-  lines.push(` "rng": ${JSON.stringify(rngSection())},`);
-  lines.push(` "catalog": ${JSON.stringify(catalogSection())},`);
-  lines.push(` "fallTicks": ${JSON.stringify(fallTicksSection())},`);
-  lines.push(` "scenarios": [`);
-  records.forEach((rec, i) => lines.push(`  ${JSON.stringify(rec)}${i + 1 < records.length ? ',' : ''}`));
-  lines.push(' ]');
-  lines.push('}');
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, lines.join('\n') + '\n');
-  console.log(`wrote ${out}: ${records.length} scenarios, ${totalTicks} ticks, reference ${commit}`);
-}
-
-main();
+runExporter(
+  {
+    game: 'tetris',
+    files: ['src/brick/base.ts', 'src/brick/games/tetris.ts', 'src/brick/games/tetris/core.ts', 'src/brick/games/tetris/shapes.ts', 'src/core/rng.ts'],
+    sections: [
+      ['rng', rngSection()],
+      ['catalog', catalogSection()],
+      ['fallTicks', fallTicksSection()],
+    ],
+    defaultOut: '../../tests/fixtures/tetris/tetris.conformance.json',
+  },
+  scenarios,
+  base,
+  makeRecorder,
+);

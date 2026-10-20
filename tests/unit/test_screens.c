@@ -9,6 +9,7 @@
 
 #include "bk_test.h"
 #include "brick/console.h"
+#include "brick/games/snake.h"
 #include "brick/games/tetris.h"
 #include "fake_hal.h"
 #include "frame_dump.h"
@@ -124,6 +125,7 @@ static void tap(bk_buttons_t b)
 }
 
 static const bk_catalog_entry_t CAT_TETRIS[] = {{&bk_tetris_def, "1"}};
+static const bk_catalog_entry_t CAT_TWO[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}};
 static const bk_catalog_entry_t CAT_MULTI[] = {{&stub_def_multi, "12"}, {&stub_def_single, "A"}};
 
 static void seed_profile(uint16_t uid, uint16_t mode, uint32_t score, uint8_t speed, uint8_t level)
@@ -202,6 +204,43 @@ static void test_game_screens(void)
     check_golden("game_tetris_over");
 }
 
+static void test_snake_screens(void)
+{
+    fake_hal_init(&hal);
+    seed_profile(BK_SNAKE_UID, 1, 230, 4, 1);
+    boot(CAT_TWO, 2);
+    run(BK_SPLASH_TICKS, 0);
+    tap(BK_BTN_RIGHT);  /* game 2 */
+    tap(BK_BTN_SELECT); /* focus: SPEED -> LEVEL */
+    tap(BK_BTN_SELECT); /* LEVEL -> variant */
+    tap(BK_BTN_UP);     /* variant 02, "FRAME" */
+    run(30, 0);
+    check_golden("home_snake_frame");
+    tap(BK_BTN_START);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    run(20, 0);
+    tap(BK_BTN_UP);
+    run(30, 0);
+    tap(BK_BTN_LEFT);
+    run(15, 0);
+    CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+    CHECK_EQ(con.game->lives, 4);
+    run(1, 0);
+    while ((con.ticks / BK_BLINK_HALF_TICKS) % 2u != 0u) { /* the lit blink phase: the head and the meal show */
+        run(1, 0);
+    }
+    CHECK_EQ(con.game->lives, 4);
+    check_golden("game_snake_frame");
+    /* the clear scene after a lost life: the worm runs into the frame */
+    unsigned guard = 0;
+    while (con.game->lives == 4 && guard++ < 2000) {
+        bk_console_step(&con, 0);
+    }
+    CHECK_EQ(con.game->lives, 3);
+    run(20, 0);
+    check_golden("game_snake_clear");
+}
+
 static void test_text_screens(void)
 {
     fake_hal_init(&hal);
@@ -261,6 +300,7 @@ int main(int argc, char **argv)
     TEST_RUN(test_splash_and_home);
     TEST_RUN(test_home_two_digit_glyph_and_mode_focus);
     TEST_RUN(test_game_screens);
+    TEST_RUN(test_snake_screens);
     TEST_RUN(test_text_screens);
     TEST_RUN(test_native_panels);
     return bk_test_finish("screens");

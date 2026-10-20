@@ -248,3 +248,65 @@ uint8_t *bk_game_overlay(bk_game_t *g)
     g->overlay_on = true;
     return g->overlay;
 }
+
+/* ---------------------------------------------------------------- lives and clear scenes */
+
+void bk_game_set_lives(bk_game_t *g, int count)
+{
+    g->lives = (int8_t)(count < 0 ? 0 : (count > BK_MAX_LIVES ? BK_MAX_LIVES : count));
+}
+
+void bk_game_next_level(bk_game_t *g)
+{
+    int next = g->level + 1;
+    if (next > BK_MAX_LEVEL) {
+        g->level = BK_MIN_LEVEL;
+        bk_game_set_speed(g, g->speed + 1);
+    } else {
+        g->level = (uint8_t)next;
+    }
+    bk_game_emit(g, BK_EV_LEVEL_UP, g->speed, 0, 0);
+}
+
+/* ceil() for 0 <= x < 2^31 without libm: the core keeps fmod() as its only libm call (ADR-024). */
+static int ceil_small(double x)
+{
+    int i = (int)x;
+    return (double)i < x ? i + 1 : i;
+}
+
+void bk_game_paint_clear(bk_game_t *g, uint32_t total, uint16_t elapsed)
+{
+    uint8_t *out = bk_game_overlay(g);
+    memset(out, 0, BK_CELLS);
+    /* Same double arithmetic and order as the reference: ceil(((elapsed + 1) / half) * rows). */
+    double half = (double)(total < 2u ? 2u : total) / 2.0;
+    if ((double)elapsed < half) {
+        int rows = ceil_small(((double)elapsed + 1.0) / half * (double)BK_ROWS);
+        int n = rows > BK_ROWS ? BK_ROWS : rows;
+        memset(out + (BK_ROWS - n) * BK_COLS, BK_CELL_ON, (size_t)n * BK_COLS);
+    } else {
+        int cleared = ceil_small(((double)elapsed + 1.0 - half) / half * (double)BK_ROWS);
+        int n = cleared > BK_ROWS ? BK_ROWS : cleared;
+        memset(out + n * BK_COLS, BK_CELL_ON, (size_t)(BK_ROWS - n) * BK_COLS);
+    }
+}
+
+void bk_game_lose_life(bk_game_t *g, uint8_t scene_kind)
+{
+    int left = (g->lives < 0 ? 1 : g->lives) - 1;
+    bk_game_set_lives(g, left < 0 ? 0 : left);
+    bk_game_emit(g, BK_EV_LIFE_LOST, 0, 0, 0);
+    if (g->lives == 0) {
+        bk_game_game_over(g);
+    } else {
+        bk_game_cutscene(g, scene_kind, BK_CLEAR_SCENE_TICKS);
+    }
+}
+
+void bk_game_win_level(bk_game_t *g, uint8_t scene_kind)
+{
+    bk_game_add_score(g, 100);
+    bk_game_emit(g, BK_EV_WIN, 0, 0, 0);
+    bk_game_cutscene(g, scene_kind, BK_CLEAR_SCENE_TICKS);
+}
