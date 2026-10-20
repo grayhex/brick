@@ -25,6 +25,9 @@ if(BRICK_SANITIZE)
 endif()
 
 add_subdirectory(firmware)
+if(NOT CMAKE_CROSSCOMPILING)
+  add_subdirectory(platform) # PC simulator, host only
+endif()
 
 if(BRICK_BUILD_TESTS)
   enable_testing()

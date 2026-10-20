@@ -33,6 +33,11 @@ set(BRICK_FRAME_MAX_W 336 CACHE STRING "Largest logical frame width in dots")
 set(BRICK_FRAME_MAX_H 536 CACHE STRING "Largest logical frame height in dots")
 target_compile_definitions(brickcore PUBLIC BK_FRAME_MAX_W=${BRICK_FRAME_MAX_W} BK_FRAME_MAX_H=${BRICK_FRAME_MAX_H})
 
+# The games that ship (product decision, kept out of the core): front-ends and the firmware image link this.
+add_library(brickcatalog STATIC catalog/catalog.c)
+target_link_libraries(brickcatalog PUBLIC brickcore)
+target_compile_options(brickcatalog PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wstrict-prototypes -Wmissing-prototypes)
+
 # libm: fmod() in the gravity timer (ADR-024).
 target_link_libraries(brickcore PUBLIC m)
 

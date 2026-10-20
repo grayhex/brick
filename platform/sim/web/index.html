@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Симулятор Brick</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  :root {
+    --page: #f3f2ee; --card: #ffffff; --ink: #1c1d1f; --muted: #666a70; --line: #d9d8d2; --accent: #b8860b;
+    --lcd-ink: #1d1f18; --lcd-off: #c3c6b9; --lcd-lit1: #d3d6c9; --lcd-lit2: #e3e6da;
+    --yellow: #f2c230; --yellow-dark: #b8860b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --page: #141517; --card: #1e2023; --ink: #e8e8e6; --muted: #9a9ea4; --line: #33363a; --accent: #e0b64a; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --page: #141517; --card: #1e2023; --ink: #e8e8e6; --muted: #9a9ea4; --line: #33363a; --accent: #e0b64a; color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink);
+    font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); min-height: 100vh; }
+  h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: .02em; }
+  .sub { color: var(--muted); margin: 0 0 16px; max-width: 70ch; }
+  .stage { display: grid; grid-template-columns: auto minmax(280px, 380px); gap: 24px; justify-content: center; align-items: start; }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; justify-items: center; } }
+
+  /* ---- the device: 80 x 175 mm, one CSS variable converts millimetres to pixels ---- */
+  .device-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .device { --u: 4px; position: relative; width: calc(80 * var(--u)); height: calc(175 * var(--u)); border-radius: calc(11 * var(--u));
+    background: var(--body); box-shadow: 0 calc(2 * var(--u)) calc(6 * var(--u)) rgba(0,0,0,.35), inset 0 0 0 calc(.35 * var(--u)) rgba(255,255,255,.08);
+    touch-action: none; user-select: none; -webkit-user-select: none; }
+  .device[data-finish="monolith"] { --body: linear-gradient(160deg, #34363b, #25272b 60%, #1f2124); --bezel: #0c0d0f; --label: #c9c9c4; }
+  .device[data-finish="smoke"] { --body: linear-gradient(160deg, rgba(88,92,100,.82), rgba(52,55,62,.86)); --bezel: #0a0b0d; --label: #d4d6d8; }
+  .device[data-finish="ceramic"] { --body: linear-gradient(160deg, #efe8d8, #e2dac6); --bezel: #15161a; --label: #5b574d; }
+  .device[data-finish="smoke"]::before { content: ""; position: absolute; inset: calc(3 * var(--u)); border-radius: calc(8 * var(--u));
+    background: repeating-linear-gradient(90deg, #0a0a0a 0 calc(.5 * var(--u)), #101113 calc(.5 * var(--u)) calc(1.2 * var(--u))); opacity: .55; }
+  .off .glass canvas { opacity: 0; }
+  .window { position: absolute; left: calc(13 * var(--u)); top: calc(9 * var(--u)); width: calc(54 * var(--u)); height: calc(82 * var(--u));
+    background: var(--bezel); border-radius: calc(1.6 * var(--u)); display: grid; place-items: center; overflow: hidden;
+    box-shadow: inset 0 0 calc(1.5 * var(--u)) rgba(0,0,0,.8); }
+  .glass { position: relative; background: var(--lcd-off); transition: background .25s; line-height: 0; }
+  .glass.light1 { background: var(--lcd-lit1); box-shadow: 0 0 calc(3 * var(--u)) rgba(255,255,255,.18); }
+  .glass.light2 { background: var(--lcd-lit2); box-shadow: 0 0 calc(5 * var(--u)) rgba(255,255,255,.32); }
+  .glass canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .off .glass { background: #2a2c28; box-shadow: none; }
+  .key { position: absolute; border: 0; padding: 0; border-radius: 50%; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transform: translate(-50%, -50%); background: radial-gradient(circle at 35% 30%, #ffe27a, var(--yellow) 55%, var(--yellow-dark));
+    box-shadow: 0 calc(.5 * var(--u)) calc(.9 * var(--u)) rgba(0,0,0,.45), inset 0 calc(-.35 * var(--u)) calc(.5 * var(--u)) rgba(0,0,0,.18); }
+  .key.down { transform: translate(-50%, -46%) scale(.96); box-shadow: 0 calc(.15 * var(--u)) calc(.3 * var(--u)) rgba(0,0,0,.5), inset 0 calc(.2 * var(--u)) calc(.5 * var(--u)) rgba(0,0,0,.25); filter: brightness(.92); }
+  .key:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .key-label { position: absolute; transform: translate(-50%, 0); font-size: calc(1.9 * var(--u)); letter-spacing: .06em; color: var(--label);
+    font-weight: 600; pointer-events: none; white-space: nowrap; }
+  .grille { position: absolute; left: calc(40 * var(--u)); top: calc(163 * var(--u)); width: calc(22 * var(--u)); height: calc(9 * var(--u)); transform: translate(-50%, -50%);
+    display: flex; justify-content: space-between; }
+  .grille i { width: calc(.9 * var(--u)); height: 100%; border-radius: calc(.45 * var(--u)); background: rgba(0,0,0,.55); box-shadow: inset 0 calc(.2 * var(--u)) calc(.3 * var(--u)) rgba(0,0,0,.6); }
+  .usb { position: absolute; left: calc(40 * var(--u)); bottom: 0; width: calc(9 * var(--u)); height: calc(.7 * var(--u)); transform: translateX(-50%); background: #070707; border-radius: calc(.4 * var(--u)) calc(.4 * var(--u)) 0 0; }
+  .side { position: absolute; border: 0; padding: 0; cursor: pointer; background: #6c6f75; }
+  .side.power { right: calc(-.9 * var(--u)); top: calc(98 * var(--u)); width: calc(1.2 * var(--u)); height: calc(10 * var(--u)); border-radius: calc(.5 * var(--u)); }
+  .side.power[aria-pressed="true"] { background: var(--yellow); }
+  .side.wheel { left: calc(-.9 * var(--u)); top: calc(118 * var(--u)); width: calc(1.2 * var(--u)); height: calc(15 * var(--u)); border-radius: calc(.5 * var(--u));
+    background: repeating-linear-gradient(0deg, #55585d 0 calc(.6 * var(--u)), #7b7e84 calc(.6 * var(--u)) calc(1.2 * var(--u))); }
+  .caption { font-size: 12px; color: var(--muted); text-align: center; max-width: 52ch; min-height: 2.6em; }
+  .caption b { color: var(--ink); font-weight: 600; }
+  .warn { color: #b3261e; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .warn { color: #f2a19b; } }
+  :root[data-theme="dark"] .warn { color: #f2a19b; }
+
+  /* ---- panel ---- */
+  .side-col { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  label.row, .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0; }
+  select, button.btn, input[type="range"] { font: inherit; color: var(--ink); }
+  select { width: 100%; padding: 6px 8px; background: var(--page); border: 1px solid var(--line); border-radius: 6px; }
+  button.btn { padding: 6px 10px; background: var(--page); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+  button.btn:hover { border-color: var(--accent); }
+  button.btn[aria-pressed="true"], button.btn.on { background: var(--accent); color: #101010; border-color: var(--accent); }
+  button.btn:disabled { opacity: .45; cursor: default; }
+  .seg { display: flex; flex-wrap: wrap; gap: 4px; }
+  .seg .btn { padding: 4px 9px; }
+  .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  dl.stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+  dl.stats dt { color: var(--muted); } dl.stats dd { margin: 0; text-align: right; }
+  kbd { font: 12px ui-monospace, monospace; padding: 1px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--page); }
+  .keys p { margin: 3px 0; font-size: 13px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; background: var(--accent); color: #101010; }
+  textarea { width: 100%; font: 12px ui-monospace, monospace; color: var(--ink); background: var(--page); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; resize: vertical; margin-top: 6px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<h1>Симулятор Brick</h1>
+<p class="sub">Прошивочное ядро (C11) из репозитория, собранное в WebAssembly: те же правила, меню и 1-битный кадр, что пойдут на плату. Корпус и кнопки — по рабочим значениям R0.2 (предложение, не чертёж). Звук и подсветка — условные.</p>
+
+<div class="stage">
+  <div class="device-wrap">
+    <div class="device" id="device" data-finish="monolith">
+      <div class="window"><div class="glass" id="glass"><canvas id="lcd" width="132" height="160"></canvas></div></div>
+      <div class="grille"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="usb"></div>
+      <button class="side power" id="power" aria-pressed="true" aria-label="Питание"></button>
+      <div class="side wheel" id="wheel" aria-label="Громкость" role="slider" tabindex="0"></div>
+    </div>
+    <div class="caption" id="caption"></div>
+  </div>
+
+  <div class="side-col">
+    <section class="card">
+      <h2>Панель</h2>
+      <select id="panel" aria-label="Панель"></select>
+      <p class="note" id="panelInfo"></p>
+      <div class="row"><span>Частота показа</span></div>
+      <div class="seg" id="fps" role="group" aria-label="Частота показа"></div>
+      <p class="note">Игра идёт на 60 тактов в секунду; панель получает новые картинки не чаще выбранного предела, промежуточные пропускаются. У кандидата Sharp LS032B7DD02 в документации 1…10 Гц (не измерено на модуле).</p>
+    </section>
+
+    <section class="card">
+      <h2>Корпус, звук, питание</h2>
+      <label class="row"><span>Отделка</span>
+        <select id="finish" style="width:auto"><option value="monolith">Monolith</option><option value="smoke">Clear Smoke</option><option value="ceramic">Ceramic</option></select></label>
+      <label class="row"><span>Громкость</span><input type="range" id="volume" min="0" max="100" value="40"></label>
+      <div class="row"><span>Питание</span><button class="btn" id="powerBtn" aria-pressed="true">Включено</button></div>
+      <p class="note">Подсветка и звук приходят из ядра так же, как придут на плату: SELECT в игре меняет подсветку, звуки — заглушки.</p>
+    </section>
+
+    <section class="card">
+      <h2>Запись и воспроизведение</h2>
+      <div class="row">
+        <button class="btn" id="rec">Запись</button>
+        <button class="btn" id="save" disabled>Сохранить .bkt</button>
+        <button class="btn" id="load">Открыть…</button>
+      </div>
+      <input type="file" id="file" accept=".bkt,.txt" hidden>
+      <div class="row"><button class="btn" id="copyTrace" disabled>Копировать как текст</button><button class="btn" id="pasteTrace">Воспроизвести из текста</button></div>
+      <textarea id="traceText" rows="3" spellcheck="false" aria-label="Запись в виде текста" placeholder="Запись в виде текста (base64): вставьте сюда и нажмите «Воспроизвести из текста»"></textarea>
+      <p class="note" id="traceInfo">Запись начинается с заводского состояния (профиль в записи сброшен; ваш сохранённый профиль не затрагивается). Файл можно воспроизвести здесь и в терминальном симуляторе.</p>
+    </section>
+
+    <section class="card">
+      <h2>Состояние</h2>
+      <dl class="stats">
+        <dt>Экран</dt><dd id="sScreen">—</dd>
+        <dt>Такт</dt><dd id="sTicks">0</dd>
+        <dt>Картинок показано</dt><dd id="sShown">0</dd>
+        <dt>Картинок в секунду</dt><dd id="sRate">0</dd>
+        <dt>Ждали и были заменены</dt><dd id="sDropped">0</dd>
+        <dt>Подсветка</dt><dd id="sLight">выкл</dd>
+        <dt>Тон</dt><dd id="sTone">—</dd>
+      </dl>
+    </section>
+
+    <section class="card keys">
+      <h2>Управление</h2>
+      <p><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> направления · <kbd>Пробел</kbd> / <kbd>Z</kbd> ACTION</p>
+      <p><kbd>A</kbd> MODE · <kbd>S</kbd> SELECT · <kbd>D</kbd> / <kbd>Enter</kbd> START</p>
+      <p class="note">Назначение MODE / SELECT / START — предложение (ADR-025). На сенсорном экране нажимайте жёлтые кнопки.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+"use strict";
+const WASM_B64 = "__WASM_B64__";
+
+// ---------------------------------------------------------------- constants
+const BTN = { UP: 1, DOWN: 2, LEFT: 4, RIGHT: 8, ACTION: 16, MODE: 32, SELECT: 64, START: 128 };
+const TICK_MS = 1000 / 60;
+const SCREENS = ["заставка", "меню", "настройки", "тест кнопок", "о приборе", "игра"];
+const PANELS = [
+  { id: "lcd316", name: "Sharp LS032B7DD02 3.16″ — 336 × 536", w: 336, h: 536, mm: [42.672, 68.072] },
+  { id: "lcd44", name: "Sharp LS044Q7DH01 4.4″ (повёрнута) — 240 × 320", w: 240, h: 320, mm: [67.2, 89.6] },
+  { id: "lcd27", name: "Sharp LS027B7DH01 2.7″ (повёрнута) — 240 × 400", w: 240, h: 400, mm: [35.28, 58.8] },
+  { id: "ref8", name: "Эталонная сетка, клетка 8 — 132 × 160", cell: 8 },
+  { id: "ref12", name: "Эталонная сетка, клетка 12 — 198 × 240", cell: 12 },
+];
+const FPS_CHOICES = [[0, "без ограничения"], [30, "30"], [20, "20"], [15, "15"], [10, "10"], [5, "5"], [2, "2"], [1, "1"]];
+const WINDOW_MM = { w: 54, h: 82 }; // R0.2 working value
+
+// Key positions and sizes (mm) from docs/MECHANICAL_CONCEPT.md section 2 (PROPOSED).
+const KEYS = [
+  { id: "MODE", x: 25, y: 101, d: 6.5, label: "MODE" }, { id: "SELECT", x: 40, y: 101, d: 6.5, label: "SELECT" }, { id: "START", x: 55, y: 101, d: 6.5, label: "START" },
+  { id: "UP", x: 24, y: 119, d: 9, aria: "Вверх" }, { id: "LEFT", x: 12.5, y: 130.5, d: 9, aria: "Влево" },
+  { id: "RIGHT", x: 35.5, y: 130.5, d: 9, aria: "Вправо" }, { id: "DOWN", x: 24, y: 142, d: 9, aria: "Вниз" },
+  { id: "ACTION", x: 59, y: 130.5, d: 22, aria: "ACTION" },
+];
+
+// ---------------------------------------------------------------- state
+let w = null;                 // wasm exports
+let user = { panel: "lcd316", fps: 0, seed: (crypto.getRandomValues(new Uint32Array(1))[0] || 1) >>> 0 };
+let powered = true;
+let pointerHeld = 0, keyHeld = 0;
+let lastSeq = -1, lastWrites = 0;
+let isolated = false;         // recording or replaying: the saved profile is neither read nor written
+let lastTrace = null;         // bytes of the last recording
+let acc = 0, lastNow = 0;
+let rateWindow = { t: 0, seq: 0, v: 0 };
+
+const $ = (id) => document.getElementById(id);
+const lcd = $("lcd"), ctx2d = lcd.getContext("2d"), glass = $("glass"), device = $("device");
+
+// ---------------------------------------------------------------- boot
+function b64ToBytes(b64) { const s = atob(b64); const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+function mem() { return new Uint8Array(w.memory.buffer); }
+
+async function boot() {
+  try {
+    const { instance } = await WebAssembly.instantiate(b64ToBytes(WASM_B64), {});
+    w = instance.exports;
+  } catch (e) {
+    $("caption").innerHTML = '<span class="warn">Не удалось запустить WebAssembly: ' + String(e.message || e) + "</span>";
+    return;
+  }
+  buildDevice();
+  buildControls();
+  loadPrefs();
+  applyUser(true);
+  window.addEventListener("resize", fitDevice);
+  fitDevice();
+  requestAnimationFrame(frame);
+}
+
+function buildDevice() {
+  for (const k of KEYS) {
+    const b = document.createElement("button");
+    b.className = "key"; b.dataset.key = k.id; b.setAttribute("aria-label", k.aria || k.label);
+    b.style.left = `calc(${k.x} * var(--u))`; b.style.top = `calc(${k.y} * var(--u))`;
+    b.style.width = b.style.height = `calc(${k.d} * var(--u))`;
+    const bit = BTN[k.id];
+    const down = (e) => { e.preventDefault(); b.setPointerCapture(e.pointerId); ensureAudio(); pressed.set(e.pointerId, bit); latchBits(bit); syncPointers(); };
+    const up = (e) => { pressed.delete(e.pointerId); syncPointers(); };
+    b.addEventListener("pointerdown", down); b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("lostpointercapture", up);
+    device.appendChild(b);
+    if (k.label) {
+      const l = document.createElement("div");
+      l.className = "key-label"; l.textContent = k.label;
+      l.style.left = `calc(${k.x} * var(--u))`; l.style.top = `calc(${k.y + k.d / 2 + 1.6} * var(--u))`;
+      device.appendChild(l);
+    }
+  }
+}
+const pressed = new Map();
+// A tap shorter than one tick (16 ms) must still reach the console: every press is held for at least 3 ticks.
+const latch = new Array(8).fill(0);
+function latchBits(bit) { for (let i = 0; i < 8; i++) if (bit & (1 << i)) latch[i] = 3; }
+function latchedMask() { let m = 0; for (let i = 0; i < 8; i++) if (latch[i] > 0) m |= 1 << i; return m; }
+function ageLatch() { for (let i = 0; i < 8; i++) if (latch[i] > 0) latch[i]--; }
+function syncPointers() {
+  pointerHeld = 0; for (const bit of pressed.values()) pointerHeld |= bit;
+  for (const el of device.querySelectorAll(".key")) el.classList.toggle("down", (pointerHeld & BTN[el.dataset.key]) !== 0 || (keyHeld & BTN[el.dataset.key]) !== 0);
+}
+
+function fitDevice() {
+  const availH = Math.max(320, window.innerHeight - 150);
+  const availW = Math.min(window.innerWidth - 32, 460);
+  const u = Math.max(1.6, Math.min(availH / 175, availW / 80, 5.2));
+  device.style.setProperty("--u", u.toFixed(3) + "px");
+  layoutGlass();
+}
+
+// ---------------------------------------------------------------- panel / layout
+function panelById(id) { return PANELS.find((p) => p.id === id) || PANELS[0]; }
+
+function configFor(p) { return p.cell ? [p.cell, 0, 0] : [0, p.w, p.h]; }
+
+function layoutGlass() {
+  const p = panelById(user.panel);
+  const u = parseFloat(getComputedStyle(device).getPropertyValue("--u")) || 4;
+  const fw = lcd.width, fh = lcd.height;
+  let gw, gh, note = "", warn = false;
+  if (p.mm) {
+    gw = p.mm[0]; gh = p.mm[1];
+    if (gw > WINDOW_MM.w || gh > WINDOW_MM.h) {
+      const s = Math.min(WINDOW_MM.w / gw, WINDOW_MM.h / gh);
+      note = `Панель ${gw.toString().replace(".", ",")} × ${gh.toString().replace(".", ",")} мм не помещается в окно R0.2 ${WINDOW_MM.w} × ${WINDOW_MM.h} мм — показана уменьшенной в ${(1 / s).toFixed(2).replace(".", ",")} раза. Корпус 80 мм этой панели тоже тесен.`;
+      gw *= s; gh *= s; warn = true;
+    } else {
+      note = `Экран в натуральную величину: видимая область ${gw.toString().replace(".", ",")} × ${gh.toString().replace(".", ",")} мм в окне ${WINDOW_MM.w} × ${WINDOW_MM.h} мм.`;
+    }
+  } else {
+    const s = Math.min(WINDOW_MM.w / fw, WINDOW_MM.h / fh) * 0.94;
+    gw = fw * s; gh = fh * s;
+    note = "Эталонная сетка: размер панели не задан, кадр вписан в окно.";
+  }
+  glass.style.width = gw * u + "px"; glass.style.height = gh * u + "px";
+  const cap = $("caption");
+  cap.innerHTML = (warn ? '<span class="warn">' : "") + note + (warn ? "</span>" : "");
+  const cellDots = w ? w.bk_w_cell_dots() : 0;
+  let info = `Логический кадр ${fw} × ${fh} точек, клетка ${cellDots} точек`;
+  if (p.mm && cellDots) info += ` = ${(cellDots * p.mm[0] / p.w).toFixed(2).replace(".", ",")} мм`;
+  $("panelInfo").textContent = info + ".";
+}
+
+function buildControls() {
+  const sel = $("panel");
+  for (const p of PANELS) { const o = document.createElement("option"); o.value = p.id; o.textContent = p.name; sel.appendChild(o); }
+  sel.addEventListener("change", () => { user.panel = sel.value; savePrefs(); applyUser(false); });
+  const seg = $("fps");
+  for (const [v, label] of FPS_CHOICES) {
+    const b = document.createElement("button");
+    b.className = "btn"; b.textContent = label + (v ? " Гц" : ""); b.dataset.fps = v; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => { user.fps = v; savePrefs(); w.bk_w_set_max_fps(v); markFps(); });
+    seg.appendChild(b);
+  }
+  $("finish").addEventListener("change", (e) => { device.dataset.finish = e.target.value; savePrefs(); });
+  $("volume").addEventListener("input", () => { setVolume(); savePrefs(); });
+  $("powerBtn").addEventListener("click", () => setPower(!powered));
+  $("power").addEventListener("click", () => setPower(!powered));
+  const wheel = $("wheel");
+  wheel.addEventListener("wheel", (e) => { e.preventDefault(); const v = $("volume"); v.value = Math.max(0, Math.min(100, +v.value - Math.sign(e.deltaY) * 5)); setVolume(); }, { passive: false });
+  wheel.addEventListener("keydown", (e) => { const v = $("volume"); if (e.key === "ArrowUp") v.value = Math.min(100, +v.value + 5); else if (e.key === "ArrowDown") v.value = Math.max(0, +v.value - 5); else return; setVolume(); e.preventDefault(); });
+  $("rec").addEventListener("click", toggleRecord);
+  $("save").addEventListener("click", saveTrace);
+  $("load").addEventListener("click", () => $("file").click());
+  $("file").addEventListener("change", loadTraceFile);
+  $("copyTrace").addEventListener("click", copyTraceText);
+  $("pasteTrace").addEventListener("click", () => {
+    let bytes;
+    try { bytes = b64ToBytes($("traceText").value.replace(/\s+/g, "")); } catch (e) { $("traceInfo").textContent = "Текст не похож на запись (base64)."; return; }
+    startReplay(bytes);
+  });
+}
+
+function markFps() {
+  for (const b of $("fps").children) b.setAttribute("aria-pressed", String(+b.dataset.fps === user.fps));
+}
+
+// ---------------------------------------------------------------- persistence (per-viewer convenience only)
+const STORE = "brick-sim-v1";
+function loadPrefs() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE) || "{}");
+    if (s.panel && PANELS.some((p) => p.id === s.panel)) user.panel = s.panel;
+    if (Number.isInteger(s.fps) && FPS_CHOICES.some((c) => c[0] === s.fps)) user.fps = s.fps;
+    if (s.finish) { device.dataset.finish = s.finish; $("finish").value = s.finish; }
+    if (Number.isInteger(s.volume)) $("volume").value = s.volume;
+  } catch (e) { /* storage may be unavailable: the simulator works without it */ }
+  $("panel").value = user.panel; setVolume(); markFps();
+}
+function savePrefs() {
+  try {
+    const old = JSON.parse(localStorage.getItem(STORE) || "{}");
+    localStorage.setItem(STORE, JSON.stringify({ ...old, panel: user.panel, fps: user.fps, finish: device.dataset.finish, volume: +$("volume").value }));
+  } catch (e) { /* ignore */ }
+}
+function readProfile() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE) || "{}");
+    return Array.isArray(s.slots) && s.slots.length === 2 ? s.slots.map((x) => (typeof x === "string" ? b64ToBytes(x) : new Uint8Array(0))) : null;
+  } catch (e) { return null; }
+}
+function writeProfile() {
+  try {
+    const old = JSON.parse(localStorage.getItem(STORE) || "{}");
+    const slots = [0, 1].map((i) => { const n = w.bk_w_storage_len(i); let s = ""; const a = new Uint8Array(w.memory.buffer, w.bk_w_storage_ptr(i), n); for (const c of a) s += String.fromCharCode(c); return btoa(s); });
+    localStorage.setItem(STORE, JSON.stringify({ ...old, slots }));
+  } catch (e) { /* ignore */ }
+}
+function restoreProfile(slots) {
+  if (!slots) return;
+  slots.forEach((bytes, i) => {
+    if (bytes.length <= w.bk_w_storage_slot_max()) { mem().set(bytes, w.bk_w_storage_ptr(i)); w.bk_w_storage_set_len(i, bytes.length); }
+  });
+}
+
+// ---------------------------------------------------------------- device configuration
+function applyUser(first) {
+  const p = panelById(user.panel);
+  const [cell, pw, ph] = configFor(p);
+  isolated = false;
+  if (!w.bk_w_init(cell, pw, ph, user.fps, user.seed)) { $("caption").innerHTML = '<span class="warn">Эта панель не помещается в буфер кадра ядра.</span>'; return; }
+  restoreProfile(readProfile());
+  w.bk_w_reset(0);                 // boot with the stored profile
+  lastWrites = w.bk_w_storage_writes();
+  lastSeq = -1;
+  resizeCanvas();
+  setRecordUi(false);
+  markFps();
+  $("panel").value = user.panel;
+  layoutGlass();
+}
+
+function resizeCanvas() {
+  w.bk_w_tick();                    // the splash gives the frame size
+  const fw = w.bk_w_frame_width(), fh = w.bk_w_frame_height();
+  if (fw && fh) { lcd.width = fw; lcd.height = fh; }
+  w.bk_w_reset(0);
+  lastSeq = -1;
+}
+
+function setPower(on) {
+  powered = on;
+  device.classList.toggle("off", !on);
+  $("powerBtn").setAttribute("aria-pressed", String(on));
+  $("powerBtn").textContent = on ? "Включено" : "Выключено";
+  $("power").setAttribute("aria-pressed", String(on));
+  if (on) { applyUser(false); } else { setTone(0); }
+}
+
+// ---------------------------------------------------------------- input
+const KEYMAP = { ArrowUp: BTN.UP, ArrowDown: BTN.DOWN, ArrowLeft: BTN.LEFT, ArrowRight: BTN.RIGHT, " ": BTN.ACTION, z: BTN.ACTION, Z: BTN.ACTION,
+  a: BTN.MODE, A: BTN.MODE, s: BTN.SELECT, S: BTN.SELECT, d: BTN.START, D: BTN.START, Enter: BTN.START };
+window.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target; if (t && (t.tagName === "SELECT" || t.tagName === "INPUT")) return;
+  const bit = KEYMAP[e.key];
+  if (bit) { e.preventDefault(); ensureAudio(); keyHeld |= bit; latchBits(bit); syncPointers(); }
+});
+window.addEventListener("keyup", (e) => { const bit = KEYMAP[e.key]; if (bit) { keyHeld &= ~bit; syncPointers(); } });
+window.addEventListener("blur", () => { keyHeld = 0; pressed.clear(); syncPointers(); });
+
+// ---------------------------------------------------------------- sound (a square wave, as the speaker port will give)
+let audio = null;
+function ensureAudio() {
+  if (audio || !(window.AudioContext || window.webkitAudioContext)) return;
+  try {
+    const A = window.AudioContext || window.webkitAudioContext;
+    const ctx = new A(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = "square"; osc.frequency.value = 440; gain.gain.value = 0;
+    osc.connect(gain); gain.connect(ctx.destination); osc.start();
+    audio = { ctx, osc, gain, hz: 0 };
+  } catch (e) { audio = null; }
+}
+function volume() { return +$("volume").value / 100; }
+function setVolume() { if (audio) setTone(audio.hz, true); }
+function setTone(hz, force) {
+  if (!audio) return;
+  if (hz === audio.hz && !force) return;
+  audio.hz = hz;
+  const t = audio.ctx.currentTime;
+  if (hz > 0) audio.osc.frequency.setValueAtTime(hz, t);
+  audio.gain.gain.setTargetAtTime(hz > 0 && powered ? 0.06 * volume() * volume() : 0, t, 0.004);
+}
+
+// ---------------------------------------------------------------- the main loop: 60 simulated ticks per second
+function frame(now) {
+  const dt = Math.min(100, now - (lastNow || now)); lastNow = now;
+  if (powered) {
+    acc += dt;
+    let n = 0;
+    while (acc >= TICK_MS && n < 6) {
+      w.bk_w_set_buttons(pointerHeld | keyHeld | latchedMask());
+      w.bk_w_tick();
+      ageLatch();
+      setTone(w.bk_w_tone_hz());
+      acc -= TICK_MS; n++;
+      if (w.bk_w_replaying() && w.bk_w_replay_done()) { finishReplay(); break; }
+    }
+    if (acc > TICK_MS * 6) acc = 0;
+    if (!isolated && w.bk_w_storage_writes() !== lastWrites) { lastWrites = w.bk_w_storage_writes(); writeProfile(); }
+    if (w.bk_w_frame_seq() !== lastSeq) draw();
+    updateStats(now);
+  }
+  requestAnimationFrame(frame);
+}
+
+const ink = [0x1d, 0x1f, 0x18];
+let img = null;
+function draw() {
+  lastSeq = w.bk_w_frame_seq();
+  const fw = w.bk_w_frame_width(), fh = w.bk_w_frame_height(), stride = w.bk_w_frame_stride();
+  if (!fw) return;
+  if (lcd.width !== fw || lcd.height !== fh) { lcd.width = fw; lcd.height = fh; }
+  const bits = new Uint8Array(w.memory.buffer, w.bk_w_frame_bits(), stride * fh);
+  if (!img || img.width !== fw || img.height !== fh) img = ctx2d.createImageData(fw, fh);
+  const px = img.data; px.fill(0);
+  for (let y = 0; y < fh; y++) {
+    for (let x = 0; x < fw; x++) {
+      if (bits[y * stride + (x >> 3)] & (0x80 >> (x & 7))) { const o = (y * fw + x) * 4; px[o] = ink[0]; px[o + 1] = ink[1]; px[o + 2] = ink[2]; px[o + 3] = 255; }
+    }
+  }
+  ctx2d.putImageData(img, 0, 0);
+  const light = w.bk_w_light();
+  glass.classList.toggle("light1", light === 1); glass.classList.toggle("light2", light >= 2);
+}
+
+function updateStats(now) {
+  if (now - rateWindow.t > 500) {
+    const seq = w.bk_w_frame_seq();
+    if (rateWindow.t) rateWindow.v = (seq - rateWindow.seq) * 1000 / (now - rateWindow.t);
+    rateWindow.t = now; rateWindow.seq = seq;
+    $("sScreen").textContent = SCREENS[w.bk_w_screen()] || "—";
+    $("sTicks").textContent = w.bk_w_ticks();
+    $("sShown").textContent = w.bk_w_presents();
+    $("sRate").textContent = rateWindow.v.toFixed(1).replace(".", ",");
+    $("sDropped").textContent = w.bk_w_dropped();
+    const l = w.bk_w_light(); $("sLight").textContent = l === 0 ? "выкл" : String(l);
+    const hz = w.bk_w_tone_hz(); $("sTone").textContent = hz ? hz + " Гц" : "—";
+    if (w.bk_w_recording()) $("traceInfo").textContent = `Идёт запись: ${(w.bk_w_trace_len() / 60).toFixed(1).replace(".", ",")} с.${w.bk_w_trace_overflow() ? " Предел записи достигнут." : ""}`;
+    else if (w.bk_w_replaying()) $("traceInfo").textContent = "Воспроизведение записи: ввод с кнопок отключён.";
+  }
+}
+
+// ---------------------------------------------------------------- record / save / load
+function setRecordUi(rec) {
+  $("rec").textContent = rec ? "Остановить запись" : "Запись";
+  $("rec").classList.toggle("on", rec);
+  $("save").disabled = !lastTrace;
+  $("copyTrace").disabled = !lastTrace;
+}
+function bytesToB64(bytes) { let s = ""; for (const c of bytes) s += String.fromCharCode(c); return btoa(s); }
+function copyTraceText() {
+  if (!lastTrace) return;
+  const text = bytesToB64(lastTrace);
+  const box = $("traceText"); box.value = text;
+  const fallback = () => { box.focus(); box.select(); $("traceInfo").textContent = "Текст записи выделен, скопируйте его вручную."; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => { $("traceInfo").textContent = "Запись скопирована как текст."; }, fallback);
+  else fallback();
+}
+function toggleRecord() {
+  if (w.bk_w_recording()) { stopRecording(); return; }
+  if (w.bk_w_replaying()) { w.bk_w_replay_stop(); applyUser(false); return; }
+  isolated = true;                       // the recording starts from factory state: keep the stored profile out of it
+  w.bk_w_reset(1);
+  w.bk_w_record_start();
+  lastSeq = -1;
+  setRecordUi(true);
+}
+function stopRecording() {
+  w.bk_w_record_stop();
+  const n = w.bk_w_trace_save();
+  lastTrace = n ? new Uint8Array(w.memory.buffer, w.bk_w_io_ptr(), n).slice() : null;
+  $("traceInfo").textContent = lastTrace ? `Записано ${(w.bk_w_trace_len() / 60).toFixed(1).replace(".", ",")} с (${lastTrace.length} байт). Можно сохранить файл.` : "Запись пуста.";
+  applyUser(false);                      // back to the stored profile and settings
+  setRecordUi(false);
+}
+// Inside the Artifact viewer a page cannot start a download itself and only some file types are offered: there the
+// recording is saved through the downloads capability as a text file (base64), which "Открыть…" reads back.
+let downloads = null;
+if (window.claude && window.claude.use) {
+  window.claude.use("downloads").then((d) => { downloads = d; if (d) $("save").textContent = "Сохранить файл"; }, () => {});
+}
+function saveTrace() {
+  if (!lastTrace) return;
+  if (downloads) {
+    downloads.save({ filename: "brick-session.txt", data: bytesToB64(lastTrace) }).then(
+      () => { $("traceInfo").textContent = "Файл записи сохранён."; },
+      (e) => { if (!e || e.code !== "declined") $("traceInfo").textContent = "Файл сохранить не удалось, скопируйте запись как текст."; });
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lastTrace], { type: "application/octet-stream" }));
+  a.download = "brick-session.bkt"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function loadTraceFile(e) {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  f.arrayBuffer().then((buf) => {
+    let bytes = new Uint8Array(buf);
+    if (!(bytes.length >= 4 && String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === "BKT1")) {
+      try { bytes = b64ToBytes(new TextDecoder().decode(bytes).replace(/\s+/g, "")); } catch (err) { $("traceInfo").textContent = "Это не запись симулятора."; return; }
+    }
+    startReplay(bytes);
+  });
+}
+function startReplay(bytes) {
+  if (bytes.length > w.bk_w_io_size()) { $("traceInfo").textContent = "Запись слишком велика."; return; }
+  mem().set(bytes, w.bk_w_io_ptr());
+  isolated = true;
+  if (!w.bk_w_trace_load(bytes.length)) { isolated = false; $("traceInfo").textContent = "Это не запись симулятора (BKT1) или она повреждена."; return; }
+  resizeCanvasKeepTrace();
+  $("traceInfo").textContent = `Воспроизведение: ${((bytes.length - 18) / 60).toFixed(1).replace(".", ",")} с, панель ${w.bk_w_cfg_width() ? w.bk_w_cfg_width() + "×" + w.bk_w_cfg_height() : "сетка " + w.bk_w_cfg_cell()}, частота ${w.bk_w_cfg_fps() || "без ограничения"}.`;
+  $("rec").textContent = "Прервать"; lastSeq = -1;
+}
+function resizeCanvasKeepTrace() {
+  // the trace has just rebooted the console; show the first picture size without disturbing the replay
+  const fw = w.bk_w_cfg_width() || (w.bk_w_cfg_cell() * 33 / 2), fh = w.bk_w_cfg_height() || w.bk_w_cfg_cell() * 20;
+  lcd.width = fw; lcd.height = fh; layoutGlass();
+}
+function finishReplay() {
+  $("traceInfo").textContent = "Воспроизведение закончено, возврат к вашему устройству.";
+  applyUser(false);
+}
+
+boot();
+</script>
+</body>
+</html>

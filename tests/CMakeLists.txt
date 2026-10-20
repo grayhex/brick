@@ -23,6 +23,12 @@ brick_test(test_save unit/test_save.c)
 brick_test(test_audio unit/test_audio.c)
 brick_test(test_game_base unit/test_game_base.c)
 brick_test(test_console unit/test_console.c)
+brick_test(test_minlibc unit/test_minlibc.c) # the C library of the WebAssembly build, against the host's
+
+add_executable(test_sim unit/test_sim.c)
+target_link_libraries(test_sim PRIVATE bktest bricksim)
+target_compile_options(test_sim PRIVATE -Wall -Wextra -Wpedantic -Wshadow)
+add_test(NAME test_sim COMMAND test_sim ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/sim)
 
 add_executable(test_screens unit/test_screens.c)
 target_link_libraries(test_screens PRIVATE bktest)
@@ -38,3 +44,22 @@ add_test(NAME test_cpp_headers COMMAND test_cpp_headers)
 add_executable(panel_fit ${CMAKE_SOURCE_DIR}/tools/experiments/panel_fit.c)
 target_link_libraries(panel_fit PRIVATE brickcore)
 add_test(NAME panel_fit_runs COMMAND panel_fit)
+
+# The simulator core as WebAssembly must give the same results as the native build (tests/fixtures/sim). Needs clang with
+# the wasm32 target, wasm-ld and node; skipped (with a note) when one is missing.
+find_program(BRICK_CLANG NAMES clang)
+find_program(BRICK_WASM_LD NAMES wasm-ld)
+find_program(BRICK_NODE NAMES node nodejs)
+set(BRICK_HAVE_WASM_TARGET OFF)
+if(BRICK_CLANG)
+  execute_process(COMMAND ${BRICK_CLANG} --print-targets OUTPUT_VARIABLE BRICK_CLANG_TARGETS ERROR_QUIET)
+  if(BRICK_CLANG_TARGETS MATCHES "wasm32")
+    set(BRICK_HAVE_WASM_TARGET ON)
+  endif()
+endif()
+if(BRICK_HAVE_WASM_TARGET AND BRICK_WASM_LD AND BRICK_NODE)
+  add_test(NAME test_wasm
+           COMMAND sh -c "CC='${BRICK_CLANG}' '${CMAKE_SOURCE_DIR}/platform/sim/web/build_wasm.sh' '${CMAKE_BINARY_DIR}/wasm' && '${BRICK_NODE}' '${CMAKE_SOURCE_DIR}/tests/web/test_wasm.mjs' '${CMAKE_BINARY_DIR}/wasm/brick-sim.wasm' '${CMAKE_CURRENT_SOURCE_DIR}/fixtures/sim'")
+else()
+  message(STATUS "test_wasm skipped: needs clang with the wasm32 target, wasm-ld and node")
+endif()
