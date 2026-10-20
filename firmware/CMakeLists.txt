@@ -15,12 +15,13 @@ set(BRICK_CORE_SOURCES
   games/tetris/tetris_shapes.c
   games/tetris/tetris.c
   games/snake/snake.c
+  games/racing/racing.c
 )
 
 add_library(brickcore STATIC ${BRICK_CORE_SOURCES})
 target_include_directories(brickcore
   PUBLIC include
-  PRIVATE games/tetris games/snake)
+  PRIVATE games/tetris games/snake games/racing)
 
 target_compile_options(brickcore PRIVATE
   -Wall -Wextra -Wpedantic -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wcast-qual -Wformat=2

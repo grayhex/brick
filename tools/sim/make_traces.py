@@ -68,6 +68,14 @@ SNAKE_LCD = " ".join([
     "800:-", tap("SELECT"), "20:-", "400:-",
 ])
 
+RACING_LCD = " ".join([
+    "70:-", tap("RIGHT"), tap("RIGHT"), "20:-", tap("START"), "130:-",   # game 3 in the menu, play on the 336 x 536 panel at 15 Hz
+    tap("LEFT"), "40:-", "20:UP", "20:-", tap("RIGHT"), "40:-", "12:ACTION", "30:-",
+    tap("LEFT"), "60:-", tap("RIGHT"), "400:-",                          # crashes: explosions, lost lives, clear scenes
+    tap("START"), "20:-", tap("START"), "500:-",                         # pause, resume
+    tap("MODE"), "30:-", tap("MODE"), "40:-",                            # pause, then out to the menu
+])
+
 # name, cell, width, height, max_fps, seed, script
 TRACES = [
     ("tetris_ref8", 8, 0, 0, 0, 12345, TETRIS),
@@ -75,6 +83,7 @@ TRACES = [
     ("menu_cell10_30hz", 10, 0, 0, 30, 4242, MENU),
     ("snake_ref8", 8, 0, 0, 0, 31, SNAKE),
     ("snake_lcd316_15hz", 0, 336, 536, 15, 5150, SNAKE_LCD),
+    ("racing_lcd316_15hz", 0, 336, 536, 15, 777, RACING_LCD),
 ]
 
 

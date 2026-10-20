@@ -9,7 +9,8 @@
   "scripts": {
     "build": "node build.mjs",
     "export:tetris": "node build.mjs tetris && node dist/export_tetris.mjs",
-    "export:snake": "node build.mjs snake && node dist/export_snake.mjs"
+    "export:snake": "node build.mjs snake && node dist/export_snake.mjs",
+    "export:racing": "node build.mjs racing && node dist/export_racing.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12"
