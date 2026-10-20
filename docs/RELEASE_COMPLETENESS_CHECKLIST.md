@@ -33,8 +33,8 @@ References: [REFERENCE_PROJECTS.md](REFERENCE_PROJECTS.md). Current prototype au
 ## Gate 2 — mechanical CAD + physical ergonomics
 
 - [x] Draft coordinate/button and case CAD agent handoff: `docs/CAD_HANDOFF_PROMPT.md`, `docs/CAD_WORKFLOW.md`.
-- [ ] Reproducible parameterized master CAD source (e.g. `mechanical/src/`, native editable files + version/tool chain), **not only STL/STEP images**.
-- [ ] Identifiable independent parts: two case shells, display bezel/lens, eight buttons + switch parts, speaker port/cavity, PCB and battery fit models.
+- [x] Reproducible parameterized master CAD source (e.g. `mechanical/src/`, native editable files + version/tool chain), **not only STL/STEP images**: `mechanical/params.json` + CadQuery 2.8.0 generator, checked by CI jobs `mechanical-params` and `mechanical-cad`. **Mock-up level only (`M0.2-draft`)**: shells, eight keys and an LCD placeholder; not a moulding, no physical fit checked.
+- [ ] Identifiable independent parts: two case shells, display bezel/lens, eight buttons + switch parts, speaker port/cavity, PCB and battery fit models. *Partly: two shells, eight keys and an LCD placeholder exist in `mechanical/src/`; bezel/lens, switch parts, speaker cavity, PCB and battery fit models do not.*
 - [ ] Assembly `*.step`, STL/3MF for printable prototypes, orthographic/mechanical drawings, section cuts, exploded BOM and clearance dimensions.
 - [ ] One shared case geometry across Monolith/Clear Smoke/Ceramic with explicit material and appearance differences.
 - [ ] 1:1 printed ergonomic prototype test for grip, fingertip travel and zero palm activation; four direction keys must be separated.
