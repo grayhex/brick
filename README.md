@@ -41,6 +41,8 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 ## Documentation
 
 - [Product requirements](docs/PRODUCT_REQUIREMENTS.md) — authoritative confirmed requirements vs open choices.
+- [Reference open hardware console repositories](docs/REFERENCE_PROJECTS.md) — verified Pi Tin, Arduboy, ENGAGE, STM-boy, TeleBall and more; what to reuse as structure vs what not to copy.
+- [Manufacturing and release completeness checklist](docs/RELEASE_COMPLETENESS_CHECKLIST.md) — gate-by-gate checklist from prototype through PCB, CAD, firmware, EVT/DVT/PVT and shipping 100–500 units.
 - [Hardware research and decision gates](docs/HARDWARE_RESEARCH.md) — LCD, SoC, battery, BLE, sound, production, provisional BOM.
 - [Display shortlist and physical pixel fit](docs/DISPLAY_CANDIDATES.md) — concrete Sharp MIP displays, Azumo frontlight, 10×20+right-side HUD fit, sourcing risks.
 - [Enclosure R0.2 concept](docs/MECHANICAL_CONCEPT.md) — preferred classic straight-sided silhouette, 175×80 mm, proposed 20–22 mm thickness, corrected 8 buttons and front speaker.
