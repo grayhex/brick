@@ -1,0 +1,13 @@
+# KiCad: рабочие и временные файлы, не источник
+*-backups/
+*.kicad_prl
+fp-info-cache
+_autosave-*
+*.bak
+*.lck
+~*.kicad_*
+*.kicad_pcb-bak
+*.sch-bak
+# локальные выгрузки: заводские файлы лежат в hardware/fabrication/<H_REV>/
+/output/
+/gerbers/

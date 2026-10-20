@@ -1,0 +1,31 @@
+# TEMPLATE ONLY. NOT A MANUFACTURING PACKAGE. Заводские файлы появятся только из проверенной KiCad-платы.
+# Один такой манифест лежит в hardware/fabrication/<H_REV>/ рядом с выгрузкой и ссылается на неё.
+schema_version: 1
+hardware_revision: null        # H0.1 ...
+mechanical_revision: null      # M0.x, с которой сверены контур, отверстия и разъёмы
+source: { git_commit: null, kicad_project: null, kicad_version: null, export_command: null }
+checks: { erc: null, drc: null, dfm_review: null, dft_review: null }   # ссылки на отчёты, а не слова «пройдено»
+board:
+  outline: null
+  layers: null
+  thickness_mm: null
+  copper_oz: null
+  surface_finish: null
+  solder_mask: null
+  stackup_note: null
+files:
+  gerber_and_drill: null
+  fab_notes_pdf: null
+  schematic_pdf: null
+  pick_and_place_top: null
+  pick_and_place_bottom: null
+  assembly_drawing_top: null
+  assembly_drawing_bottom: null
+  stencil: null
+  bom: null
+  avl: null
+  dnp_list: null
+files_sha256: {}
+known_issues: []
+approved_by: null
+approval_date: null

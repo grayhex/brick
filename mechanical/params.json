@@ -1,0 +1,178 @@
+{
+  "schema": "brick-mechanical-params/1",
+  "m_rev": "M0.2-draft",
+  "status": "PROPOSED",
+  "note": "Working values of the R0.2 concept for physical mock-ups and ergonomics. NOT verified on a physical sample, NOT approved for tooling. Source of every group: docs/CAD_HANDOFF_PROMPT.md (coordinate table), docs/MECHANICAL_CONCEPT.md, docs/DISPLAY_CANDIDATES.md. Open items of the first owner mock-up: docs/MECHANICAL_MOCKUP_REVIEW.md (M-1..M-14).",
+  "units": "mm",
+  "axes": "X to the right, Y downwards, Z through the thickness; origin = outer top-left corner of the front face",
+  "body": {
+    "status": "width and height CONFIRMED as the preliminary footprint; thickness PROPOSED",
+    "width": 80,
+    "height": 175,
+    "thickness_options": [
+      20,
+      22
+    ],
+    "thickness_default": 20,
+    "corner_radius": 9,
+    "corner_radius_range": [
+      8,
+      11
+    ],
+    "wall_prototype": 1.8,
+    "wall_prototype_range": [
+      1.6,
+      2.0
+    ],
+    "fit_clearance_prototype_range": [
+      0.2,
+      0.4
+    ]
+  },
+  "lcd_opening": {
+    "status": "PROPOSED window; the panel itself is a CANDIDATE",
+    "x": 13,
+    "y": 9,
+    "width": 54,
+    "height": 82
+  },
+  "lcd_candidate": {
+    "status": "CANDIDATE, not purchased, fSCS 1-10 Hz risk open (ADR-017, risk R-9)",
+    "model": "Sharp LS032B7DD02 (+ Azumo frontlight, thickness up to about 4.7 mm to be checked)",
+    "outline": [
+      47.02,
+      76.0
+    ],
+    "active_area": [
+      42.672,
+      68.072
+    ],
+    "native_pixels": [
+      336,
+      536
+    ]
+  },
+  "function_keys": {
+    "status": "CONFIRMED set and place (under the LCD); positions and diameter PROPOSED",
+    "diameter": 6.5,
+    "centers": {
+      "MODE": [
+        25,
+        101
+      ],
+      "SELECT": [
+        40,
+        101
+      ],
+      "START": [
+        55,
+        101
+      ]
+    },
+    "label_zone_y": [
+      94,
+      108
+    ]
+  },
+  "direction_keys": {
+    "status": "CONFIRMED four separate round keys without a cross; positions and diameter PROPOSED",
+    "diameter": 9.0,
+    "diameter_range": [
+      8.5,
+      9.0
+    ],
+    "centers": {
+      "UP": [
+        24,
+        119
+      ],
+      "LEFT": [
+        12.5,
+        130.5
+      ],
+      "RIGHT": [
+        35.5,
+        130.5
+      ],
+      "DOWN": [
+        24,
+        142
+      ]
+    },
+    "min_open_gap": 5.0
+  },
+  "action_key": {
+    "status": "CONFIRMED one large smooth key; position and diameter PROPOSED",
+    "diameter": 21.5,
+    "diameter_range": [
+      21,
+      22
+    ],
+    "center": [
+      59,
+      130.5
+    ]
+  },
+  "speaker_grille": {
+    "status": "CONFIRMED single grille on the FRONT near the lower centre; size PROPOSED",
+    "center": [
+      40,
+      163
+    ],
+    "envelope": [
+      22,
+      9
+    ],
+    "rear_or_bottom_holes": 0
+  },
+  "usb_c": {
+    "status": "CONFIRMED the only opening, centred on the bottom edge; cut-out size NOT defined (take it from the chosen receptacle)",
+    "edge": "bottom",
+    "center_x": 40,
+    "openings_on_bottom_edge": 1,
+    "cutout_placeholder": [
+      9.5,
+      3.5
+    ]
+  },
+  "side_controls": {
+    "status": "CONFIRMED a power switch and a volume wheel or slider; places and type OPEN (D-5)",
+    "power_switch": {
+      "side": "right",
+      "recessed": true
+    },
+    "volume": {
+      "side": "left",
+      "kind": "wheel or slider, OPEN"
+    }
+  },
+  "finishes": {
+    "status": "CONFIRMED three finishes on ONE geometry (ADR-022, ADR-034); materials and moulding shrinkage are NOT assumed equal",
+    "names": [
+      "MONOLITH",
+      "CLEAR_SMOKE",
+      "CERAMIC"
+    ],
+    "geometry_is_shared": true
+  },
+  "not_decided": [
+    "battery size, NTC/PCM and swelling allowance",
+    "PCB outline and antenna keep-out (depends on the chosen BLE module)",
+    "LCD/FPC exit and frontlight stack",
+    "fasteners, bosses and seam",
+    "moulding or printing process, tolerances",
+    "microSD slot (no cut-out in R0.2)"
+  ],
+  "prototype_assumptions": {
+    "status": "STARTING ENGINEERING ASSUMPTIONS of the generator for a printed mock-up; they are not owner decisions and not tooling tolerances",
+    "seam_at": "mid-thickness",
+    "hole_clearance": 0.3,
+    "key_protrusion": 1.5,
+    "key_flange_extra_radius": 1.5,
+    "key_flange_thickness": 0.8,
+    "grille_hole_diameter": 1.2,
+    "grille_pitch": 2.0,
+    "lcd_stack_thickness_placeholder": 4.7,
+    "usb_c_cutout_note": "cutout_placeholder in usb_c is a placeholder, not the footprint of the chosen receptacle"
+  }
+}

@@ -132,3 +132,34 @@ jobs:
           name: brick-simulator
           path: build-wasm/brick-sim.html
           retention-days: 14
+
+  mechanical-params:
+    name: mechanical parameters are consistent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checks without a CAD kernel (standard library only)
+        run: python3 mechanical/src/check_params.py
+      - name: The checks must be able to fail
+        run: python3 mechanical/src/test_check_params.py
+
+  mechanical-cad:
+    name: parametric case builds and its validation can fail
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r mechanical/requirements.txt
+      - name: Build the 20 mm and 22 mm assemblies and validate them
+        run: |
+          python3 mechanical/src/build.py --thickness 20 --out "$RUNNER_TEMP/cad/t20" --report "$RUNNER_TEMP/cad/validation-t20.md"
+          python3 mechanical/src/build.py --thickness 22 --out "$RUNNER_TEMP/cad/t22" --report "$RUNNER_TEMP/cad/validation-t22.md"
+      - name: Deliberately broken models must be caught
+        run: python3 mechanical/src/test_validation.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brick-r02-mockup-cad
+          path: ${{ runner.temp }}/cad
+          retention-days: 14
