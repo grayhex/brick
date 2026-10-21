@@ -6,6 +6,7 @@
 
 #include "bk_test.h"
 #include "brick/console.h"
+#include "brick/games/tank.h"
 #include "brick/games/tetris.h"
 #include "fake_hal.h"
 #include "stub_game.h"
@@ -13,6 +14,7 @@
 
 static const bk_catalog_entry_t CAT_STUBS[] = {{&stub_def_multi, "2"}, {&stub_def_single, "A"}};
 static const bk_catalog_entry_t CAT_TETRIS[] = {{&bk_tetris_def, "1"}};
+static const bk_catalog_entry_t CAT_TANK[] = {{&bk_tank_def, "4"}};
 
 static fake_hal_t hal;
 static bk_console_t con;
@@ -658,6 +660,22 @@ static unsigned ink_in(const bk_frame_t *f, int x0, int y0, int x1, int y1)
     return n;
 }
 
+/* The ACTION key fires the Tank gun and the shot is heard through the whole chain: key -> game event -> cue -> HAL tone. */
+static void test_the_shot_of_the_tank_is_heard(void)
+{
+    fresh(CAT_TANK, 1);
+    to_home();
+    tap(BK_BTN_START);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    idle(100); /* the start melody (90 ticks) and the tune of the start cue are over; the gun is free */
+    fake_hal_clear_tones(&hal);
+    bk_console_step(&con, BK_BTN_ACTION);
+    CHECK(hal.tone_count >= 1);
+    CHECK_EQ(hal.tones[0], 1900); /* the first note of BK_CUE_SHOT */
+    idle(bk_audio_cue_ticks(BK_CUE_SHOT) + 1);
+    CHECK_EQ(hal.tone_now, 0);
+}
+
 static void test_home_plays_the_clip_of_the_selected_game(void)
 {
     fresh(CAT_STUBS, 2);
@@ -1018,6 +1036,7 @@ int main(void)
     TEST_RUN(test_display_rate_limit);
     TEST_RUN(test_storage_failure_does_not_stop_the_console);
     TEST_RUN(test_tetris_in_the_console);
+    TEST_RUN(test_the_shot_of_the_tank_is_heard);
     TEST_RUN(test_home_plays_the_clip_of_the_selected_game);
     TEST_RUN(test_demo_off_shows_the_poster_and_stops_refreshing);
     TEST_RUN(test_settings_ble_demo_and_auto_off_values);

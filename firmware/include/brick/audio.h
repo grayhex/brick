@@ -31,6 +31,13 @@ typedef enum {
     BK_CUE_RESUME,
     BK_CUE_GAME_OVER,
     BK_CUE_BLOCKED,
+    BK_CUE_SHOT,      /* the player fires (Tank): short, repeats every 14 ticks while the key is held */
+    BK_CUE_HIT,       /* a bullet hit something: a wall cell, a bullet */
+    BK_CUE_EXPLODE,   /* an enemy is destroyed */
+    BK_CUE_CRASH,     /* the player is hit / crashes: the start of the explosion */
+    BK_CUE_LIFE_LOST, /* the explosion is over and a life is gone */
+    BK_CUE_BONUS,     /* an extra life, a fruit eaten */
+    BK_CUE_WIN,       /* a level is won: the start of the clear scene */
     BK_CUE_COUNT
 } bk_cue_t;
 

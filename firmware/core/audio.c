@@ -37,6 +37,15 @@ static const phrase_t PHRASES[BK_CUE_COUNT] = {
     [BK_CUE_RESUME] = PHRASE(2, {700, T(60)}, {1000, T(90)}),
     [BK_CUE_GAME_OVER] = PHRASE(5, {440, T(150)}, {392, T(150)}, {330, T(150)}, {262, T(400)}),
     [BK_CUE_BLOCKED] = PHRASE(2, {200, T(120)}),
+    /* Game events (ADR-045). A shot repeats every 14 ticks (233 ms), so it stays under 60 ms; the falling ones are the
+     * explosions; nothing goes below 200 Hz, where a small speaker has nothing left to say. */
+    [BK_CUE_SHOT] = PHRASE(1, {1900, T(18)}, {1100, T(30)}),
+    [BK_CUE_HIT] = PHRASE(2, {320, T(35)}),
+    [BK_CUE_EXPLODE] = PHRASE(3, {600, T(30)}, {420, T(40)}, {300, T(50)}, {210, T(70)}),
+    [BK_CUE_CRASH] = PHRASE(4, {480, T(50)}, {360, T(60)}, {280, T(80)}, {220, T(100)}, {200, T(160)}),
+    [BK_CUE_LIFE_LOST] = PHRASE(4, {392, T(110)}, {330, T(110)}, {262, T(110)}, {220, T(260)}),
+    [BK_CUE_BONUS] = PHRASE(4, {1047, T(60)}, {1319, T(60)}, {1568, T(60)}, {2093, T(150)}),
+    [BK_CUE_WIN] = PHRASE(4, {523, T(90)}, {659, T(90)}, {784, T(90)}, {1047, T(90)}, {1319, T(220)}),
 };
 // clang-format on
 
@@ -143,12 +152,26 @@ bk_cue_t bk_audio_cue_for_event(const bk_event_t *e, bool in_menu)
         return BK_CUE_RESUME;
     case BK_EV_BLOCKED:
         return BK_CUE_BLOCKED;
+    case BK_EV_SHOT:
+        return BK_CUE_SHOT;
+    case BK_EV_HIT:
+        return BK_CUE_HIT;
+    case BK_EV_EXPLODE:
+        return BK_CUE_EXPLODE;
+    case BK_EV_CRASH:
+        return BK_CUE_CRASH;
+    case BK_EV_LIFE_LOST:
+        return BK_CUE_LIFE_LOST;
+    case BK_EV_BONUS:
+        return BK_CUE_BONUS;
+    case BK_EV_WIN:
+        return BK_CUE_WIN;
     case BK_EV_UI_CONFIRM:
         return BK_CUE_CONFIRM;
     case BK_EV_UI_BACK:
         return BK_CUE_BACK;
     default:
-        return BK_CUE_NONE; /* events of games that are not ported yet (shot, hit, explode, ...) get cues with their game */
+        return BK_CUE_NONE; /* BK_EV_NONE and BK_EV_TONE (a raw tone request no game sends yet) */
     }
 }
 
