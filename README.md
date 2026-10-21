@@ -47,7 +47,7 @@
 
   ![Меню Tetris: анимированное превью](docs/img/menu_tetris.gif) ![Меню Snake](docs/img/menu_snake.gif) ![Меню Racing](docs/img/menu_racing.gif) ![Меню Tank](docs/img/menu_tank.gif) ![Настройки](docs/img/settings.png) ![Пауза](docs/img/game_tetris_paused.png)
 
-- Размер ядра с четырьмя играми под Cortex-M4F: ≈ 52,7 КБ flash (52 664 Б, из них около 4,3 КБ — клипы меню и 17 КБ — Tank), `.data` и `.bss` равны 0 (**только компиляция**, на железе не измерялось).
+- Размер ядра с четырьмя играми под Cortex-M4F: ≈ 52,8 КБ flash (52 848 Б, из них около 4,3 КБ — клипы меню и 17 КБ — Tank), `.data` и `.bss` равны 0 (**только компиляция**, на железе не измерялось).
 
 ```sh
 cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build --output-on-failure
