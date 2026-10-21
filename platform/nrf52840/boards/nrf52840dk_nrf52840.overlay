@@ -1,0 +1,20 @@
+/*
+ * Application devicetree for the nRF52840 DK.
+ * Partitions come from the shared map; USB CDC ACM carries MCUmgr/SMP
+ * (the "nRF USB" connector J3, NOT the J-Link port).
+ * Console and logs stay on the J-Link VCOM UART (uart0).
+ */
+
+#include "../dts/brick_dk_memory_map.dtsi"
+
+/ {
+	chosen {
+		zephyr,uart-mcumgr = &cdc_acm_uart0;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};

@@ -9,8 +9,9 @@ brick/
 ├── .github/          # действующий CI, шаблон PR
 ├── firmware/         # рабочие C11-ядро, игры, HAL-интерфейсы — НЕ ПЕРЕНОСИТЬ
 ├── platform/sim/     # действующий терминальный/WebAssembly симулятор
+├── platform/nrf52840/ # sysbuild NCS 3.4.1 для nRF52840 DK: MCUboot + приложение (собирается, на плате не проверено)
 ├── tests/            # unit, conformance, golden, сессии симулятора
-├── tools/            # генераторы, исследования, анализ CAD
+├── tools/            # генераторы, исследования, анализ CAD; dfu/ — утилита обновления по USB
 ├── design/           # визуальные концепты, не рабочий CAD
 ├── hardware/
 │   ├── pcb/          # исходники KiCad, не Gerber
@@ -37,7 +38,7 @@ brick/
 | Тема | Редактируемый источник | Только производный артефакт |
 |---|---|---|
 | Требования | `docs/PRODUCT_REQUIREMENTS.md`, `docs/DECISIONS.md` | release criteria |
-| Программа | `firmware/`, `tests/`, `platform/sim/` | ELF/BIN/HEX, отчёты CI |
+| Программа | `firmware/`, `tests/`, `platform/sim/`, `platform/nrf52840/`, `tools/dfu/` | ELF/BIN/HEX, отчёты CI |
 | Электроника | `hardware/pcb/` KiCad | `hardware/fabrication/<H_REV>/` |
 | Комплектующие | `hardware/components/` плюс BOM KiCad | согласованный frozen BOM/AVL |
 | Корпус | `mechanical/src/` CadQuery/FreeCAD | `mechanical/exports/` STEP/STL |

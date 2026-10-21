@@ -1,0 +1,31 @@
+# Brick V1 — application options (nRF52840 platform glue).
+
+mainmenu "Brick V1 nRF52840 platform"
+
+menu "Brick image confirmation (bring-up tests)"
+
+choice BRICK_CONFIRM_POLICY
+	prompt "What the application does after boot"
+	default BRICK_CONFIRM_AFTER_SELFTEST
+
+config BRICK_CONFIRM_AFTER_SELFTEST
+	bool "Confirm the image after a successful self-test (normal behaviour)"
+
+config BRICK_TEST_NEVER_CONFIRM
+	bool "TEST ONLY: run normally but never confirm (MCUboot must revert on next reset)"
+
+config BRICK_TEST_CRASH_BEFORE_CONFIRM
+	bool "TEST ONLY: fault right after start, before confirming (MCUboot must revert)"
+
+config BRICK_TEST_HANG_BEFORE_CONFIRM
+	bool "TEST ONLY: hang right after start, watchdog resets, before confirming"
+
+endchoice
+
+config BRICK_SELFTEST_WDT_TIMEOUT_MS
+	int "Watchdog timeout while the image is not confirmed [ms]"
+	default 5000
+
+endmenu
+
+source "Kconfig.zephyr"

@@ -85,7 +85,7 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 
 - [Платформа Nordic nRF52840 и выбор SDK](docs/MCU_PLATFORM_NRF52840.md) — принятое MCU-решение для V1, модуль и RAM/flash budget.
 - [Обновление/защита/восстановление прошивки](docs/FIRMWARE_UPDATE_NRF52840.md) — MCUboot, USB DFU/recovery, QSPI slot1, откат и выпуск ключей.
-- [Системная реализация на nRF52840](platform/nrf52840/README.md) — будущая Zephyr-обёртка над переносимым ядром.
+- [Системная реализация на nRF52840](platform/nrf52840/README.md) — Zephyr/MCUboot-платформа для DK: **собирается**, на плате не проверена ([состояние и измерения](docs/NRF52840_BRINGUP.md), [обновление по USB](docs/USB_UPDATE.md)).
 - [Архитектура прошивки](docs/FIRMWARE_ARCHITECTURE.md) — слои, HAL, память, порт на ARM, как добавить игру.
 - [План переноса игр](docs/GAME_PORTING.md) — соответствие исходникам и безопасный порядок миграции.
 - [Кандидаты на порт](docs/GAME_CANDIDATES.md) — опись игр ApolloBrickGames (размер, достоверность, кнопки), порядок работ.
@@ -114,7 +114,7 @@ cmake -S . -B build-m4 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake
 
 **Nordic nRF52840** (ARM Cortex-M4F 64 МГц, 1 МиБ Flash, 256 КиБ RAM; BLE+USB+QSPI), reference-модуль **Raytac MDBT50Q-P1MV2** (пока не квалифицирован к закупке). **nRF Connect SDK 3.4.1 LTS / Zephyr / MCUboot**: USB-C подписанное DFU с независимым recovery и откатом. Внешняя QSPI NOR под второй образ прошивки; на официальной **nRF52840 DK** уже есть 8 МиБ внешней Flash. Игры/симулятор остаются аппаратно-независимыми на C11.
 
-См. [MCU decision](docs/MCU_PLATFORM_NRF52840.md), [архитектура обновления](docs/FIRMWARE_UPDATE_NRF52840.md), [точка входа системного ПО](platform/nrf52840/README.md). **Ни bootloader, ни образ для nRF52840 пока не собраны/испытаны**; это следующее задание агенту.
+См. [MCU decision](docs/MCU_PLATFORM_NRF52840.md), [архитектура обновления](docs/FIRMWARE_UPDATE_NRF52840.md), [точка входа системного ПО](platform/nrf52840/README.md). **Загрузчик MCUboot и приложение для nRF52840 DK собираются воспроизводимо** ([состояние](docs/NRF52840_BRINGUP.md), ADR-043), но **не прошивались и не испытывались на плате**: рабочими восстановление, обновление и откат считать нельзя. Дальше: испытания на DK ([план](platform/nrf52840/tests/HIL_TESTPLAN.md)) и отдельный PR подключения `libbrickcore` через `bk_hal_t`.
 
 ## Ближайшие приоритеты
 
