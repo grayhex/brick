@@ -9,7 +9,7 @@ if (!existsSync(resolve(apollo, 'src/brick/types.ts'))) {
   console.error(`Reference checkout not found at ${apollo}. Set APOLLO_BRICK_GAMES=/path/to/ApolloBrickGames.`);
   process.exit(1);
 }
-const games = process.argv.length > 2 ? process.argv.slice(2) : ['tetris', 'snake', 'racing'];
+const games = process.argv.length > 2 ? process.argv.slice(2) : ['tetris', 'snake', 'racing', 'tank'];
 for (const game of games) {
   await build({
   entryPoints: [`export_${game}.ts`],
