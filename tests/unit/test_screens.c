@@ -11,6 +11,7 @@
 #include "brick/console.h"
 #include "brick/games/racing.h"
 #include "brick/games/snake.h"
+#include "brick/games/tank.h"
 #include "brick/games/tetris.h"
 #include "fake_hal.h"
 #include "frame_dump.h"
@@ -146,6 +147,12 @@ static void goto_setting(bk_setting_item_t item)
 static const bk_catalog_entry_t CAT_TETRIS[] = {{&bk_tetris_def, "1"}};
 static const bk_catalog_entry_t CAT_TWO[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}};
 static const bk_catalog_entry_t CAT_THREE[] = {{&bk_tetris_def, "1"}, {&bk_snake_def, "2"}, {&bk_racing_def, "3"}};
+static const bk_catalog_entry_t CAT_FOUR[] = {
+    {&bk_tetris_def, "1"},
+    {&bk_snake_def, "2"},
+    {&bk_racing_def, "3"},
+    {&bk_tank_def, "4"},
+};
 static const bk_catalog_entry_t CAT_MULTI[] = {{&stub_def_multi, "12"}, {&stub_def_single, "A"}};
 
 static void seed_profile(uint16_t uid, uint16_t mode, uint32_t score, uint8_t speed, uint8_t level)
@@ -287,6 +294,36 @@ static void test_racing_screens(void)
     check_golden("game_racing_kaboom");
 }
 
+static void test_tank_screens(void)
+{
+    fake_hal_init(&hal);
+    seed_profile(BK_TANK_UID, 0, 321, 3, 1);
+    boot(CAT_FOUR, 4);
+    run(BK_SPLASH_TICKS, 0);
+    tap(BK_BTN_RIGHT);   /* game 2 */
+    tap(BK_BTN_RIGHT);   /* game 3 */
+    tap(BK_BTN_RIGHT);   /* game 4 */
+    show_clip_frame(11); /* the poster of the Tank clip: the two tanks and the gap in the wall */
+    check_golden("home_tank");
+    tap(BK_BTN_START);
+    CHECK_EQ(con.screen, BK_SCREEN_GAME);
+    run(130, 0); /* the start melody (90 ticks) is over and the enemies are coming */
+    tap(BK_BTN_LEFT);
+    tap(BK_BTN_ACTION);
+    run(60, 0);
+    CHECK_EQ(con.game->phase, BK_PHASE_PLAYING);
+    CHECK_EQ(con.game->lives, 4);
+    check_golden("game_tank");
+    /* the first hit on the player's tank */
+    unsigned guard = 0;
+    while (!bk_game_busy(con.game) && guard++ < 20000) {
+        bk_console_step(&con, 0);
+    }
+    CHECK(bk_game_busy(con.game));
+    run(20, 0);
+    check_golden("game_tank_kaboom");
+}
+
 static void test_text_screens(void)
 {
     fake_hal_init(&hal);
@@ -371,6 +408,7 @@ int main(int argc, char **argv)
     TEST_RUN(test_game_screens);
     TEST_RUN(test_snake_screens);
     TEST_RUN(test_racing_screens);
+    TEST_RUN(test_tank_screens);
     TEST_RUN(test_text_screens);
     TEST_RUN(test_muted_and_paused_pictures);
     TEST_RUN(test_native_panels);

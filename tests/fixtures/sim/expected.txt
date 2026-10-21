@@ -5,3 +5,4 @@ menu_cell10_30hz.bkt 830 65 1 6db3a1f2
 snake_ref8.bkt 1751 219 0 59804622
 snake_lcd316_15hz.bkt 1542 134 175 4787003b
 racing_lcd316_15hz.bkt 1498 232 137 03600f30
+tank_lcd316_15hz.bkt 1498 127 101 9bcebd96

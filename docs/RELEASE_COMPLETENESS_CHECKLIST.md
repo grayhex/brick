@@ -64,7 +64,7 @@ References: [REFERENCE_PROJECTS.md](REFERENCE_PROJECTS.md). Current prototype au
 ## Gate 4 — firmware, games, BLE companion
 
 - [x] Portable C11 core, simulation 60Hz, game/scene API, 1bpp renderer and HAL boundaries: `firmware/`.
-- [x] Base Tetris, Snake **and Racing (one variant each, ADR-036; Racing rules are a donor reconstruction, not ROM)**, pinned ApolloBrickGames reference, tick-level fixtures and tests: `tests/`, `docs/CONFORMANCE.md`, `docs/GAME_SNAKE.md`. **Not full set of ten games; some Snake mechanics are reconstructed.**
+- [x] Base Tetris, Snake, Racing **and Tank (one variant each, ADR-036; Racing and Tank rules are a donor reconstruction, not ROM)**, pinned ApolloBrickGames reference, tick-level fixtures and tests: `tests/`, `docs/CONFORMANCE.md`, `docs/GAME_SNAKE.md`, `docs/GAME_TANK.md`. **The first-version set of four is complete (ADR-035); not the full set of ten games; some Snake mechanics are reconstructed.**
 - [x] Console menu and settings following the owner's mock-ups, with a **looped gameplay clip as the preview of every game** (ADR-041, PRD UI-01/UI-02): `docs/UI_MENU.md`, `tests/unit/test_clips.c`, golden screens in `tests/golden`. **Host evidence only: the clips are hand-drawn illustrations, readability and refresh behaviour on a real panel, the power effect of DEMO / AUTO OFF and the BLE radio are not measured.**
 - [x] Core host CI/compiler/sanitizer and Cortex-M4 cross-compile smoke test: `.github/workflows/ci.yml`. **Not full linked+flashed ARM firmware.**
 - [x] Interactive **terminal + browser/WebAssembly simulator**, physical-layout clickable keys and adjustable display FPS: `platform/sim/`, `docs/SIMULATOR.md`. **Does not validate real panel response, subjective readability or actual MCU performance.**

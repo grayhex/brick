@@ -89,14 +89,17 @@ jobs:
           grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/tetris/tetris.conformance.json
           grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/snake/snake.conformance.json
           grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/racing/racing.conformance.json
+          grep -q "\"commit\":\"$APOLLO_REF\"" tests/fixtures/tank/tank.conformance.json
       - name: Regenerate and compare
         working-directory: tools/conformance
         run: |
           npm ci --no-audit --no-fund
-          for game in tetris snake racing; do
+          for game in tetris snake racing tank; do
             APOLLO_BRICK_GAMES="$GITHUB_WORKSPACE/ApolloBrickGames" npm run "export:$game" -- --out "/tmp/$game.conformance.json"
             cmp "/tmp/$game.conformance.json" "../../tests/fixtures/$game/$game.conformance.json"
           done
+      - name: The mutation patterns still match the sources (the run itself takes minutes and is not part of CI)
+        run: CHECK_ONLY=1 python3 tools/mutation/mutate_tank.py
 
   cad-review:
     name: STL mockup measurements are reproducible

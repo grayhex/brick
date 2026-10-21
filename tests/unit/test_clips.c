@@ -9,10 +9,11 @@
 #include "brick/clip.h"
 #include "brick/games/racing.h"
 #include "brick/games/snake.h"
+#include "brick/games/tank.h"
 #include "brick/games/tetris.h"
 #include "stub_game.h"
 
-static const bk_game_def_t *const GAMES[] = {&bk_tetris_def, &bk_snake_def, &bk_racing_def, &stub_def_multi};
+static const bk_game_def_t *const GAMES[] = {&bk_tetris_def, &bk_snake_def, &bk_racing_def, &bk_tank_def, &stub_def_multi};
 
 #define MAX_STEP_CELLS          24 /* cells that may change between two neighbouring pictures: a line burning out is 20 */
 #define MAX_PICTURES_PER_SECOND 10 /* the fastest panel candidate (Sharp LS032B7DD02 quotes fSCS 1..10 Hz) */
